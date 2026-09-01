@@ -1,0 +1,82 @@
+{
+  "name": "Subscriber",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name of the subscriber"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "Subscriber's first name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "how_heard": {
+      "type": "string",
+      "description": "How the subscriber heard about the service"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe customer id"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription id"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "past_due",
+        "trialling"
+      ],
+      "default": "active",
+      "description": "Subscription status"
+    },
+    "subscribed_since": {
+      "type": "string",
+      "format": "date",
+      "description": "Date subscribed"
+    }
+  },
+  "required": [
+    "name",
+    "email"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

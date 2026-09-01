@@ -1,0 +1,139 @@
+{
+  "name": "TrendStats",
+  "type": "object",
+  "properties": {
+    "stat_key": {
+      "type": "string",
+      "description": "Singleton key; always 'global'"
+    },
+    "computed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "items_analysed": {
+      "type": "number"
+    },
+    "category_stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "loved": {
+            "type": "number"
+          },
+          "purchased": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "retailer_stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "loved": {
+            "type": "number"
+          },
+          "purchased": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "price_band_stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "loved": {
+            "type": "number"
+          },
+          "purchased": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "rejection_reason_counts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "recent_loved_titles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 10 most recent loved/purchased gift titles"
+    },
+    "recent_rejected_titles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 10 most recent taste-rejected gift titles"
+    }
+  },
+  "required": [
+    "stat_key"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

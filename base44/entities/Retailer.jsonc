@@ -1,0 +1,112 @@
+{
+  "name": "Retailer",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Retailer name"
+    },
+    "website_url": {
+      "type": "string",
+      "description": "Retailer website URL"
+    },
+    "gift_page_url": {
+      "type": "string",
+      "description": "Specific gift page URL"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Men",
+        "Women",
+        "Unisex (Adult)",
+        "Kids",
+        "Unisex + Kids"
+      ],
+      "description": "Audience category"
+    },
+    "applies_to": {
+      "type": "string",
+      "description": "Who this retailer applies to"
+    },
+    "contains_age_restricted_items": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the retailer sells age-restricted items"
+    },
+    "what_they_sell": {
+      "type": "string",
+      "description": "What the retailer sells"
+    },
+    "why_it_fits": {
+      "type": "string",
+      "description": "Why this retailer fits"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the retailer is active"
+    },
+    "curated_only": {
+      "type": "boolean",
+      "default": false,
+      "description": "Retailer exists only to host Gem's curated imports — excluded from catalogue scraping (usable set and no-source stamping); admin Retailers tab shows a Curated only badge instead of scrape actions. Must stay active:true or generation drops its products."
+    },
+    "last_scrape_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this retailer was last processed by the catalogue scraper"
+    },
+    "last_discovery_method": {
+      "type": "string",
+      "enum": [
+        "shopify",
+        "sitemap",
+        "crawl",
+        "none"
+      ],
+      "description": "How product URLs were discovered on the last scrape"
+    },
+    "last_scrape_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "no_products",
+        "error",
+        "skipped_no_source"
+      ],
+      "description": "Outcome of the last scrape attempt"
+    },
+    "last_scrape_error": {
+      "type": "string",
+      "description": "Human-readable reason the last scrape failed or found nothing; empty when ok"
+    },
+    "last_scrape_products_found": {
+      "type": "number",
+      "description": "New + updated products recorded for this retailer on its last completed scrape pass"
+    }
+  },
+  "required": [
+    "name",
+    "website_url",
+    "category"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

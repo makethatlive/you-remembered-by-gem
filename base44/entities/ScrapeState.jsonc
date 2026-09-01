@@ -1,0 +1,53 @@
+{
+  "name": "ScrapeState",
+  "type": "object",
+  "properties": {
+    "is_running": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a scrape run is currently in progress"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date",
+      "description": "When the current/last run started"
+    },
+    "heartbeat_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp written when a batch acquires the lock; a lock whose heartbeat is older than the stale threshold is recovered automatically"
+    },
+    "last_completed_at": {
+      "type": "string",
+      "format": "date",
+      "description": "When the last run completed"
+    },
+    "last_run_summary": {
+      "type": "string",
+      "description": "Summary of the last completed run"
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

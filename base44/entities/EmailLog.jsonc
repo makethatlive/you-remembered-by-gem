@@ -1,0 +1,77 @@
+{
+  "name": "EmailLog",
+  "type": "object",
+  "properties": {
+    "subscriber_id": {
+      "type": "string",
+      "description": "Subscriber id"
+    },
+    "recipient_id": {
+      "type": "string",
+      "description": "Recipient id"
+    },
+    "gift_list_id": {
+      "type": "string",
+      "description": "Gift list id"
+    },
+    "email_type": {
+      "type": "string",
+      "enum": [
+        "welcome",
+        "onboarding_reminder",
+        "6_week_reminder",
+        "30_day",
+        "14_day",
+        "7_day",
+        "post_occasion",
+        "post_birthday_feedback"
+      ],
+      "description": "Email type"
+    },
+    "occasion_year": {
+      "type": "number",
+      "description": "Calendar year of the occasion this email relates to (for per-year dedupe)"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When sent"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "failed",
+        "pending"
+      ],
+      "default": "sent",
+      "description": "Send status"
+    }
+  },
+  "required": [
+    "subscriber_id",
+    "email_type"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,504 @@
+// Prisma Schema for You Remembered By Gem
+// Migration from Base44 to standalone PostgreSQL database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User entity - handles authentication and authorization
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  subscribers Subscriber[]
+  recipients  Recipient[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USER
+
+  @@map("role")
+}
+
+// Subscriber - paid user with subscription
+model Subscriber {
+  id                    String             @id @default(cuid())
+  name                  String
+  firstName             String?            @map("first_name")
+  email                 String             @unique
+  howHeard              String?            @map("how_heard")
+  stripeCustomerId      String?            @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String?            @unique @map("stripe_subscription_id")
+  subscriptionStatus    SubscriptionStatus @default(ACTIVE) @map("subscription_status")
+  subscribedSince       DateTime?          @map("subscribed_since") @db.Date
+  createdById           String             @map("created_by_id")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  createdBy  User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  recipients Recipient[]
+  giftLists  GiftList[]
+  emailLogs  EmailLog[]
+
+  @@map("subscribers")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  TRIALLING
+
+  @@map("subscription_status")
+}
+
+// Retailer - stores selling products
+model Retailer {
+  id                        String            @id @default(cuid())
+  name                      String
+  websiteUrl                String            @map("website_url")
+  giftPageUrl               String?           @map("gift_page_url")
+  category                  RetailerCategory
+  appliesTo                 String?           @map("applies_to")
+  containsAgeRestrictedItems Boolean          @default(false) @map("contains_age_restricted_items")
+  whatTheySell              String?           @map("what_they_sell")
+  whyItFits                 String?           @map("why_it_fits")
+  active                    Boolean           @default(true)
+  curatedOnly               Boolean           @default(false) @map("curated_only")
+  lastScrapeAt              DateTime?         @map("last_scrape_at")
+  lastDiscoveryMethod       DiscoveryMethod?  @map("last_discovery_method")
+  lastScrapeStatus          ScrapeStatus?     @map("last_scrape_status")
+  lastScrapeError           String?           @map("last_scrape_error")
+  lastScrapeProductsFound   Int?              @map("last_scrape_products_found")
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  updatedAt                 DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  products Product[]
+
+  @@map("retailers")
+}
+
+enum RetailerCategory {
+  MEN
+  WOMEN
+  UNISEX_ADULT
+  KIDS
+  UNISEX_KIDS
+
+  @@map("retailer_category")
+}
+
+enum DiscoveryMethod {
+  SHOPIFY
+  SITEMAP
+  CRAWL
+  NONE
+
+  @@map("discovery_method")
+}
+
+enum ScrapeStatus {
+  OK
+  NO_PRODUCTS
+  ERROR
+  SKIPPED_NO_SOURCE
+
+  @@map("scrape_status")
+}
+
+// Product - items available for gifting
+model Product {
+  id                    String        @id @default(cuid())
+  name                  String
+  description           String?       @db.Text
+  retailerId            String        @map("retailer_id")
+  productUrl            String        @map("product_url")
+  affiliateUrl          String?       @map("affiliate_url")
+  imageUrl              String?       @map("image_url")
+  price                 Decimal       @db.Decimal(10, 2)
+  category              String?
+  genderAppliesTo       String?       @map("gender_applies_to")
+  ageRestricted         Boolean       @default(false) @map("age_restricted")
+  suitableAgeBands      String[]      @map("suitable_age_bands")
+  sourceType            SourceType    @default(LEGACY_UNKNOWN) @map("source_type")
+  status                ProductStatus @default(NEEDS_REVIEW)
+  reportedBrokenAt      DateTime?     @map("reported_broken_at") @db.Date
+  lastChecked           DateTime?     @map("last_checked") @db.Date
+  lastVerified          DateTime?     @map("last_verified") @db.Date
+  addedDate             DateTime?     @map("added_date") @db.Date
+  notes                 String?       @db.Text
+  interestTags          String[]      @map("interest_tags")
+  giftTypeTags          String[]      @map("gift_type_tags")
+  searchKeywords        String[]      @map("search_keywords")
+  qualityScore          Float?        @map("quality_score")
+  catalogueEnrichedAt   DateTime?     @map("catalogue_enriched_at")
+  dataQualityFlags      String[]      @map("data_quality_flags")
+  canonicalCategory     String?       @map("canonical_category")
+  aiClassifications     Json?         @map("ai_classifications")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  retailer  Retailer   @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  giftItems GiftItem[]
+
+  @@index([retailerId])
+  @@index([status])
+  @@index([sourceType])
+  @@map("products")
+}
+
+enum SourceType {
+  CURATED_PRODUCT
+  CURATED_RETAILER
+  SHOPIFY_UPLOAD
+  LEGACY_UNKNOWN
+
+  @@map("source_type")
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  NEEDS_REVIEW
+  REPORTED_BROKEN
+
+  @@map("product_status")
+}
+
+// Recipient - person receiving gifts
+model Recipient {
+  id                    String    @id @default(cuid())
+  subscriberId          String    @map("subscriber_id")
+  name                  String
+  relationship          String
+  occasion              String?
+  occasionDay           Int?      @map("occasion_day")
+  occasionMonth         Int?      @map("occasion_month")
+  occasions             Json?
+  birthday              String    @db.Char(7) // Format: --MM-DD
+  gender                Gender
+  ageRange              String?   @map("age_range")
+  childAgeBracket       String?   @map("child_age_bracket")
+  ageBand               AgeBand   @map("age_band")
+  budgetMin             Decimal?  @map("budget_min") @db.Decimal(10, 2)
+  budgetMax             Decimal?  @map("budget_max") @db.Decimal(10, 2)
+  interests             String[]
+  personality           String[]
+  giftTypes             String[]  @map("gift_types")
+  avoidNotes            String?   @map("avoid_notes") @db.Text
+  whoTheyAre            String?   @map("who_they_are") @db.Text
+  hobbiesAndInterests   String?   @map("hobbies_and_interests") @db.Text
+  thingsYouKnow         String?   @map("things_you_know") @db.Text
+  milestones            String?   @db.Text
+  involvementLevel      String?   @map("involvement_level")
+  commsPreferences      String?   @map("comms_preferences") @db.Text
+  notes                 String?   @db.Text
+  lastGiftGenerated     DateTime? @map("last_gift_generated") @db.Date
+  derivedProfile        Json?     @map("derived_profile")
+  derivedProfileHash    String?   @map("derived_profile_hash") @db.Text
+  createdById           String    @map("created_by_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  subscriber User       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  owner      Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  giftLists  GiftList[]
+  emailLogs  EmailLog[]
+
+  @@index([subscriberId])
+  @@index([birthday])
+  @@map("recipients")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+
+  @@map("gender")
+}
+
+enum AgeBand {
+  UNDER_5
+  FIVE_TO_10
+  ELEVEN_TO_17
+  EIGHTEEN_TO_30
+  THIRTY_ONE_TO_50
+  FIFTY_ONE_TO_70
+  SEVENTY_PLUS
+
+  @@map("age_band")
+}
+
+// GiftList - collection of gift suggestions
+model GiftList {
+  id                  String       @id @default(cuid())
+  recipientId         String       @map("recipient_id")
+  subscriberId        String       @map("subscriber_id")
+  subscriberUserId    String       @map("subscriber_user_id")
+  birthdayDate        DateTime?    @map("birthday_date") @db.Date
+  listType            ListType     @default(CURATED) @map("list_type")
+  status              ListStatus   @default(PENDING_APPROVAL)
+  generatedAt         DateTime?    @map("generated_at")
+  approvedAt          DateTime?    @map("approved_at")
+  visibleToSubscriber Boolean      @default(false) @map("visible_to_subscriber")
+  aiPromptUsed        String?      @map("ai_prompt_used") @db.Text
+  supersedesListId    String?      @map("supersedes_list_id")
+  refreshRequestedAt  DateTime?    @map("refresh_requested_at")
+  refreshReason       String?      @map("refresh_reason")
+  rejectionReason     RejectionReason? @map("rejection_reason")
+  rejectionNote       String?      @map("rejection_note") @db.Text
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  recipient  Recipient  @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  giftItems  GiftItem[]
+  emailLogs  EmailLog[]
+
+  @@index([recipientId])
+  @@index([subscriberId])
+  @@index([status])
+  @@map("gift_lists")
+}
+
+enum ListType {
+  CURATED
+  LAST_MINUTE
+  EXPERIENCE_DIGITAL
+
+  @@map("list_type")
+}
+
+enum ListStatus {
+  GENERATING
+  PENDING_APPROVAL
+  APPROVED
+  SENT
+  REJECTED
+
+  @@map("list_status")
+}
+
+enum RejectionReason {
+  WRONG_AGE
+  WRONG_AUDIENCE
+  NOT_RELEVANT
+  TOO_GENERIC
+  DUPLICATE
+  POOR_QUALITY
+  BAD_LINK_OR_DATA
+  OTHER
+
+  @@map("rejection_reason")
+}
+
+// GiftItem - individual gift in a list
+model GiftItem {
+  id                     String            @id @default(cuid())
+  giftListId             String            @map("gift_list_id")
+  subscriberUserId       String            @map("subscriber_user_id")
+  productId              String            @map("product_id")
+  title                  String
+  description            String?           @db.Text
+  whyThisGift            String?           @map("why_this_gift") @db.Text
+  productUrl             String            @map("product_url")
+  affiliateUrl           String?           @map("affiliate_url")
+  retailerName           String            @map("retailer_name")
+  price                  Decimal           @db.Decimal(10, 2)
+  imageUrl               String?           @map("image_url")
+  sourceType             SourceType        @map("source_type")
+  deliverySpeed          DeliverySpeed     @default(STANDARD) @map("delivery_speed")
+  status                 GiftItemStatus    @default(ACTIVE)
+  subscriberAction       SubscriberAction? @map("subscriber_action")
+  feedback               Feedback?
+  adminFeedbackReason    RejectionReason?  @map("admin_feedback_reason")
+  adminFeedbackNote      String?           @map("admin_feedback_note") @db.Text
+  selectionScore         Float?            @map("selection_score")
+  matchedSignals         String[]          @map("matched_signals")
+  suitabilityConfidence  Int?              @map("suitability_confidence")
+  suitabilityReasoning   String?           @map("suitability_reasoning") @db.Text
+  aiFlagConcern          String?           @map("ai_flag_concern") @db.Text
+  createdAt              DateTime          @default(now()) @map("created_at")
+  updatedAt              DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([giftListId])
+  @@index([productId])
+  @@index([status])
+  @@map("gift_items")
+}
+
+enum DeliverySpeed {
+  STANDARD
+  NEXT_DAY
+  EXPERIENCE
+  DIGITAL
+
+  @@map("delivery_speed")
+}
+
+enum GiftItemStatus {
+  ACTIVE
+  STANDBY
+  SWAPPED
+  REMOVED
+
+  @@map("gift_item_status")
+}
+
+enum SubscriberAction {
+  PURCHASED
+  NOT_PURCHASED
+
+  @@map("subscriber_action")
+}
+
+enum Feedback {
+  LOVED_IT
+  BAD_SUGGESTION
+
+  @@map("feedback")
+}
+
+// EmailLog - tracks sent emails
+model EmailLog {
+  id           String     @id @default(cuid())
+  subscriberId String     @map("subscriber_id")
+  recipientId  String?    @map("recipient_id")
+  giftListId   String?    @map("gift_list_id")
+  emailType    EmailType  @map("email_type")
+  occasionYear Int?       @map("occasion_year")
+  sentAt       DateTime   @default(now()) @map("sent_at")
+  status       EmailStatus @default(SENT)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  recipient  Recipient?  @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+  giftList   GiftList?   @relation(fields: [giftListId], references: [id], onDelete: SetNull)
+
+  @@index([subscriberId])
+  @@index([emailType])
+  @@map("email_logs")
+}
+
+enum EmailType {
+  WELCOME
+  ONBOARDING_REMINDER
+  SIX_WEEK_REMINDER
+  THIRTY_DAY
+  FOURTEEN_DAY
+  SEVEN_DAY
+  POST_OCCASION
+  POST_BIRTHDAY_FEEDBACK
+
+  @@map("email_type")
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+  PENDING
+
+  @@map("email_status")
+}
+
+// SignupAttempt - tracks signup attempts
+model SignupAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("signup_attempts")
+}
+
+// ScrapeRunLog - logs scraping operations
+model ScrapeRunLog {
+  id                 String           @id @default(cuid())
+  runDate            DateTime         @map("run_date") @db.Date
+  scope              ScrapeScope
+  retailerId         String?          @map("retailer_id")
+  retailerName       String?          @map("retailer_name")
+  scrapeStatus       ScrapeRunStatus  @map("scrape_status")
+  discoveryMethod    DiscoveryMethod? @map("discovery_method")
+  newProducts        Int              @default(0) @map("new_products")
+  updated            Int              @default(0)
+  rejectReasonsJson  String?          @map("reject_reasons_json") @db.Text
+  error              String?          @db.Text
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  @@index([runDate])
+  @@index([retailerId])
+  @@map("scrape_run_logs")
+}
+
+enum ScrapeScope {
+  FULL
+  RETAILER
+
+  @@map("scrape_scope")
+}
+
+enum ScrapeRunStatus {
+  OK
+  NO_PRODUCTS
+  ERROR
+
+  @@map("scrape_run_status")
+}
+
+// ScrapeState - singleton state tracker for scraping
+model ScrapeState {
+  id               String    @id @default(cuid())
+  isRunning        Boolean   @default(false) @map("is_running")
+  startedAt        DateTime? @map("started_at") @db.Date
+  heartbeatAt      DateTime? @map("heartbeat_at")
+  lastCompletedAt  DateTime? @map("last_completed_at") @db.Date
+  lastRunSummary   String?   @map("last_run_summary") @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@map("scrape_states")
+}
+
+// TrendStats - analytics and trending data
+model TrendStats {
+  id                      String   @id @default(cuid())
+  statKey                 String   @unique @map("stat_key") // Always 'global'
+  computedAt              DateTime @map("computed_at")
+  itemsAnalysed           Int      @map("items_analysed")
+  categoryStats           Json     @map("category_stats")
+  retailerStats           Json     @map("retailer_stats")
+  priceBandStats          Json     @map("price_band_stats")
+  rejectionReasonCounts   Json     @map("rejection_reason_counts")
+  recentLovedTitles       String[] @map("recent_loved_titles")
+  recentRejectedTitles    String[] @map("recent_rejected_titles")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("trend_stats")
+}

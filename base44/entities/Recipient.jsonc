@@ -1,0 +1,266 @@
+{
+  "name": "Recipient",
+  "type": "object",
+  "properties": {
+    "subscriber_id": {
+      "type": "string",
+      "description": "Owning subscriber id"
+    },
+    "name": {
+      "type": "string",
+      "description": "Recipient first name"
+    },
+    "relationship": {
+      "type": "string",
+      "description": "Relationship to subscriber"
+    },
+    "occasion": {
+      "type": "string",
+      "description": "Primary occasion to remember (e.g. Birthday, Christmas, Anniversary) \u2014 mirrors occasions[0] for backward compatibility"
+    },
+    "occasion_day": {
+      "type": "number",
+      "description": "Day of the primary occasion (1-31)"
+    },
+    "occasion_month": {
+      "type": "number",
+      "description": "Month of the primary occasion (1-12)"
+    },
+    "occasions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Occasion name (e.g. Birthday, Christmas, Anniversary, Other)"
+          },
+          "custom_label": {
+            "type": "string",
+            "description": "Free-text label when type is 'Other'"
+          },
+          "day": {
+            "type": "number",
+            "description": "Day of this occasion (1-31)"
+          },
+          "month": {
+            "type": "number",
+            "description": "Month of this occasion (1-12)"
+          },
+          "budget_min": {
+            "type": "number",
+            "description": "Minimum budget in GBP for this occasion"
+          },
+          "budget_max": {
+            "type": "number",
+            "description": "Maximum budget in GBP for this occasion"
+          }
+        }
+      },
+      "description": "All occasions to remember for this recipient, each with its own date and budget. The first entry (typically Birthday) mirrors the legacy occasion/occasion_day/occasion_month/budget fields."
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date",
+      "description": "Primary occasion date stored as yearless fragment --MM-DD; drives all reminder timing"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "Male",
+        "Female",
+        "Non-binary",
+        "Prefer not to say"
+      ],
+      "description": "Recipient gender"
+    },
+    "age_range": {
+      "type": "string",
+      "enum": [
+        "Under 11",
+        "12-17",
+        "18-25",
+        "26-35",
+        "36-45",
+        "46-55",
+        "56-65",
+        "66-75",
+        "75+"
+      ],
+      "description": "Approximate age range as captured at onboarding"
+    },
+    "child_age_bracket": {
+      "type": "string",
+      "enum": [
+        "1-2",
+        "3-4",
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "description": "Detailed age bracket, only collected when age_range is 'Under 11'"
+    },
+    "age_band": {
+      "type": "string",
+      "enum": [
+        "Under 5",
+        "5-10",
+        "11-17",
+        "18-30",
+        "31-50",
+        "51-70",
+        "71+"
+      ],
+      "description": "Age band used by gift logic; derived from age_range or child_age_bracket"
+    },
+    "budget_min": {
+      "type": "number",
+      "description": "Minimum budget in GBP for the primary occasion"
+    },
+    "budget_max": {
+      "type": "number",
+      "description": "Maximum budget in GBP for the primary occasion"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Their interests"
+    },
+    "personality": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Their personality traits (up to 3)"
+    },
+    "gift_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Kinds of gifts they love"
+    },
+    "avoid_notes": {
+      "type": "string",
+      "description": "Gifts or categories to avoid"
+    },
+    "who_they_are": {
+      "type": "string",
+      "description": "Description of who they are"
+    },
+    "hobbies_and_interests": {
+      "type": "string",
+      "description": "Hobbies and interests; for children under 11 this holds the free-text 'what are they into' answer"
+    },
+    "things_you_know": {
+      "type": "string",
+      "description": "Anything else that would help"
+    },
+    "milestones": {
+      "type": "string",
+      "description": "Any upcoming significant milestones"
+    },
+    "involvement_level": {
+      "type": "string",
+      "description": "How involved the subscriber would like to be"
+    },
+    "comms_preferences": {
+      "type": "string",
+      "description": "Communication preferences"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free notes"
+    },
+    "last_gift_generated": {
+      "type": "string",
+      "format": "date",
+      "description": "Date a gift list was last generated for this recipient"
+    },
+    "derived_profile": {
+      "type": "object",
+      "description": "AI-derived structured interpretation of the free-text profile; refreshed only when profile fields change",
+      "properties": {
+        "canonical_interests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "canonical_gift_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "persona_keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "avoid_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "life_stage_summary": {
+          "type": "string"
+        }
+      }
+    },
+    "derived_profile_hash": {
+      "type": "string",
+      "description": "Hash of the profile source fields the derived_profile was computed from"
+    }
+  },
+  "required": [
+    "name",
+    "relationship",
+    "birthday",
+    "gender",
+    "age_band"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
