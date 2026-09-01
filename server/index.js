@@ -5,7 +5,12 @@
 
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const prisma = new PrismaClient();
@@ -18,7 +23,7 @@ app.use(express.json());
 
 // Serve static files from dist folder in production
 if (NODE_ENV === 'production') {
-  app.use(express.static('dist'));
+  app.use(express.static(path.join(__dirname, '../dist')));
 }
 
 // Health check
@@ -429,10 +434,18 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+// Catch-all route for React Router (must be after API routes)
+if (NODE_ENV === 'production') {
+  app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+}
+
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 API Server running on http://localhost:${PORT}`);
   console.log(`📊 Database: PostgreSQL via Prisma`);
+  console.log(`🔧 Environment: ${NODE_ENV}`);
   console.log(`🔧 Available endpoints:`);
   console.log(`   - GET  /api/health`);
   console.log(`   - GET  /api/subscribers`);
@@ -443,13 +456,6 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/products`);
   console.log(`\n✨ Ready to serve data from your PostgreSQL database!\n`);
 });
-
-// Catch-all route for React Router (must be after API routes)
-if (NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile('index.html', { root: 'dist' });
-  });
-}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
