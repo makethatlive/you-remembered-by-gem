@@ -435,9 +435,15 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // Catch-all route for React Router (must be after API routes)
+// Using middleware instead of route to avoid path-to-regexp issues
 if (NODE_ENV === 'production') {
-  app.get('/*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  app.use((req, res, next) => {
+    // Only handle GET requests that aren't API calls
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      res.sendFile(path.join(__dirname, '../dist/index.html'));
+    } else {
+      next();
+    }
   });
 }
 
