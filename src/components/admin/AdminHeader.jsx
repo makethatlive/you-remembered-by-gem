@@ -6,7 +6,7 @@ export default function AdminHeader() {
   const { logout } = useAuth();
   return (
     <header className="sticky top-0 z-40 bg-brand-teal">
-      <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-center relative">
+      <div className="max-w-8xl mx-auto px-5 h-16 flex items-center justify-center relative">
         <h1 className="font-display text-2xl font-semibold text-brand-gold">Gem's View</h1>
         <button
           onClick={() => logout()}

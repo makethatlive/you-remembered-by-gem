@@ -224,7 +224,7 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-5">
+    <div className="max-w-6xl mx-auto px-5 pt-5">
       <button
         onClick={onDone}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"

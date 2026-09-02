@@ -11,7 +11,7 @@ const TABS = [
 export default function BottomTabBar({ active, onChange }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-brand-teal border-t border-brand-teal-dark">
-      <div className="max-w-3xl mx-auto grid grid-cols-4">
+      <div className="max-w-6xl mx-auto grid grid-cols-4">
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = active === id;
           return (

@@ -3,6 +3,7 @@
  * Provides REST endpoints to access PostgreSQL data via Prisma
  */
 
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -29,6 +30,11 @@ if (NODE_ENV === 'production') {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API server running' });
+});
+
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Test route works!' });
 });
 
 // ==================== SUBSCRIBERS ====================
@@ -234,6 +240,58 @@ app.post('/api/recipients', async (req, res) => {
   try {
     const data = req.body;
     
+    // Transform gender to uppercase enum if provided
+    let gender = data.gender;
+    if (gender && typeof gender === 'string') {
+      gender = gender.toUpperCase();
+    }
+    
+    // Transform ageBand to uppercase enum if provided
+    let ageBand = data.ageBand || data.age_band;
+    if (ageBand && typeof ageBand === 'string') {
+      ageBand = ageBand.toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
+      const ageBandMap = {
+        'UNDER_5': 'UNDER_5',
+        'UNDER5': 'UNDER_5',
+        '5_10': 'FIVE_TO_10',
+        '5_TO_10': 'FIVE_TO_10',
+        '11_17': 'ELEVEN_TO_17',
+        '11_TO_17': 'ELEVEN_TO_17',
+        '18_30': 'EIGHTEEN_TO_30',
+        '18_TO_30': 'EIGHTEEN_TO_30',
+        '31_50': 'THIRTY_ONE_TO_50',
+        '31_TO_50': 'THIRTY_ONE_TO_50',
+        '51_70': 'FIFTY_ONE_TO_70',
+        '51_TO_70': 'FIFTY_ONE_TO_70',
+        '71+': 'SEVENTY_PLUS',
+        '71_PLUS': 'SEVENTY_PLUS',
+        'SEVENTY_PLUS': 'SEVENTY_PLUS',
+      };
+      ageBand = ageBandMap[ageBand] || ageBand;
+    }
+    
+    // Get createdById from subscriber if not provided
+    let createdById = data.createdById || data.created_by_id;
+    const subscriberId = data.subscriberId || data.subscriber_id;
+    
+    if (!createdById && subscriberId) {
+      // Look up the subscriber to get their createdById (owner)
+      const subscriber = await prisma.subscriber.findUnique({
+        where: { id: subscriberId },
+        select: { createdById: true }
+      });
+      
+      if (subscriber) {
+        createdById = subscriber.createdById;
+      }
+    }
+    
+    if (!createdById) {
+      return res.status(400).json({ 
+        error: 'createdById is required and could not be determined from subscriber' 
+      });
+    }
+    
     const recipient = await prisma.recipient.create({
       data: {
         name: data.name,
@@ -243,10 +301,10 @@ app.post('/api/recipients', async (req, res) => {
         occasionMonth: data.occasionMonth || data.occasion_month,
         occasions: data.occasions,
         birthday: data.birthday,
-        gender: data.gender,
+        gender: gender,
         ageRange: data.ageRange || data.age_range,
         childAgeBracket: data.childAgeBracket || data.child_age_bracket,
-        ageBand: data.ageBand || data.age_band,
+        ageBand: ageBand,
         budgetMin: data.budgetMin || data.budget_min,
         budgetMax: data.budgetMax || data.budget_max,
         interests: data.interests || [],
@@ -260,14 +318,15 @@ app.post('/api/recipients', async (req, res) => {
         involvementLevel: data.involvementLevel || data.involvement_level,
         commsPreferences: data.commsPreferences || data.comms_preferences,
         notes: data.notes,
-        subscriberId: data.subscriberId || data.subscriber_id,
-        createdById: data.createdById || data.created_by_id,
+        subscriberId: subscriberId,
+        createdById: createdById,
       }
     });
     
     res.status(201).json(recipient);
   } catch (error) {
     console.error('Error creating recipient:', error);
+    console.error('Request data:', req.body);
     res.status(500).json({ error: error.message });
   }
 });
@@ -276,6 +335,38 @@ app.post('/api/recipients', async (req, res) => {
 app.patch('/api/recipients/:id', async (req, res) => {
   try {
     const data = req.body;
+    
+    // Transform gender to uppercase enum if provided
+    let gender = data.gender;
+    if (gender && typeof gender === 'string') {
+      gender = gender.toUpperCase();
+    }
+    
+    // Transform ageBand to uppercase enum if provided
+    let ageBand = data.ageBand || data.age_band;
+    if (ageBand && typeof ageBand === 'string') {
+      // Handle the special case formatting
+      ageBand = ageBand.toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
+      // Map common variations
+      const ageBandMap = {
+        'UNDER_5': 'UNDER_5',
+        'UNDER5': 'UNDER_5',
+        '5_10': 'FIVE_TO_10',
+        '5_TO_10': 'FIVE_TO_10',
+        '11_17': 'ELEVEN_TO_17',
+        '11_TO_17': 'ELEVEN_TO_17',
+        '18_30': 'EIGHTEEN_TO_30',
+        '18_TO_30': 'EIGHTEEN_TO_30',
+        '31_50': 'THIRTY_ONE_TO_50',
+        '31_TO_50': 'THIRTY_ONE_TO_50',
+        '51_70': 'FIFTY_ONE_TO_70',
+        '51_TO_70': 'FIFTY_ONE_TO_70',
+        '71+': 'SEVENTY_PLUS',
+        '71_PLUS': 'SEVENTY_PLUS',
+        'SEVENTY_PLUS': 'SEVENTY_PLUS',
+      };
+      ageBand = ageBandMap[ageBand] || ageBand;
+    }
     
     const recipient = await prisma.recipient.update({
       where: { id: req.params.id },
@@ -287,10 +378,10 @@ app.patch('/api/recipients/:id', async (req, res) => {
         occasionMonth: data.occasionMonth || data.occasion_month,
         occasions: data.occasions,
         birthday: data.birthday,
-        gender: data.gender,
+        gender: gender,
         ageRange: data.ageRange || data.age_range,
         childAgeBracket: data.childAgeBracket || data.child_age_bracket,
-        ageBand: data.ageBand || data.age_band,
+        ageBand: ageBand,
         budgetMin: data.budgetMin || data.budget_min,
         budgetMax: data.budgetMax || data.budget_max,
         interests: data.interests,
@@ -310,6 +401,7 @@ app.patch('/api/recipients/:id', async (req, res) => {
     res.json(recipient);
   } catch (error) {
     console.error('Error updating recipient:', error);
+    console.error('Request data:', req.body);
     res.status(500).json({ error: error.message });
   }
 });
@@ -387,6 +479,115 @@ app.get('/api/gift-lists/:id', async (req, res) => {
   }
 });
 
+// ==================== USERS ====================
+
+// Get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const { limit = 200 } = req.query;
+    
+    const users = await prisma.user.findMany({
+      take: parseInt(limit),
+      orderBy: {
+        createdAt: 'desc',
+      }
+    });
+    
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single user
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        subscribers: true,
+        recipients: true,
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user (role change)
+app.patch('/api/users/:id', async (req, res) => {
+  try {
+    const data = req.body;
+    
+    // Transform role to uppercase if provided
+    let role = data.role;
+    if (role && typeof role === 'string') {
+      role = role.toUpperCase();
+    }
+    
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: {
+        email: data.email,
+        role: role,
+      }
+    });
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    console.error('Request data:', req.body);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== RETAILERS ====================
+
+// Get all retailers
+app.get('/api/retailers', async (req, res) => {
+  try {
+    const { limit = 200 } = req.query;
+    
+    const retailers = await prisma.retailer.findMany({
+      take: parseInt(limit),
+      orderBy: {
+        name: 'asc',
+      }
+    });
+    
+    res.json(retailers);
+  } catch (error) {
+    console.error('Error fetching retailers:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single retailer
+app.get('/api/retailers/:id', async (req, res) => {
+  try {
+    const retailer = await prisma.retailer.findUnique({
+      where: { id: req.params.id },
+    });
+    
+    if (!retailer) {
+      return res.status(404).json({ error: 'Retailer not found' });
+    }
+    
+    res.json(retailer);
+  } catch (error) {
+    console.error('Error fetching retailer:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== PRODUCTS ====================
 
 // Get all products
@@ -454,6 +655,9 @@ app.listen(PORT, () => {
   console.log(`🔧 Environment: ${NODE_ENV}`);
   console.log(`🔧 Available endpoints:`);
   console.log(`   - GET  /api/health`);
+  console.log(`   - GET  /api/users`);
+  console.log(`   - PATCH /api/users/:id`);
+  console.log(`   - GET  /api/retailers`);
   console.log(`   - GET  /api/subscribers`);
   console.log(`   - POST /api/subscribers`);
   console.log(`   - GET  /api/recipients`);

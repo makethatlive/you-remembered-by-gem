@@ -2,6 +2,9 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Store, Plus, Pencil } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { formatDateTime } from "@/lib/format";
 import RetailerForm from "./RetailerForm";
 import RetailerScrapeButton from "./RetailerScrapeButton";
@@ -18,6 +21,10 @@ const METHOD_LABEL = { shopify: "Shopify", sitemap: "Sitemap", crawl: "Crawl", n
 
 export default function RetailersTab() {
   const [editing, setEditing] = useState(null); // null | {} | record
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const { data: retailers = [], isLoading } = useQuery({
     queryKey: ["retailers"],
@@ -46,12 +53,24 @@ export default function RetailersTab() {
   const countsFor = (id) => countsByRetailer.get(id) || { total: 0, active: 0, needs_review: 0, inactive: 0 };
   const isUnderfilled = (r) => r.active && !r.curated_only && countsFor(r.id).active < 10;
 
+  // Pagination calculations
+  const totalItems = retailers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRetailers = retailers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when itemsPerPage changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
+
   if (editing !== null) {
     return <RetailerForm retailer={editing} onDone={() => setEditing(null)} />;
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-3xl text-brand-dark">Retailers</h1>
         <button
@@ -62,9 +81,26 @@ export default function RetailersTab() {
         </button>
       </div>
 
+      {/* Per page selector */}
+      <div className="flex items-center justify-between mb-5">
+        <Select value={String(itemsPerPage)} onValueChange={(v) => setItemsPerPage(Number(v))}>
+          <SelectTrigger className="h-10 w-32 bg-brand-cream-card"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10 per page</SelectItem>
+            <SelectItem value="25">25 per page</SelectItem>
+            <SelectItem value="50">50 per page</SelectItem>
+            <SelectItem value="100">100 per page</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <p className="font-body text-sm text-brand-dark/60">
+          Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of {totalItems} retailers
+        </p>
+      </div>
+
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
-        {retailers.map((r) => (
+        {paginatedRetailers.map((r) => (
           <div key={r.id} className="bg-brand-cream-card rounded-2xl shadow-sm p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -126,7 +162,7 @@ export default function RetailersTab() {
             </tr>
           </thead>
           <tbody>
-            {retailers.map((r) => (
+            {paginatedRetailers.map((r) => (
               <tr key={r.id} className="border-b border-brand-gold/10 last:border-0">
                 <td className="px-5 py-4 font-display text-base text-brand-dark">{r.name}</td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark/60 break-all max-w-xs">{r.website_url}</td>
@@ -167,6 +203,75 @@ export default function RetailersTab() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              First
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* Show page numbers */}
+            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 7) {
+                pageNum = i + 1;
+              } else if (currentPage <= 4) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 3) {
+                pageNum = totalPages - 6 + i;
+              } else {
+                pageNum = currentPage - 3 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-10 h-10 rounded-lg font-body text-sm ${
+                    currentPage === pageNum
+                      ? 'bg-brand-teal text-brand-cream font-medium'
+                      : 'text-brand-dark/70 hover:bg-brand-cream-card'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Last
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Advanced: the full-catalogue walk lives here (Kate item 3, round 3) —
           demoted from the Products-tab header so it can't be pressed by habit.

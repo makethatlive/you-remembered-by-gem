@@ -24,7 +24,7 @@ export default function SentHistory() {
   const sorted = [...emails].sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
 
   return (
-    <div className="max-w-4xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-6">Sent History</h1>
       <div className="space-y-3">
         {sorted.map((e) => {

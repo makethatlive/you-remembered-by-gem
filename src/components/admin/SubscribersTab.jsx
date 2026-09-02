@@ -6,6 +6,11 @@ import SubscriberDetail from "./SubscriberDetail";
 import InviteUserForm from "./InviteUserForm";
 
 const statusColor = {
+  ACTIVE: "bg-emerald-100 text-emerald-700",
+  TRIALLING: "bg-blue-100 text-blue-700",
+  PAST_DUE: "bg-amber-100 text-amber-700",
+  CANCELLED: "bg-red-100 text-red-700",
+  // Legacy lowercase support
   active: "bg-emerald-100 text-emerald-700",
   trialling: "bg-blue-100 text-blue-700",
   past_due: "bg-amber-100 text-amber-700",
@@ -25,7 +30,7 @@ export default function SubscribersTab() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-3xl text-brand-dark">Subscribers</h1>
         {!inviting && (
@@ -49,8 +54,8 @@ export default function SubscribersTab() {
                 <p className="font-display text-lg text-brand-dark">{s.name}</p>
                 <p className="font-body text-sm text-brand-dark/50">{s.email}</p>
               </div>
-              <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscription_status] || statusColor.active}`}>
-                {STATUS_LABEL[s.subscription_status]}
+              <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscriptionStatus] || statusColor.ACTIVE}`}>
+                {STATUS_LABEL[s.subscriptionStatus]}
               </span>
             </div>
             <div className="flex gap-6 mt-3 font-body text-sm text-brand-dark/60">
@@ -83,8 +88,8 @@ export default function SubscribersTab() {
                   <p className="font-body text-xs text-brand-dark/50">{s.email}</p>
                 </td>
                 <td className="px-5 py-4">
-                  <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscription_status] || statusColor.active}`}>
-                    {STATUS_LABEL[s.subscription_status]}
+                  <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscriptionStatus] || statusColor.ACTIVE}`}>
+                    {STATUS_LABEL[s.subscriptionStatus]}
                   </span>
                 </td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark">{countRecip(s.id)}</td>

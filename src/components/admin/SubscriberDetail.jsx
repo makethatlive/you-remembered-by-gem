@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const statusColor = {
+  ACTIVE: "bg-emerald-100 text-emerald-700",
+  TRIALLING: "bg-blue-100 text-blue-700",
+  PAST_DUE: "bg-amber-100 text-amber-700",
+  CANCELLED: "bg-red-100 text-red-700",
+  // Legacy lowercase support
   active: "bg-emerald-100 text-emerald-700",
   trialling: "bg-blue-100 text-blue-700",
   past_due: "bg-amber-100 text-amber-700",
@@ -107,8 +112,8 @@ export default function SubscriberDetail({ subscriber, onBack }) {
               <p className="font-body text-sm text-brand-dark/55 truncate">{subscriber.email}</p>
             </div>
           </div>
-          <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full shrink-0 ${statusColor[subscriber.subscription_status] || statusColor.active}`}>
-            {STATUS_LABEL[subscriber.subscription_status]}
+          <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full shrink-0 ${statusColor[subscriber.subscriptionStatus] || statusColor.ACTIVE}`}>
+            {STATUS_LABEL[subscriber.subscriptionStatus]}
           </span>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-1 mt-4 font-body text-sm text-brand-dark/60">

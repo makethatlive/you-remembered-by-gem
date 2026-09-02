@@ -41,21 +41,21 @@ function toSnakeCase(obj) {
 export const base44 = {
   auth: {
     me: async () => {
-      // Return mock user matching database
-      return {
-        id: '6a82fcc8dd23ed146cdc7a8f',
-        email: 'pph2shoaib@gmail.com',
-        role: 'admin',
-        full_name: 'pph2shoaib'
-      };
+      // Get current user from localStorage (set by AuthContext)
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+      return null;
     },
     logout: (redirectUrl) => {
+      localStorage.removeItem('auth_user');
       if (redirectUrl) {
-        window.location.href = '/';
+        window.location.href = redirectUrl;
       }
     },
     redirectToLogin: (returnUrl) => {
-      window.location.href = '/';
+      window.location.href = '/login';
     },
   },
   
@@ -67,12 +67,17 @@ export const base44 = {
         const url = `${API_BASE}/recipients?${params}`;
         console.log('📡 Fetching:', url);
         const response = await fetch(url);
+        console.log('📥 Response status:', response.status, response.statusText);
         if (!response.ok) {
           console.error('❌ Failed to fetch recipients:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('❌ Error response:', errorText);
           throw new Error('Failed to fetch recipients');
         }
-        const data = toCamelCase(await response.json());
-        console.log('✅ Recipients received:', data);
+        const rawData = await response.json();
+        console.log('📦 Raw data received:', rawData);
+        const data = toCamelCase(rawData);
+        console.log('✅ Recipients after camelCase conversion:', data);
         return data;
       },
       list: async (sortBy, limit) => {
@@ -203,6 +208,38 @@ export const base44 = {
       },
     },
     
+    Retailer: {
+      filter: async (filters) => {
+        const params = new URLSearchParams(toSnakeCase(filters));
+        const response = await fetch(`${API_BASE}/retailers?${params}`);
+        if (!response.ok) throw new Error('Failed to fetch retailers');
+        return toCamelCase(await response.json());
+      },
+      list: async (sortBy, limit) => {
+        console.log('📋 Retailer.list called');
+        const params = new URLSearchParams();
+        if (limit) params.set('limit', limit);
+        const response = await fetch(`${API_BASE}/retailers?${params}`);
+        if (!response.ok) throw new Error('Failed to list retailers');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Retailers listed:', data.length, 'items');
+        return data;
+      },
+      get: async (id) => {
+        const response = await fetch(`${API_BASE}/retailers/${id}`);
+        if (!response.ok) return null;
+        return toCamelCase(await response.json());
+      },
+      create: async (data) => {
+        console.warn('Mock: Retailer.create not yet implemented', data);
+        return data;
+      },
+      update: async (id, data) => {
+        console.warn('Mock: Retailer.update not yet implemented', id, data);
+        return { id, ...data };
+      },
+    },
+    
     Subscriber: {
       filter: async (filters) => {
         console.log('🔍 Subscriber.filter called with:', filters);
@@ -249,6 +286,39 @@ export const base44 = {
           body: JSON.stringify(toSnakeCase(data)),
         });
         if (!response.ok) throw new Error('Failed to update subscriber');
+        return toCamelCase(await response.json());
+      },
+    },
+    
+    User: {
+      filter: async (filters) => {
+        const params = new URLSearchParams(toSnakeCase(filters));
+        const response = await fetch(`${API_BASE}/users?${params}`);
+        if (!response.ok) throw new Error('Failed to fetch users');
+        return toCamelCase(await response.json());
+      },
+      list: async (sortBy, limit) => {
+        console.log('📋 User.list called');
+        const params = new URLSearchParams();
+        if (limit) params.set('limit', limit);
+        const response = await fetch(`${API_BASE}/users?${params}`);
+        if (!response.ok) throw new Error('Failed to list users');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Users listed:', data.length, 'items');
+        return data;
+      },
+      get: async (id) => {
+        const response = await fetch(`${API_BASE}/users/${id}`);
+        if (!response.ok) return null;
+        return toCamelCase(await response.json());
+      },
+      update: async (id, data) => {
+        const response = await fetch(`${API_BASE}/users/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) throw new Error('Failed to update user');
         return toCamelCase(await response.json());
       },
     },

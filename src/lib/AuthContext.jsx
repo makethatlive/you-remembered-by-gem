@@ -11,37 +11,48 @@ export const AuthProvider = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false); // Start as not checked
   const [appPublicSettings, setAppPublicSettings] = useState(null);
 
-  // Mock user for local development
+  // Check for stored user session on mount
   useEffect(() => {
-    // Simulate async auth check
-    setTimeout(() => {
-      const mockUser = {
-        id: '6a82fcc8dd23ed146cdc7a8f', // Real user ID from database
-        email: 'pph2shoaib@gmail.com', // Real email from database
-        role: 'admin',
-        full_name: 'pph2shoaib'
-      };
+    const checkSession = () => {
+      const storedUser = localStorage.getItem('auth_user');
       
-      setUser(mockUser);
-      setIsAuthenticated(true);
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } catch (err) {
+          console.error('Failed to parse stored user:', err);
+          localStorage.removeItem('auth_user');
+        }
+      }
+      
       setAuthChecked(true);
       setIsLoadingAuth(false);
       setIsLoadingPublicSettings(false);
-    }, 100); // Small delay to simulate auth check
+    };
+    
+    checkSession();
   }, []);
 
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
+    localStorage.removeItem('auth_user');
     
     if (shouldRedirect) {
-      window.location.href = '/';
+      window.location.href = '/login';
     }
   };
 
+  const login = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem('auth_user', JSON.stringify(userData));
+  };
+
   const navigateToLogin = () => {
-    // For local development, just reload
-    window.location.href = '/';
+    window.location.href = '/login';
   };
 
   const checkUserAuth = async () => {
@@ -64,6 +75,7 @@ export const AuthProvider = ({ children }) => {
       authError,
       appPublicSettings,
       authChecked,
+      login,
       logout,
       navigateToLogin,
       checkUserAuth,

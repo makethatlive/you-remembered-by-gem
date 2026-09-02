@@ -34,6 +34,12 @@ export const LIST_LABEL = {
 };
 
 export const STATUS_LABEL = {
+  // Uppercase (from database)
+  ACTIVE: "Active",
+  CANCELLED: "Cancelled",
+  PAST_DUE: "Past Due",
+  TRIALLING: "Trialling",
+  // Legacy lowercase support
   active: "Active",
   cancelled: "Cancelled",
   past_due: "Past Due",

@@ -16,7 +16,7 @@ export default function BirthdayCalendar() {
     .sort((a, b) => a._days - b._days);
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-1">Birthday Calendar</h1>
       <p className="font-body text-sm text-brand-dark/50 mb-6">Next 60 days across all members.</p>
 

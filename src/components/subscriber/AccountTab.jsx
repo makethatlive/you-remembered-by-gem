@@ -5,7 +5,7 @@ import { STATUS_LABEL, formatDate } from "@/lib/format";
 export default function AccountTab({ subscriber }) {
   if (!subscriber) return null;
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-6">
+    <div className="max-w-6xl mx-auto px-5 pt-6">
       <h1 className="font-display text-2xl sm:text-3xl text-brand-dark mb-6">Account</h1>
 
       <div className="bg-brand-teal rounded-2xl p-6 text-brand-cream shadow-sm">
@@ -14,7 +14,7 @@ export default function AccountTab({ subscriber }) {
         <div className="mt-4 inline-flex items-center gap-1.5 bg-brand-gold/90 text-brand-teal rounded-full px-3 py-1">
           <BadgeCheck className="w-4 h-4" />
           <span className="font-body text-xs font-semibold">
-            {STATUS_LABEL[subscriber.subscription_status] || "Active"} Membership
+            {STATUS_LABEL[subscriber.subscriptionStatus] || "Active"} Membership
           </span>
         </div>
       </div>

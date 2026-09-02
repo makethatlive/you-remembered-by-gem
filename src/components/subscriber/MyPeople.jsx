@@ -27,7 +27,7 @@ export default function MyPeople({ subscriber, onEdit, onAdd }) {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6">
+    <div className="max-w-6xl mx-auto px-5 pt-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl sm:text-3xl text-brand-dark">My People</h1>
         {recipients.length < 10 && (

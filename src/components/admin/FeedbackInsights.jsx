@@ -85,7 +85,7 @@ export default function FeedbackInsights() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-6">Feedback {"&"} Insights</h1>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

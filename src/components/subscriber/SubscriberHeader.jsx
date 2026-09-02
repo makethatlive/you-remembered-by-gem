@@ -6,7 +6,7 @@ export default function SubscriberHeader() {
   const { logout } = useAuth();
   return (
     <header className="sticky top-0 z-40 bg-brand-teal">
-      <div className="max-w-3xl mx-auto px-5 h-16 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
         <div className="flex items-center">
           <img
             src="https://media.base44.com/images/public/6a1e06f4f6a04e07fc73780a/96fb8be3d_yourememberedbygem1.png"

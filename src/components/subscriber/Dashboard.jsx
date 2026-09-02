@@ -41,7 +41,7 @@ export default function Dashboard({ subscriber, onOpenList, onGoTab }) {
   const listForRecip = (id) => lists.find((l) => l.recipient_id === id);
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6">
+    <div className="max-w-6xl mx-auto px-5 pt-6">
       <h1 className="font-display text-2xl sm:text-3xl text-brand-dark mb-6">
         Hello {firstName}, here's what's coming up
       </h1>

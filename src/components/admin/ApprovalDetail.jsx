@@ -432,7 +432,7 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <button
         onClick={onBack}
         className="inline-flex items-center gap-1.5 font-body text-sm text-brand-teal font-medium mb-4"

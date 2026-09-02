@@ -36,6 +36,10 @@ export default function ProductsTab() {
   const [sourceFilter, setSourceFilter] = useState("all"); // "all" | "gem_pick" | "catalogue" | "legacy"
   const [gemFirst, setGemFirst] = useState(false); // Source-column sort toggle
   const [selected, setSelected] = useState([]);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
@@ -68,6 +72,18 @@ export default function ProductsTab() {
     const rank = { gem_pick: 0, catalogue: 1, legacy: 2 };
     return [...rows].sort((a, b) => rank[provenanceGroup(a)] - rank[provenanceGroup(b)]);
   }, [sourceFiltered, statusFilter, retailerFilter, gemFirst]);
+
+  // Pagination calculations
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProducts = filtered.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, retailerFilter, sourceFilter, gemFirst, itemsPerPage]);
 
   // Live provenance distribution — doubles as the runtime source_type audit.
   const sourceCounts = useMemo(() => {
@@ -125,7 +141,7 @@ export default function ProductsTab() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-3xl text-brand-dark">Products</h1>
         <div className="flex items-center gap-2">
@@ -201,6 +217,17 @@ export default function ProductsTab() {
         </Select>
         <SourceFilterSelect value={sourceFilter} onChange={setSourceFilter} counts={sourceCounts} total={products.length} />
 
+        {/* Per page selector */}
+        <Select value={String(itemsPerPage)} onValueChange={(v) => setItemsPerPage(Number(v))}>
+          <SelectTrigger className="h-10 w-32 bg-brand-cream-card"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="25">25 per page</SelectItem>
+            <SelectItem value="50">50 per page</SelectItem>
+            <SelectItem value="100">100 per page</SelectItem>
+            <SelectItem value="200">200 per page</SelectItem>
+          </SelectContent>
+        </Select>
+
         {eligibleSelected.length > 0 && (
           <button
             onClick={() => markActive.mutate(eligibleSelected)}
@@ -210,6 +237,13 @@ export default function ProductsTab() {
             Mark as Active ({eligibleSelected.length})
           </button>
         )}
+      </div>
+
+      {/* Showing X-Y of Z */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-body text-sm text-brand-dark/60">
+          Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of {totalItems} products
+        </p>
       </div>
 
       <div className="bg-brand-cream-card rounded-2xl shadow-sm overflow-x-auto">
@@ -242,7 +276,7 @@ export default function ProductsTab() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((p) => (
+            {paginatedProducts.map((p) => (
               <tr key={p.id} className="border-b border-brand-gold/10 last:border-0">
                 <td className="px-4 py-4">
                   <Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} />
@@ -273,6 +307,75 @@ export default function ProductsTab() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              First
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* Show page numbers */}
+            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 7) {
+                pageNum = i + 1;
+              } else if (currentPage <= 4) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 3) {
+                pageNum = totalPages - 6 + i;
+              } else {
+                pageNum = currentPage - 3 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-10 h-10 rounded-lg font-body text-sm ${
+                    currentPage === pageNum
+                      ? 'bg-brand-teal text-brand-cream font-medium'
+                      : 'text-brand-dark/70 hover:bg-brand-cream-card'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Last
+            </button>
+          </div>
+        </div>
+      )}
 
       {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center py-14 text-brand-dark/40">

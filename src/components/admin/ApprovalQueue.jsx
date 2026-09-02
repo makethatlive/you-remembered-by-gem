@@ -50,11 +50,11 @@ export default function ApprovalQueue({ onGoTab, initialListId }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark text-center mb-6">Approval Queue</h1>
 
       <div className="grid grid-cols-4 gap-2.5 sm:gap-3 mb-5">
-        <StatCard value={subscribers.filter((s) => s.subscription_status === "active").length} label="Active Subscribers" onClick={() => onGoTab?.("subscribers")} />
+        <StatCard value={subscribers.filter((s) => s.subscriptionStatus === "ACTIVE" || s.subscriptionStatus === "TRIALLING").length} label="Active Subscribers" onClick={() => onGoTab?.("subscribers")} />
         <StatCard value={pending.length} label="Pending Approvals" onClick={() => onGoTab?.("approvals")} />
         <StatCard value={birthdaysThisWeek} label="Birthday This Week" onClick={() => onGoTab?.("calendar")} />
         <StatCard value={feedbackCount} label="Feedback Items" onClick={() => onGoTab?.("insights")} />

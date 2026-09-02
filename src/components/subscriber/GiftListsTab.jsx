@@ -52,7 +52,7 @@ export default function GiftListsTab({ subscriber, onOpen }) {
     .filter((g) => g.lists.length > 0);
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6">
+    <div className="max-w-6xl mx-auto px-5 pt-6">
       <h1 className="font-display text-2xl sm:text-3xl text-brand-dark mb-6">Your Gift Lists</h1>
 
       {groups.length === 0 ? (

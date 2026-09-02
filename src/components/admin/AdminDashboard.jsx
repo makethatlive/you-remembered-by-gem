@@ -27,12 +27,12 @@ export default function AdminDashboard({ onGoTab }) {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-1">Hello Gemma</h1>
       <p className="font-body text-sm text-brand-dark/50 mb-6">Here's how your members are looking today.</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mb-5">
-        <StatCard value={subscribers.filter((s) => s.subscription_status === "active").length} label="Active Subscribers" onClick={() => onGoTab("subscribers")} />
+        <StatCard value={subscribers.filter((s) => s.subscriptionStatus === "ACTIVE" || s.subscriptionStatus === "TRIALLING").length} label="Active Subscribers" onClick={() => onGoTab("subscribers")} />
         <StatCard value={pending.length} label="Pending Approvals" onClick={() => onGoTab("approvals")} />
         <StatCard value={recipients.filter((r) => { const d = daysUntil(r.birthday); return d != null && d <= 7; }).length} label="Birthday This Week" onClick={() => onGoTab("calendar")} />
         <StatCard value={comingSoon.length} label="Coming Soon" onClick={() => onGoTab("sent")} />

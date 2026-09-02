@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Users API</title>
+</head>
+<body>
+    <h1>Test Users API</h1>
+    <button onclick="testAPI()">Test /api/users</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testAPI() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/users?limit=5');
+                const data = await response.json();
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Auto-test on load
+        testAPI();
+    </script>
+</body>
+</html>
