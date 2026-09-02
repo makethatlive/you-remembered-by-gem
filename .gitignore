@@ -28,7 +28,7 @@ prisma/migrations/*
 *.db
 *.sqlite
 *.sqlite3
-database-csv/*.csv
+# database-csv/*.csv  # Commented out to allow CSV import on Railway
 
 # Editor directories and files
 .vscode/*

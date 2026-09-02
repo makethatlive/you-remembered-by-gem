@@ -1,0 +1,2 @@
+"is_running","started_at","last_run_summary","heartbeat_at","last_completed_at","id","created_date","updated_date","created_by_id","is_sample"
+"false","2026-08-01","Catalogue batch: 4 retailer(s) attempted, 2 new, 92 updated/verified, 9 rejected, 1 error(s).","2026-08-01T06:15:08.135Z","2026-08-01","6a5d34deffb05e155f09a6a0","2026-07-19T20:34:38.065000","2026-08-01T06:15:12.817000","service_65c7d42f-d3fd-4718-8ffb-6dd41cef1b6c","false"
