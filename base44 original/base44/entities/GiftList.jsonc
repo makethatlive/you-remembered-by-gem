@@ -1,0 +1,137 @@
+{
+  "name": "GiftList",
+  "type": "object",
+  "properties": {
+    "recipient_id": {
+      "type": "string",
+      "description": "Recipient id"
+    },
+    "subscriber_id": {
+      "type": "string",
+      "description": "Subscriber id"
+    },
+    "subscriber_user_id": {
+      "type": "string",
+      "description": "Auth user id of the subscriber who owns this list; used directly by read/update RLS so the subscriber reliably sees their own approved lists"
+    },
+    "birthday_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Birthday this list targets"
+    },
+    "list_type": {
+      "type": "string",
+      "enum": [
+        "curated",
+        "last_minute",
+        "experience_digital"
+      ],
+      "default": "curated",
+      "description": "Type of gift list"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "generating",
+        "pending_approval",
+        "approved",
+        "sent",
+        "rejected"
+      ],
+      "default": "pending_approval",
+      "description": "Workflow status"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the list was generated"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When Gem approved"
+    },
+    "visible_to_subscriber": {
+      "type": "boolean",
+      "default": false,
+      "description": "Visible to subscriber"
+    },
+    "ai_prompt_used": {
+      "type": "string",
+      "description": "Prompt used for generation"
+    },
+    "supersedes_list_id": {
+      "type": "string",
+      "description": "Id of the gift list this list supersedes, if refreshed"
+    },
+    "refresh_requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When a refresh was requested for this list"
+    },
+    "refresh_reason": {
+      "type": "string",
+      "description": "Subscriber-supplied context for the most recent refresh request on this list (max 300 chars, untrusted text; ROUND-3 Layer C — writes drop until publish, readers must treat absence as normal)"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "enum": [
+        "wrong_age",
+        "wrong_audience",
+        "not_relevant",
+        "too_generic",
+        "duplicate",
+        "poor_quality",
+        "bad_link_or_data",
+        "other"
+      ],
+      "description": "Structured reason when Gem rejects a whole list"
+    },
+    "rejection_note": {
+      "type": "string",
+      "description": "Free-text note accompanying a list-level rejection"
+    }
+  },
+  "required": [
+    "recipient_id",
+    "subscriber_id",
+    "list_type",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.subscriber_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.subscriber_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

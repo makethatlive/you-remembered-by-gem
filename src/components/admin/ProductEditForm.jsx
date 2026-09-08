@@ -11,25 +11,40 @@ import {
 } from "@/components/ui/select";
 import { SOURCE_LABELS_EDIT } from "@/lib/provenance";
 
-const STATUSES = ["needs_review", "active", "inactive", "reported_broken"];
+const STATUSES = ["NEEDS_REVIEW", "ACTIVE", "INACTIVE", "REPORTED_BROKEN"];
 
 // Product.jsonc source_type enum — the only way Gem can relabel a legacy record she
 // recognises as her own pick so the Gem's Pick badge can appear for it.
-const SOURCE_TYPES = ["curated_product", "curated_retailer", "shopify_upload", "legacy_unknown"];
+const SOURCE_TYPES = ["CURATED_PRODUCT", "CURATED_RETAILER", "SHOPIFY_UPLOAD", "LEGACY_UNKNOWN"];
 
 export default function ProductEditForm({ product, retailerName, onDone }) {
   const queryClient = useQueryClient();
+  
+  // Normalize status to UPPERCASE for consistency
+  const normalizeStatus = (status) => {
+    if (!status) return "NEEDS_REVIEW";
+    const upper = status.toUpperCase();
+    return STATUSES.includes(upper) ? upper : "NEEDS_REVIEW";
+  };
+  
+  // Normalize source type to UPPERCASE for consistency
+  const normalizeSourceType = (sourceType) => {
+    if (!sourceType) return "LEGACY_UNKNOWN";
+    const upper = sourceType.toUpperCase();
+    return SOURCE_TYPES.includes(upper) ? upper : "LEGACY_UNKNOWN";
+  };
+  
   const [form, setForm] = useState({
     name: product.name || "",
     description: product.description || "",
     price: product.price ?? "",
-    affiliate_url: product.affiliate_url || "",
-    image_url: product.image_url || "",
+    affiliate_url: product.affiliateUrl || product.affiliate_url || "",
+    image_url: product.imageUrl || product.image_url || "",
     category: product.category || "",
-    gender_applies_to: product.gender_applies_to || "",
-    age_restricted: product.age_restricted ?? false,
-    status: product.status || "needs_review",
-    source_type: product.source_type || "legacy_unknown",
+    gender_applies_to: product.genderAppliesTo || product.gender_applies_to || "",
+    age_restricted: product.ageRestricted ?? product.age_restricted ?? false,
+    status: normalizeStatus(product.status),
+    source_type: normalizeSourceType(product.sourceType || product.source_type),
     notes: product.notes || "",
   });
   const [previewBroken, setPreviewBroken] = useState(false);
@@ -54,7 +69,7 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-2xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <button
         onClick={onDone}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"
@@ -67,7 +82,7 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
       <div className="bg-brand-cream-card rounded-2xl shadow-sm p-5 mb-6 space-y-3">
         <p className="font-body text-xs uppercase tracking-wide text-brand-dark/40">From scraper · read-only</p>
         <ReadOnly label="Retailer" value={retailerName} />
-        <ReadOnly label="Product URL" value={product.product_url} />
+        <ReadOnly label="Product URL" value={product.productUrl || product.product_url} />
       </div>
 
       <form onSubmit={submit} className="space-y-5">
@@ -162,6 +177,12 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
 }
 
 export const STATUS_LABEL = {
+  // Uppercase (from database)
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+  NEEDS_REVIEW: "Needs review",
+  REPORTED_BROKEN: "Reported broken",
+  // Legacy lowercase support
   active: "Active",
   inactive: "Inactive",
   needs_review: "Needs review",

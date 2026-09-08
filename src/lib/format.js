@@ -28,6 +28,11 @@ export function gbp(n) {
 }
 
 export const LIST_LABEL = {
+  // Uppercase (from database)
+  CURATED: "Curated List",
+  LAST_MINUTE: "Last Minute",
+  EXPERIENCE_DIGITAL: "Experience & Digital",
+  // Legacy lowercase support
   curated: "Curated List",
   last_minute: "Last Minute",
   experience_digital: "Experience & Digital",
@@ -44,6 +49,38 @@ export const STATUS_LABEL = {
   cancelled: "Cancelled",
   past_due: "Past Due",
   trialling: "Trialling",
+};
+
+export const AGE_BAND_LABEL = {
+  // Uppercase (from database)
+  UNDER_5: "Under 5",
+  FIVE_TO_10: "5-10",
+  ELEVEN_TO_17: "11-17",
+  EIGHTEEN_TO_30: "18-30",
+  THIRTY_ONE_TO_50: "31-50",
+  FIFTY_ONE_TO_70: "51-70",
+  SEVENTY_PLUS: "70+",
+  // Legacy lowercase support (if needed)
+  under_5: "Under 5",
+  five_to_10: "5-10",
+  eleven_to_17: "11-17",
+  eighteen_to_30: "18-30",
+  thirty_one_to_50: "31-50",
+  fifty_one_to_70: "51-70",
+  seventy_plus: "70+",
+};
+
+export const GENDER_LABEL = {
+  // Uppercase (from database)
+  MALE: "Male",
+  FEMALE: "Female",
+  NON_BINARY: "Non-binary",
+  PREFER_NOT_TO_SAY: "Prefer not to say",
+  // Legacy lowercase support
+  male: "Male",
+  female: "Female",
+  non_binary: "Non-binary",
+  prefer_not_to_say: "Prefer not to say",
 };
 
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

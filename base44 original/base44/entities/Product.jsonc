@@ -1,0 +1,220 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short product description/blurb"
+    },
+    "retailer_id": {
+      "type": "string",
+      "description": "Owning retailer id"
+    },
+    "product_url": {
+      "type": "string",
+      "description": "Product URL"
+    },
+    "affiliate_url": {
+      "type": "string",
+      "description": "Affiliate URL"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price in GBP"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "gender_applies_to": {
+      "type": "string",
+      "description": "Gender this product applies to"
+    },
+    "age_restricted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the product is age-restricted"
+    },
+    "suitable_age_bands": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Under 5",
+          "5-10",
+          "11-17",
+          "18+"
+        ]
+      },
+      "description": "Age bands this product is suitable as a gift for. Always populated."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "curated_product",
+        "curated_retailer",
+        "shopify_upload",
+        "legacy_unknown"
+      ],
+      "default": "legacy_unknown",
+      "description": "Provenance: curated_product = personally supplied/selected by Gem (drives the Gem's Pick badge); curated_retailer = auto-discovered by sitemap/page scan of an approved retailer's site; shopify_upload = auto-discovered from an approved retailer's Shopify product feed; legacy_unknown = historical record whose provenance cannot be proven. Kate's ruling 2026-07-24: both auto-discovered classes (curated_retailer, shopify_upload) are the brief's 'catalogue upload' class and display to admins as 'Catalogue upload'; the two enum values are retained so the discovery method stays distinguishable internally."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "needs_review",
+        "reported_broken"
+      ],
+      "default": "needs_review",
+      "description": "Product status"
+    },
+    "reported_broken_at": {
+      "type": "string",
+      "format": "date",
+      "description": "When reported broken"
+    },
+    "last_checked": {
+      "type": "string",
+      "format": "date",
+      "description": "Last checked date"
+    },
+    "last_verified": {
+      "type": "string",
+      "format": "date",
+      "description": "Last verified date"
+    },
+    "added_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date added"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free notes"
+    },
+    "interest_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Interest tags matched for this product"
+    },
+    "gift_type_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Gift type tags (e.g. experience, keepsake, edible)"
+    },
+    "search_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Search keywords derived for catalogue matching"
+    },
+    "quality_score": {
+      "type": "number",
+      "description": "Quality score for this product record"
+    },
+    "catalogue_enriched_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this product was enriched in the catalogue"
+    },
+    "data_quality_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Data quality flags raised during enrichment"
+    },
+    "canonical_category": {
+      "type": "string",
+      "description": "Primary canonical category for structural matching. By convention one of the canonical R1 interest keys (INTEREST_RULES in enrichCatalogueBatch / INTEREST_KEYWORDS in generateGiftList); validated code-side, deliberately not schema-enum'd so the taxonomy can evolve without a publish. Written by enrichCatalogueBatch v2 only when absent and confidence >= 0.6. Machine-owned with an echo test: if this value differs from ai_classifications.category.value, a human edited it and machine writers must never touch it again."
+    },
+    "ai_classifications": {
+      "type": "object",
+      "description": "Machine-classification audit record (round 3, R4-enrich). Written only by enrichCatalogueBatch v2. Each verdict stores value, confidence (0-1), evidence (short phrase from the product text), applied (whether the target field was written) and skip_reason. PROVENANCE CONTRACT: a target field is machine-owned only while its current value equals the last machine write recorded here; any divergence means a human edited it and it is never machine-overwritten again. probe_at is a transient write-visibility probe stamp.",
+      "properties": {
+        "version": { "type": "number" },
+        "classified_at": { "type": "string", "format": "date-time" },
+        "model": { "type": "string" },
+        "probe_at": { "type": "string", "format": "date-time" },
+        "category": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "string" },
+            "confidence": { "type": "number" },
+            "evidence": { "type": "string" },
+            "applied": { "type": "boolean" },
+            "skip_reason": { "type": "string" }
+          }
+        },
+        "gender": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "string" },
+            "confidence": { "type": "number" },
+            "evidence": { "type": "string" },
+            "applied": { "type": "boolean" },
+            "skip_reason": { "type": "string" }
+          }
+        },
+        "age_bands": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "array", "items": { "type": "string" } },
+            "confidence": { "type": "number" },
+            "evidence": { "type": "string" },
+            "applied": { "type": "boolean" },
+            "skip_reason": { "type": "string" }
+          }
+        },
+        "restricted": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "boolean" },
+            "confidence": { "type": "number" },
+            "evidence": { "type": "string" },
+            "applied": { "type": "boolean" },
+            "skip_reason": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "name",
+    "retailer_id",
+    "product_url"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

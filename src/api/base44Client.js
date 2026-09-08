@@ -151,50 +151,130 @@ export const base44 = {
         return data;
       },
       update: async (id, data) => {
-        console.warn('Mock: GiftList.update not yet implemented', id, data);
-        return { id, ...data };
+        console.log('📋 GiftList.update called for:', id);
+        const response = await fetch(`${API_BASE}/gift-lists/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) throw new Error('Failed to update gift list');
+        const updated = toCamelCase(await response.json());
+        console.log('✅ Gift list updated:', id);
+        return updated;
       },
     },
     
     GiftItem: {
       filter: async (filters) => {
-        console.warn('Mock: GiftItem.filter not yet implemented', filters);
-        return [];
+        console.log('📋 GiftItem.filter called');
+        const params = new URLSearchParams(toSnakeCase(filters));
+        const response = await fetch(`${API_BASE}/gift-items?${params}`);
+        if (!response.ok) throw new Error('Failed to filter gift items');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Gift items filtered:', data.length, 'items');
+        return data;
       },
       list: async (sortBy, limit) => {
         console.log('📋 GiftItem.list called');
-        console.warn('Mock: GiftItem.list not yet implemented');
-        return [];
+        const params = new URLSearchParams();
+        if (limit) params.set('limit', Math.min(limit, 1000));
+        const response = await fetch(`${API_BASE}/gift-items?${params}`);
+        if (!response.ok) throw new Error('Failed to list gift items');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Gift items listed:', data.length, 'items');
+        return data;
       },
       get: async (id) => {
-        console.warn('Mock: GiftItem.get not yet implemented', id);
-        return null;
+        console.log('📋 GiftItem.get called for:', id);
+        const response = await fetch(`${API_BASE}/gift-items/${id}`);
+        if (!response.ok) return null;
+        return toCamelCase(await response.json());
+      },
+      create: async (data) => {
+        console.log('📋 GiftItem.create called with:', data);
+        const response = await fetch(`${API_BASE}/gift-items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Failed to create gift item:', response.status, errorText);
+          throw new Error('Failed to create gift item');
+        }
+        const created = toCamelCase(await response.json());
+        console.log('✅ Gift item created:', created.id);
+        return created;
+      },
+      update: async (id, data) => {
+        console.log('📋 GiftItem.update called for:', id);
+        const response = await fetch(`${API_BASE}/gift-items/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) throw new Error('Failed to update gift item');
+        const updated = toCamelCase(await response.json());
+        console.log('✅ Gift item updated:', id);
+        return updated;
       },
     },
     
     EmailLog: {
       filter: async (filters) => {
-        console.warn('Mock: EmailLog.filter not yet implemented', filters);
-        return [];
+        console.log('📋 EmailLog.filter called with:', filters);
+        const params = new URLSearchParams(toSnakeCase(filters));
+        const response = await fetch(`${API_BASE}/email-logs?${params}`);
+        if (!response.ok) throw new Error('Failed to filter email logs');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Email logs filtered:', data.length, 'items');
+        return data;
       },
       list: async (sortBy, limit) => {
         console.log('📋 EmailLog.list called');
-        console.warn('Mock: EmailLog.list not yet implemented');
-        return [];
+        const params = new URLSearchParams();
+        if (limit) params.set('limit', Math.min(limit, 1000));
+        const response = await fetch(`${API_BASE}/email-logs?${params}`);
+        if (!response.ok) throw new Error('Failed to list email logs');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Email logs listed:', data.length, 'items');
+        return data;
+      },
+      get: async (id) => {
+        console.log('📋 EmailLog.get called for:', id);
+        const response = await fetch(`${API_BASE}/email-logs/${id}`);
+        if (!response.ok) return null;
+        return toCamelCase(await response.json());
+      },
+      create: async (data) => {
+        console.log('📋 EmailLog.create called');
+        const response = await fetch(`${API_BASE}/email-logs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) throw new Error('Failed to create email log');
+        const created = toCamelCase(await response.json());
+        console.log('✅ Email log created:', created.id);
+        return created;
       },
     },
     
     Product: {
-      filter: async (filters) => {
+      filter: async (filters, sortBy, limit) => {
+        console.log('📋 Product.filter called with:', filters);
         const params = new URLSearchParams(toSnakeCase(filters));
+        if (limit) params.set('limit', Math.min(limit, 5000));
         const response = await fetch(`${API_BASE}/products?${params}`);
         if (!response.ok) throw new Error('Failed to fetch products');
-        return toCamelCase(await response.json());
+        const data = toCamelCase(await response.json());
+        console.log('✅ Products filtered:', data.length, 'items');
+        return data;
       },
       list: async (sortBy, limit) => {
         console.log('📋 Product.list called');
         const params = new URLSearchParams();
-        if (limit) params.set('limit', Math.min(limit, 1000)); // Cap at 1000
+        if (limit) params.set('limit', Math.min(limit, 10000)); // Cap at 10000 to handle large catalogs
         const response = await fetch(`${API_BASE}/products?${params}`);
         if (!response.ok) throw new Error('Failed to list products');
         const data = toCamelCase(await response.json());
@@ -205,6 +285,38 @@ export const base44 = {
         const response = await fetch(`${API_BASE}/products/${id}`);
         if (!response.ok) return null;
         return toCamelCase(await response.json());
+      },
+      create: async (data) => {
+        console.log('📋 Product.create called');
+        const response = await fetch(`${API_BASE}/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Failed to create product:', response.status, errorText);
+          throw new Error('Failed to create product');
+        }
+        const created = toCamelCase(await response.json());
+        console.log('✅ Product created:', created.id);
+        return created;
+      },
+      update: async (id, data) => {
+        console.log('📋 Product.update called for:', id, 'with data:', data);
+        const response = await fetch(`${API_BASE}/products/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Failed to update product:', response.status, errorText);
+          throw new Error('Failed to update product');
+        }
+        const updated = toCamelCase(await response.json());
+        console.log('✅ Product updated:', id);
+        return updated;
       },
     },
     
@@ -231,12 +343,28 @@ export const base44 = {
         return toCamelCase(await response.json());
       },
       create: async (data) => {
-        console.warn('Mock: Retailer.create not yet implemented', data);
-        return data;
+        console.log('📋 Retailer.create called');
+        const response = await fetch(`${API_BASE}/retailers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) throw new Error('Failed to create retailer');
+        const created = toCamelCase(await response.json());
+        console.log('✅ Retailer created:', created.id);
+        return created;
       },
       update: async (id, data) => {
-        console.warn('Mock: Retailer.update not yet implemented', id, data);
-        return { id, ...data };
+        console.log('📋 Retailer.update called for:', id);
+        const response = await fetch(`${API_BASE}/retailers/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        if (!response.ok) throw new Error('Failed to update retailer');
+        const updated = toCamelCase(await response.json());
+        console.log('✅ Retailer updated:', id);
+        return updated;
       },
     },
     
@@ -322,6 +450,40 @@ export const base44 = {
         return toCamelCase(await response.json());
       },
     },
+    
+    ScrapeState: {
+      list: async () => {
+        console.log('📋 ScrapeState.list called');
+        const response = await fetch(`${API_BASE}/scrape-state`);
+        if (!response.ok) throw new Error('Failed to list scrape state');
+        const data = toCamelCase(await response.json());
+        console.log('✅ Scrape state listed');
+        return data;
+      },
+      get: async (id) => {
+        const response = await fetch(`${API_BASE}/scrape-state/${id}`);
+        if (!response.ok) return null;
+        return toCamelCase(await response.json());
+      },
+    },
+  },
+  
+  users: {
+    inviteUser: async (email, role = 'user') => {
+      console.log('📧 users.inviteUser called for:', email, 'role:', role);
+      const response = await fetch(`${API_BASE}/users/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role }),
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to invite user');
+      }
+      const data = await response.json();
+      console.log('✅ User invitation sent:', email);
+      return data;
+    },
   },
   
   integrations: {
@@ -329,9 +491,112 @@ export const base44 = {
   },
   
   functions: {
-    // Mock function calls
+    // Gift generation function - now uses our Gemini AI backend
     invoke: async (functionName, data) => {
-      console.warn(`Mock: Function ${functionName} called`, data);
+      console.log(`🔧 Function ${functionName} called with:`, data);
+      
+      if (functionName === 'generateGiftList') {
+        // Call our new Gemini-powered generation endpoint
+        const response = await fetch(`${API_BASE}/generate-gift-list`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to generate gift list');
+        }
+        
+        return await response.json();
+      }
+      
+      // Availability checking function (for "Re-run Scrape" button)
+      if (functionName === 'checkAvailabilityBatch') {
+        const response = await fetch(`${API_BASE}/products/check-availability-batch`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': localStorage.getItem('admin_key') || '',
+          },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Availability check failed');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+      
+      // Scraping functions - now use Express backend
+      if (functionName === 'scrapeCatalogueBatch') {
+        const response = await fetch(`${API_BASE}/scrape/catalogue-batch`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': localStorage.getItem('admin_key') || '',
+          },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Scrape failed');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+      
+      if (functionName === 'monthlyScrape') {
+        const response = await fetch(`${API_BASE}/scrape/monthly`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': localStorage.getItem('admin_key') || '',
+          },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          throw new Error(errorData.error || 'Monthly scrape failed');
+        }
+        
+        return await response.json();
+      }
+      
+      // Enrichment function
+      if (functionName === 'enrichCatalogueBatch') {
+        const response = await fetch(`${API_BASE}/products/enrich-batch`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': localStorage.getItem('admin_key') || '',
+          },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Enrichment failed');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+
+      // Mock other functions
+      console.warn(`Mock: Function ${functionName} not yet implemented`, data);
       
       // Mock completePaidSignup - just return success
       if (functionName === 'completePaidSignup') {

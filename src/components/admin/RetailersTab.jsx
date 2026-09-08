@@ -11,6 +11,15 @@ import RetailerScrapeButton from "./RetailerScrapeButton";
 import RetailerEnrichButton from "./RetailerEnrichButton";
 import FullCatalogueScrapeButton from "./FullCatalogueScrapeButton";
 
+// Map database enum values to display values
+const CATEGORY_ENUM_TO_DISPLAY = {
+  "MEN": "Men",
+  "WOMEN": "Women", 
+  "UNISEX_ADULT": "Unisex (Adult)",
+  "KIDS": "Kids",
+  "UNISEX_KIDS": "Unisex + Kids",
+};
+
 const STATUS_BADGE = {
   ok: { label: "Pulled", cls: "bg-emerald-100 text-emerald-700" },
   no_products: { label: "0 found", cls: "bg-amber-100 text-amber-700" },
@@ -32,26 +41,39 @@ export default function RetailersTab() {
   });
   const { data: products = [] } = useQuery({
     queryKey: ["products"],
-    queryFn: () => base44.entities.Product.list("-added_date", 5000),
+    queryFn: () => base44.entities.Product.list("-added_date", 10000),
   });
+
+  // Helper to access fields in both camelCase and snake_case formats
+  const getField = (obj, camelField, snakeField) => {
+    return obj?.[camelField] ?? obj?.[snakeField];
+  };
+  
+  // Helper to get display value for category
+  const getCategoryDisplay = (r) => {
+    const category = r?.category;
+    return category ? (CATEGORY_ENUM_TO_DISPLAY[category] || category) : "";
+  };
 
   // Per-retailer product counts: total, active, needs_review, inactive.
   const countsByRetailer = useMemo(() => {
     const map = new Map();
     for (const p of products) {
-      if (!p.retailer_id) continue;
-      const c = map.get(p.retailer_id) || { total: 0, active: 0, needs_review: 0, inactive: 0 };
+      // Support both camelCase (from API) and snake_case (legacy)
+      const retailerId = p.retailerId || p.retailer_id;
+      if (!retailerId) continue;
+      const c = map.get(retailerId) || { total: 0, active: 0, needs_review: 0, inactive: 0 };
       c.total++;
-      if (p.status === "active") c.active++;
-      else if (p.status === "needs_review") c.needs_review++;
-      else if (p.status === "inactive") c.inactive++;
-      map.set(p.retailer_id, c);
+      if (p.status === "active" || p.status === "ACTIVE") c.active++;
+      else if (p.status === "needs_review" || p.status === "NEEDS_REVIEW") c.needs_review++;
+      else if (p.status === "inactive" || p.status === "INACTIVE") c.inactive++;
+      map.set(retailerId, c);
     }
     return map;
   }, [products]);
 
   const countsFor = (id) => countsByRetailer.get(id) || { total: 0, active: 0, needs_review: 0, inactive: 0 };
-  const isUnderfilled = (r) => r.active && !r.curated_only && countsFor(r.id).active < 10;
+  const isUnderfilled = (r) => r.active && !getField(r, 'curatedOnly', 'curated_only') && countsFor(r.id).active < 10;
 
   // Pagination calculations
   const totalItems = retailers.length;
@@ -70,7 +92,7 @@ export default function RetailersTab() {
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-3xl text-brand-dark">Retailers</h1>
         <button
@@ -105,32 +127,32 @@ export default function RetailersTab() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-display text-lg text-brand-dark">{r.name}</p>
-                <p className="font-body text-sm text-brand-dark/50 break-all">{r.website_url}</p>
+                <p className="font-body text-sm text-brand-dark/50 break-all">{r.websiteUrl || r.website_url}</p>
               </div>
               <button onClick={() => setEditing(r)} className="text-brand-teal p-2 -mr-2" aria-label="Edit">
                 <Pencil className="w-4 h-4" />
               </button>
             </div>
             <div className="flex flex-wrap items-center gap-2 mt-3">
-              <span className="text-xs font-body px-2.5 py-1 rounded-full bg-brand-gold/15 text-brand-dark/70">{r.category}</span>
-              {r.contains_age_restricted_items && (
+              <span className="text-xs font-body px-2.5 py-1 rounded-full bg-brand-gold/15 text-brand-dark/70">{getCategoryDisplay(r)}</span>
+              {(r.containsAgeRestrictedItems ?? r.contains_age_restricted_items) && (
                 <span className="text-xs font-body px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">Age restricted</span>
               )}
               <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${r.active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
                 {r.active ? "Active" : "Inactive"}
               </span>
-              {r.curated_only && (
+              {getField(r, 'curatedOnly', 'curated_only') && (
                 <span className="text-xs font-body font-medium px-2.5 py-1 rounded-full bg-brand-gold/15 text-brand-dark/70">Curated only</span>
               )}
               {isUnderfilled(r) && (
                 <span className="text-xs font-body font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-700">Underfilled</span>
               )}
-              {!r.curated_only && r.last_scrape_status && r.last_scrape_status !== "ok" && STATUS_BADGE[r.last_scrape_status] && (
-                <span title={r.last_scrape_error || ""} className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[r.last_scrape_status].cls}`}>{STATUS_BADGE[r.last_scrape_status].label}</span>
+              {!getField(r, 'curatedOnly', 'curated_only') && getField(r, 'lastScrapeStatus', 'last_scrape_status') && getField(r, 'lastScrapeStatus', 'last_scrape_status') !== "ok" && STATUS_BADGE[getField(r, 'lastScrapeStatus', 'last_scrape_status')] && (
+                <span title={getField(r, 'lastScrapeError', 'last_scrape_error') || ""} className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[getField(r, 'lastScrapeStatus', 'last_scrape_status')].cls}`}>{STATUS_BADGE[getField(r, 'lastScrapeStatus', 'last_scrape_status')].label}</span>
               )}
             </div>
             <p className="font-body text-xs text-brand-dark/60 mt-2">
-              {countsFor(r.id).total} products · {countsFor(r.id).active} active · {countsFor(r.id).needs_review} needs review · {countsFor(r.id).inactive} inactive{" · "}{r.last_scrape_at ? `scraped ${formatDateTime(r.last_scrape_at)}` : "never scraped"}{r.last_discovery_method && r.last_discovery_method !== "none" ? ` via ${METHOD_LABEL[r.last_discovery_method]}` : ""}
+              {countsFor(r.id).total} products · {countsFor(r.id).active} active · {countsFor(r.id).needs_review} needs review · {countsFor(r.id).inactive} inactive{" · "}{getField(r, 'lastScrapeAt', 'last_scrape_at') ? `scraped ${formatDateTime(getField(r, 'lastScrapeAt', 'last_scrape_at'))}` : "never scraped"}{getField(r, 'lastDiscoveryMethod', 'last_discovery_method') && getField(r, 'lastDiscoveryMethod', 'last_discovery_method') !== "none" ? ` via ${METHOD_LABEL[getField(r, 'lastDiscoveryMethod', 'last_discovery_method')]}` : ""}
             </p>
             {!r.curated_only && (
               <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -138,8 +160,8 @@ export default function RetailersTab() {
                 <RetailerEnrichButton retailer={r} />
               </div>
             )}
-            {(r.last_scrape_status === "error" || r.last_scrape_status === "skipped_no_source") && r.last_scrape_error && (
-              <p className="font-body text-xs text-red-700 mt-1">{r.last_scrape_error}</p>
+            {(getField(r, 'lastScrapeStatus', 'last_scrape_status') === "error" || getField(r, 'lastScrapeStatus', 'last_scrape_status') === "skipped_no_source") && getField(r, 'lastScrapeError', 'last_scrape_error') && (
+              <p className="font-body text-xs text-red-700 mt-1">{getField(r, 'lastScrapeError', 'last_scrape_error')}</p>
             )}
           </div>
         ))}
@@ -165,27 +187,27 @@ export default function RetailersTab() {
             {paginatedRetailers.map((r) => (
               <tr key={r.id} className="border-b border-brand-gold/10 last:border-0">
                 <td className="px-5 py-4 font-display text-base text-brand-dark">{r.name}</td>
-                <td className="px-5 py-4 font-body text-sm text-brand-dark/60 break-all max-w-xs">{r.website_url}</td>
+                <td className="px-5 py-4 font-body text-sm text-brand-dark/60 break-all max-w-xs">{r.websiteUrl || r.website_url}</td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark">{r.category}</td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark/70">{r.contains_age_restricted_items ? "Yes" : "No"}</td>
                 <td className="px-5 py-4 font-body text-xs text-brand-dark/70 whitespace-nowrap">
                   {countsFor(r.id).total} total · {countsFor(r.id).active} active · {countsFor(r.id).needs_review} review · {countsFor(r.id).inactive} inactive
                 </td>
-                <td className="px-5 py-4 font-body text-sm text-brand-dark/70">{METHOD_LABEL[r.last_discovery_method] || "—"}</td>
-                <td className="px-5 py-4 font-body text-sm text-brand-dark/50 whitespace-nowrap">{r.last_scrape_at ? formatDateTime(r.last_scrape_at) : "Never"}</td>
+                <td className="px-5 py-4 font-body text-sm text-brand-dark/70">{METHOD_LABEL[getField(r, 'lastDiscoveryMethod', 'last_discovery_method')] || "—"}</td>
+                <td className="px-5 py-4 font-body text-sm text-brand-dark/50 whitespace-nowrap">{getField(r, 'lastScrapeAt', 'last_scrape_at') ? formatDateTime(getField(r, 'lastScrapeAt', 'last_scrape_at')) : "Never"}</td>
                 <td className="px-5 py-4">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${r.active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
                       {r.active ? "Active" : "Inactive"}
                     </span>
-                    {r.curated_only && (
+                    {getField(r, 'curatedOnly', 'curated_only') && (
                       <span className="text-xs font-body font-medium px-2.5 py-1 rounded-full bg-brand-gold/15 text-brand-dark/70">Curated only</span>
                     )}
                     {isUnderfilled(r) && (
                       <span className="text-xs font-body font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-700">Underfilled</span>
                     )}
-                    {!r.curated_only && r.last_scrape_status && r.last_scrape_status !== "ok" && STATUS_BADGE[r.last_scrape_status] && (
-                      <span title={r.last_scrape_error || ""} className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[r.last_scrape_status].cls}`}>{STATUS_BADGE[r.last_scrape_status].label}</span>
+                    {!getField(r, 'curatedOnly', 'curated_only') && getField(r, 'lastScrapeStatus', 'last_scrape_status') && getField(r, 'lastScrapeStatus', 'last_scrape_status') !== "ok" && STATUS_BADGE[getField(r, 'lastScrapeStatus', 'last_scrape_status')] && (
+                      <span title={getField(r, 'lastScrapeError', 'last_scrape_error') || ""} className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[getField(r, 'lastScrapeStatus', 'last_scrape_status')].cls}`}>{STATUS_BADGE[getField(r, 'lastScrapeStatus', 'last_scrape_status')].label}</span>
                     )}
                   </div>
                 </td>

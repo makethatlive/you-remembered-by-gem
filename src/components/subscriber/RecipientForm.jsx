@@ -22,6 +22,28 @@ import {
 
 const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
 
+// Convert database enum values to display labels
+function normalizeGenderForForm(dbValue) {
+  const mapping = {
+    MALE: "Male",
+    FEMALE: "Female",
+    NON_BINARY: "Non-binary",
+    PREFER_NOT_TO_SAY: "Prefer not to say",
+  };
+  return mapping[dbValue] || dbValue;
+}
+
+// Convert display labels to database enum values
+function normalizeGenderForDB(formValue) {
+  const mapping = {
+    "Male": "MALE",
+    "Female": "FEMALE",
+    "Non-binary": "NON_BINARY",
+    "Prefer not to say": "PREFER_NOT_TO_SAY",
+  };
+  return mapping[formValue] || formValue;
+}
+
 // Fields whose change alters what generateGiftList produces. Mirrors profileHash
 // (generateGiftList/entry.ts:412-426) plus budget_min/budget_max, which drive the
 // hard budget filter but sit outside the hash. name and occasion dates/labels are
@@ -66,21 +88,21 @@ function occasionsFromRecipient(recipient) {
   if (Array.isArray(recipient?.occasions) && recipient.occasions.length) {
     return recipient.occasions.map((o) => ({
       type: o.type || "Other",
-      custom_label: o.custom_label || "",
+      custom_label: o.customLabel || o.custom_label || "",
       day: o.day ? String(o.day) : "",
       month: o.month ? String(o.month) : "",
-      budget_min: o.budget_min ?? "",
-      budget_max: o.budget_max ?? "",
+      budget_min: o.budgetMin ?? o.budget_min ?? "",
+      budget_max: o.budgetMax ?? o.budget_max ?? "",
     }));
   }
   if (recipient?.occasion) {
     return [{
       type: recipient.occasion,
       custom_label: "",
-      day: recipient.occasion_day ? String(recipient.occasion_day) : "",
-      month: recipient.occasion_month ? String(recipient.occasion_month) : "",
-      budget_min: recipient.budget_min ?? "",
-      budget_max: recipient.budget_max ?? "",
+      day: recipient.occasionDay ? String(recipient.occasionDay) : (recipient.occasion_day ? String(recipient.occasion_day) : ""),
+      month: recipient.occasionMonth ? String(recipient.occasionMonth) : (recipient.occasion_month ? String(recipient.occasion_month) : ""),
+      budget_min: recipient.budgetMin ?? recipient.budget_min ?? "",
+      budget_max: recipient.budgetMax ?? recipient.budget_max ?? "",
     }];
   }
   return [];
@@ -93,17 +115,17 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
     name: recipient?.name || "",
     relationship: recipient?.relationship || "",
     occasions: occasionsFromRecipient(recipient),
-    age_range: recipient?.age_range || "",
-    child_age_bracket: recipient?.child_age_bracket || "",
-    gender: recipient?.gender || "",
-    age_band: recipient?.age_band || "",
+    age_range: recipient?.ageRange || "",
+    child_age_bracket: recipient?.childAgeBracket || "",
+    gender: normalizeGenderForForm(recipient?.gender) || "",
+    age_band: recipient?.ageBand || "",
     interests: recipient?.interests || [],
     personality: recipient?.personality || [],
-    gift_types: recipient?.gift_types || [],
-    avoid_notes: recipient?.avoid_notes || "",
-    who_they_are: recipient?.who_they_are || "",
-    hobbies_and_interests: recipient?.hobbies_and_interests || "",
-    things_you_know: recipient?.things_you_know || "",
+    gift_types: recipient?.giftTypes || [],
+    avoid_notes: recipient?.avoidNotes || "",
+    who_they_are: recipient?.whoTheyAre || "",
+    hobbies_and_interests: recipient?.hobbiesAndInterests || "",
+    things_you_know: recipient?.thingsYouKnow || "",
     milestones: recipient?.milestones || "",
     notes: recipient?.notes || "",
   });
@@ -135,8 +157,8 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
       try {
         const lists = await base44.entities.GiftList.filter({ recipient_id: recipient.id });
         refreshable = lists
-          .filter((l) => l.visible_to_subscriber === true)
-          .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0] || null;
+          .filter((l) => l.visibleToSubscriber === true)
+          .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate))[0] || null;
       } catch {
         refreshable = null;
       }
@@ -202,6 +224,7 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
     const { occasions, age_range, child_age_bracket, ...rest } = form;
     mutation.mutate({
       ...rest,
+      gender: normalizeGenderForDB(form.gender),
       age_range,
       child_age_bracket: isChild ? child_age_bracket : undefined,
       age_band: isChild ? ageBandFromChildBracket(child_age_bracket) : ageBandFromRange(age_range),
@@ -224,7 +247,7 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-5 pt-5">
+    <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 pt-5">
       <button
         onClick={onDone}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"

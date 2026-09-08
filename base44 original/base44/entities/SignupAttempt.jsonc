@@ -1,0 +1,45 @@
+{
+  "name": "SignupAttempt",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Email address used during paid signup"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name entered during paid signup"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the signup attempt was created"
+    }
+  },
+  "required": [
+    "email",
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

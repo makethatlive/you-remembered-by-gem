@@ -16,7 +16,7 @@ export default function BirthdayCalendar() {
     .sort((a, b) => a._days - b._days);
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-1">Birthday Calendar</h1>
       <p className="font-body text-sm text-brand-dark/50 mb-6">Next 60 days across all members.</p>
 
@@ -34,7 +34,7 @@ export default function BirthdayCalendar() {
                     <div>
                       <p className="font-display text-base text-brand-dark leading-tight">{r.name}</p>
                       <p className="font-body text-xs text-brand-dark/50">
-                        {r.relationship} · {subName(r.subscriber_id)}'s list · {formatDate(r.birthday)}
+                        {r.relationship} · {subName(r.subscriberId)}'s list · {formatDate(r.birthday)}
                       </p>
                     </div>
                   </div>

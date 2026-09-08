@@ -1,0 +1,85 @@
+{
+  "name": "ScrapeRunLog",
+  "type": "object",
+  "properties": {
+    "run_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the scrape run this record belongs to"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "full",
+        "retailer"
+      ],
+      "description": "Whether the run walked all retailers or one (per-retailer Scrape button)"
+    },
+    "retailer_id": {
+      "type": "string",
+      "description": "Retailer this completion record covers"
+    },
+    "retailer_name": {
+      "type": "string",
+      "description": "Retailer name at time of scrape (denormalised for the forensics sheet)"
+    },
+    "scrape_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "no_products",
+        "error"
+      ],
+      "description": "Outcome for this retailer's pass (mirrors the advanceRetailer stamp)"
+    },
+    "discovery_method": {
+      "type": "string",
+      "enum": [
+        "shopify",
+        "sitemap",
+        "crawl",
+        "none"
+      ],
+      "description": "How product URLs were discovered for this retailer"
+    },
+    "new_products": {
+      "type": "number",
+      "description": "Products created for this retailer across the whole pass (cursor.rn)"
+    },
+    "updated": {
+      "type": "number",
+      "description": "Products updated/verified for this retailer across the whole pass (cursor.ru)"
+    },
+    "reject_reasons_json": {
+      "type": "string",
+      "description": "JSON object of normalized rejection-reason counts for this retailer's pass, e.g. {\"no_valid_price\":12}. Bounded key set from scrapeCatalogueBatch normalizeReason; always small"
+    },
+    "error": {
+      "type": "string",
+      "description": "Last error string for the pass; empty when ok"
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

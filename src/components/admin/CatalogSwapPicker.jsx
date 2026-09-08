@@ -5,7 +5,16 @@ import { base44 } from "@/api/base44Client";
 import { gbp } from "@/lib/format";
 import { SOURCE_LABELS } from "@/lib/provenance";
 
-const UNDER_18_BANDS = new Set(["Under 5", "5-10", "11-17"]);
+const UNDER_18_BANDS = new Set([
+  // Uppercase enum values from database
+  "UNDER_5",
+  "FIVE_TO_10", 
+  "ELEVEN_TO_17",
+  // Legacy lowercase support
+  "Under 5",
+  "5-10",
+  "11-17"
+]);
 
 function normaliseGender(value) {
   const gender = (value || "").toLowerCase();
@@ -15,7 +24,7 @@ function normaliseGender(value) {
 }
 
 function clearlyForChildren(product, retailerName) {
-  const text = `${product.name || ""} ${product.description || ""} ${product.category || ""} ${product.product_url || ""} ${retailerName || ""}`;
+  const text = `${product.name || ""} ${product.description || ""} ${product.category || ""} ${product.productUrl || ""} ${retailerName || ""}`;
   return /\b(baby|newborn|infant|toddler|nursery|for kids?|children'?s|childrens|8\s*[-–]\s*12\s*(yrs?|years?))\b/i.test(text);
 }
 
@@ -31,7 +40,7 @@ export default function CatalogSwapPicker({ recipient, onAdd, busy }) {
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["catalog-products-active"],
-    queryFn: () => base44.entities.Product.filter({ status: "active" }, "-created_date", 5000),
+    queryFn: () => base44.entities.Product.filter({ status: "ACTIVE" }, "-created_date", 5000),
   });
   const { data: retailers = [], isLoading: loadingRetailers } = useQuery({
     queryKey: ["catalog-retailers"],
@@ -39,24 +48,42 @@ export default function CatalogSwapPicker({ recipient, onAdd, busy }) {
   });
 
   const retailerById = new Map(retailers.map((r) => [r.id, r]));
-  const min = Number(recipient?.budget_min);
-  const max = Number(recipient?.budget_max);
-  const isUnder18 = UNDER_18_BANDS.has(recipient?.age_band);
+  const min = Number(recipient?.budgetMin);
+  const max = Number(recipient?.budgetMax);
+  const isUnder18 = UNDER_18_BANDS.has(recipient?.ageBand);
 
   const filtered = products.filter((p) => {
+    // Budget filtering
     if (Number.isFinite(min) && p.price < min) return false;
     if (Number.isFinite(max) && p.price > max) return false;
-    const retailer = retailerById.get(p.retailer_id);
-    const expectedBand = isUnder18 ? recipient?.age_band : "18+";
-    if (Array.isArray(p.suitable_age_bands) && p.suitable_age_bands.length > 0 && !p.suitable_age_bands.includes(expectedBand)) return false;
-    if (!isUnder18 && clearlyForChildren(p, retailer?.name)) return false;
-    const recipientGender = normaliseGender(recipient?.gender);
-    const productGender = normaliseGender(p.gender_applies_to || retailer?.category);
-    if (recipientGender !== "any" && productGender !== "any" && recipientGender !== productGender) return false;
-    if (isUnder18) {
-      if (p.age_restricted === true || retailer?.contains_age_restricted_items === true) return false;
+    
+    const retailer = retailerById.get(p.retailerId);
+    
+    // Age band filtering - only exclude if explicitly incompatible
+    // If suitableAgeBands is not set or empty, allow the product through
+    const expectedBand = isUnder18 ? recipient?.ageBand : "18+";
+    const ageBands = p.suitableAgeBands || p.suitable_age_bands;
+    if (Array.isArray(ageBands) && ageBands.length > 0) {
+      // Only filter out if age bands are specified AND recipient's band is not included
+      if (!ageBands.includes(expectedBand)) return false;
     }
+    
+    // Don't show obviously children's products to adults
+    if (!isUnder18 && clearlyForChildren(p, retailer?.name)) return false;
+    
+    // Gender filtering
+    const recipientGender = normaliseGender(recipient?.gender);
+    const productGender = normaliseGender(p.genderAppliesTo || retailer?.category);
+    if (recipientGender !== "any" && productGender !== "any" && recipientGender !== productGender) return false;
+    
+    // Age-restricted items (alcohol, etc.) - block for under 18
+    if (isUnder18) {
+      if (p.ageRestricted === true || retailer?.containsAgeRestrictedItems === true) return false;
+    }
+    
+    // Search filter
     if (search.trim() && !(p.name || "").toLowerCase().includes(search.trim().toLowerCase())) return false;
+    
     return true;
   });
 
@@ -81,9 +108,9 @@ export default function CatalogSwapPicker({ recipient, onAdd, busy }) {
           {filtered.map((p) => (
             <div key={p.id} className="flex items-center gap-3 bg-brand-cream rounded-xl p-2.5">
               <div className="w-14 h-14 rounded-lg overflow-hidden bg-brand-gold-soft/30 shrink-0">
-                {p.image_url && !broken[p.id] && (
+                {p.imageUrl && !broken[p.id] && (
                   <img
-                    src={p.image_url}
+                    src={p.imageUrl}
                     alt={p.name}
                     onError={() => setBroken((b) => ({ ...b, [p.id]: true }))}
                     className="w-full h-full object-cover"
@@ -93,14 +120,14 @@ export default function CatalogSwapPicker({ recipient, onAdd, busy }) {
               <div className="min-w-0 flex-1">
                 <p className="font-display text-sm text-brand-dark truncate">{p.name}</p>
                 <p className="font-body text-xs text-brand-gold">
-                  {retailerById.get(p.retailer_id)?.name || ""} · {gbp(p.price)}
-                  {SOURCE_LABELS[p.source_type] ? ` · ${SOURCE_LABELS[p.source_type]}` : ""}
+                  {retailerById.get(p.retailerId)?.name || ""} · {gbp(p.price)}
+                  {SOURCE_LABELS[p.sourceType || p.source_type] ? ` · ${SOURCE_LABELS[p.sourceType || p.source_type]}` : ""}
                 </p>
               </div>
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => onAdd(p, retailerById.get(p.retailer_id)?.name || "")}
+                onClick={() => onAdd(p, retailerById.get(p.retailerId)?.name || "")}
                 className="shrink-0 font-body text-xs text-brand-teal font-medium border border-brand-gold/60 rounded-lg px-3 py-1.5 hover:bg-brand-gold-soft/20 disabled:opacity-50"
               >
                 Add to list

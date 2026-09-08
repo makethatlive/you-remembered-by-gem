@@ -6,7 +6,7 @@ export function useAdminData() {
   const recipients = useQuery({ queryKey: ["recipients-all"], queryFn: () => base44.entities.Recipient.list("-created_date", 5000) });
   const lists = useQuery({ queryKey: ["giftlists-all"], queryFn: () => base44.entities.GiftList.list("-created_date", 5000) });
   const items = useQuery({ queryKey: ["giftitems-all"], queryFn: () => base44.entities.GiftItem.list("-created_date", 5000) });
-  const emails = useQuery({ queryKey: ["emails-all"], queryFn: () => base44.entities.EmailLog.list() });
+  const emails = useQuery({ queryKey: ["emails-all"], queryFn: () => base44.entities.EmailLog.list("-sent_at", 5000) });
 
   return {
     subscribers: subscribers.data || [],

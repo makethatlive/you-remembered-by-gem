@@ -12,18 +12,42 @@ import {
 
 const CATEGORIES = ["Men", "Women", "Unisex (Adult)", "Kids", "Unisex + Kids"];
 
+// Map database enum values to display values
+const CATEGORY_ENUM_TO_DISPLAY = {
+  "MEN": "Men",
+  "WOMEN": "Women", 
+  "UNISEX_ADULT": "Unisex (Adult)",
+  "KIDS": "Kids",
+  "UNISEX_KIDS": "Unisex + Kids",
+};
+
+// Map display values to database enum values
+const CATEGORY_DISPLAY_TO_ENUM = {
+  "Men": "MEN",
+  "Women": "WOMEN",
+  "Unisex (Adult)": "UNISEX_ADULT",
+  "Kids": "KIDS",
+  "Unisex + Kids": "UNISEX_KIDS",
+};
+
 export default function RetailerForm({ retailer, onDone }) {
   const queryClient = useQueryClient();
   const isEdit = !!retailer?.id;
+  
+  // Normalize category from database enum to display format
+  const initialCategory = retailer?.category 
+    ? (CATEGORY_ENUM_TO_DISPLAY[retailer.category] || retailer.category)
+    : "";
+  
   const [form, setForm] = useState({
     name: retailer?.name || "",
-    website_url: retailer?.website_url || "",
-    gift_page_url: retailer?.gift_page_url || "",
-    category: retailer?.category || "",
-    applies_to: retailer?.applies_to || "",
-    contains_age_restricted_items: retailer?.contains_age_restricted_items ?? false,
-    what_they_sell: retailer?.what_they_sell || "",
-    why_it_fits: retailer?.why_it_fits || "",
+    website_url: retailer?.websiteUrl || retailer?.website_url || "",
+    gift_page_url: retailer?.giftPageUrl || retailer?.gift_page_url || "",
+    category: initialCategory,
+    applies_to: retailer?.appliesTo || retailer?.applies_to || "",
+    contains_age_restricted_items: retailer?.containsAgeRestrictedItems ?? retailer?.contains_age_restricted_items ?? false,
+    what_they_sell: retailer?.whatTheySell || retailer?.what_they_sell || "",
+    why_it_fits: retailer?.whyItFits || retailer?.why_it_fits || "",
     active: retailer?.active ?? true,
   });
   const [errors, setErrors] = useState({});
@@ -48,13 +72,47 @@ export default function RetailerForm({ retailer, onDone }) {
     if (!form.website_url.trim()) er.website_url = "Website URL is required";
     if (!form.gift_page_url.trim()) er.gift_page_url = "Gift Page URL is required";
     if (!form.category) er.category = "Category is required";
+    
+    // Validate URLs
+    if (form.website_url && !form.website_url.match(/^https?:\/\//)) {
+      er.website_url = "Website URL must start with http:// or https://";
+    }
+    
+    // Auto-fix gift_page_url if it's a relative path
+    let giftPageUrl = form.gift_page_url.trim();
+    if (giftPageUrl && !giftPageUrl.match(/^https?:\/\//)) {
+      // If it's a relative path (starts with / or is just a path), combine with website URL
+      if (form.website_url.match(/^https?:\/\//)) {
+        try {
+          const baseUrl = new URL(form.website_url);
+          if (giftPageUrl.startsWith('/')) {
+            giftPageUrl = `${baseUrl.origin}${giftPageUrl}`;
+          } else {
+            giftPageUrl = `${baseUrl.origin}/${giftPageUrl}`;
+          }
+        } catch (e) {
+          er.gift_page_url = "Gift Page URL must be a valid URL or path";
+        }
+      } else {
+        er.gift_page_url = "Gift Page URL must be a full URL (starting with http:// or https://) or valid Website URL is required to convert relative paths";
+      }
+    }
+    
     setErrors(er);
     if (Object.keys(er).length) return;
-    mutation.mutate(form);
+    
+    // Convert category from display format to enum format for database
+    const payload = {
+      ...form,
+      gift_page_url: giftPageUrl,
+      category: CATEGORY_DISPLAY_TO_ENUM[form.category] || form.category,
+    };
+    
+    mutation.mutate(payload);
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-2xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <button
         onClick={onDone}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"
@@ -72,8 +130,8 @@ export default function RetailerForm({ retailer, onDone }) {
         <Field label="Website URL" error={errors.website_url}>
           <Input value={form.website_url} onChange={(e) => set("website_url", e.target.value)} className="h-12" placeholder="https://example.com" />
         </Field>
-        <Field label="Gift Page URL" error={errors.gift_page_url} helper="The specific page to load — e.g. /gifts or /bestsellers">
-          <Input value={form.gift_page_url} onChange={(e) => set("gift_page_url", e.target.value)} className="h-12" placeholder="/gifts" />
+        <Field label="Gift Page URL" error={errors.gift_page_url} helper="Full URL (https://...) or relative path (/gifts) - will be combined with Website URL">
+          <Input value={form.gift_page_url} onChange={(e) => set("gift_page_url", e.target.value)} className="h-12" placeholder="https://example.com/gifts or /gifts" />
         </Field>
         <Field label="Category" error={errors.category}>
           <Select value={form.category} onValueChange={(v) => set("category", v)}>

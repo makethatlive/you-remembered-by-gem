@@ -35,10 +35,10 @@ export default function GiftListsTab({ subscriber, onOpen }) {
     staleTime: 0,
   });
 
-  const visible = lists.filter((l) => l.visible_to_subscriber === true);
+  const visible = lists.filter((l) => l.visibleToSubscriber === true);
 
   const activeCount = (listId) =>
-    items.filter((i) => i.gift_list_id === listId && i.status === "active").length;
+    items.filter((i) => i.giftListId === listId && i.status === "active").length;
   const recipName = (id) => recipients.find((r) => r.id === id)?.name || "";
 
   // Group by recipient, lists ordered by birthday_date ascending.
@@ -46,13 +46,13 @@ export default function GiftListsTab({ subscriber, onOpen }) {
     .map((r) => ({
       recipient: r,
       lists: visible
-        .filter((l) => l.recipient_id === r.id)
-        .sort((a, b) => new Date(a.birthday_date) - new Date(b.birthday_date)),
+        .filter((l) => l.recipientId === r.id)
+        .sort((a, b) => new Date(a.birthdayDate) - new Date(b.birthdayDate)),
     }))
     .filter((g) => g.lists.length > 0);
 
   return (
-    <div className="max-w-6xl mx-auto px-5 pt-6">
+    <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 pt-6">
       <h1 className="font-display text-2xl sm:text-3xl text-brand-dark mb-6">Your Gift Lists</h1>
 
       {groups.length === 0 ? (
@@ -75,10 +75,10 @@ export default function GiftListsTab({ subscriber, onOpen }) {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="font-body text-xs uppercase tracking-wide text-brand-gold font-semibold">
-                          {TYPE_LABEL[l.list_type]}
+                          {TYPE_LABEL[l.listType]}
                         </p>
                         <p className="font-body text-sm text-brand-dark/55 mt-0.5">
-                          Birthday {formatDate(l.birthday_date)}
+                          Birthday {formatDate(l.birthdayDate)}
                         </p>
                         <p className="font-body text-xs text-brand-dark/45 mt-0.5">
                           {count} {count === 1 ? "gift" : "gifts"}

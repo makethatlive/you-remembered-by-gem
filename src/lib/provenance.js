@@ -17,6 +17,12 @@
 //               unproven. NEVER treated as curated by any consumer.
 
 export const PROVENANCE_GROUP = {
+  // Uppercase (from database)
+  CURATED_PRODUCT: "gem_pick",
+  CURATED_RETAILER: "catalogue",
+  SHOPIFY_UPLOAD: "catalogue",
+  LEGACY_UNKNOWN: "legacy",
+  // Legacy lowercase support
   curated_product: "gem_pick",
   curated_retailer: "catalogue",
   shopify_upload: "catalogue",
@@ -24,15 +30,23 @@ export const PROVENANCE_GROUP = {
 };
 
 export function provenanceGroup(product) {
-  return PROVENANCE_GROUP[product?.source_type] || "legacy";
+  const sourceType = product?.sourceType || product?.source_type;
+  return PROVENANCE_GROUP[sourceType] || "legacy";
 }
 
 export function isGemsPick(product) {
-  return product?.source_type === "curated_product";
+  const sourceType = product?.sourceType || product?.source_type;
+  return sourceType === "CURATED_PRODUCT" || sourceType === "curated_product";
 }
 
 // Plain display labels (tables, pickers, badges).
 export const SOURCE_LABELS = {
+  // Uppercase (from database)
+  CURATED_PRODUCT: "Gem's Pick",
+  CURATED_RETAILER: "Catalogue upload",
+  SHOPIFY_UPLOAD: "Catalogue upload",
+  LEGACY_UNKNOWN: "Legacy",
+  // Legacy lowercase support
   curated_product: "Gem's Pick",
   curated_retailer: "Catalogue upload",
   shopify_upload: "Catalogue upload",
@@ -43,12 +57,19 @@ export const SOURCE_LABELS = {
 // table surfaces already had. The swap picker intentionally does NOT use this
 // (it omits the label for unknown values; see CatalogSwapPicker).
 export function sourceLabel(product) {
-  return SOURCE_LABELS[product?.source_type] || "Legacy";
+  const sourceType = product?.sourceType || product?.source_type;
+  return SOURCE_LABELS[sourceType] || "Legacy";
 }
 
 // Disambiguated labels — ONLY for the editable Provenance <Select> in
 // ProductEditForm, where Gem must see which stored value she is choosing.
 export const SOURCE_LABELS_EDIT = {
+  // Uppercase (from database)
+  CURATED_PRODUCT: "Gem's Pick",
+  CURATED_RETAILER: "Catalogue upload (site scan)",
+  SHOPIFY_UPLOAD: "Catalogue upload (Shopify feed)",
+  LEGACY_UNKNOWN: "Legacy",
+  // Legacy lowercase support
   curated_product: "Gem's Pick",
   curated_retailer: "Catalogue upload (site scan)",
   shopify_upload: "Catalogue upload (Shopify feed)",

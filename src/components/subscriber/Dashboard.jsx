@@ -33,15 +33,15 @@ export default function Dashboard({ subscriber, onOpenList, onGoTab }) {
 
   const readyLists = lists
     .filter((l) => l.status === "approved" || l.status === "sent")
-    .filter((l) => l.visible_to_subscriber !== false)
-    .filter((l) => daysUntil(l.birthday_date) <= 30);
+    .filter((l) => l.visibleToSubscriber !== false)
+    .filter((l) => daysUntil(l.birthdayDate) <= 30);
 
   const recipName = (id) => recipients.find((r) => r.id === id)?.name || "";
-  const listCover = (id) => items.find((i) => i.gift_list_id === id)?.image_url;
-  const listForRecip = (id) => lists.find((l) => l.recipient_id === id);
+  const listCover = (id) => items.find((i) => i.giftListId === id)?.imageUrl;
+  const listForRecip = (id) => lists.find((l) => l.recipientId === id);
 
   return (
-    <div className="max-w-6xl mx-auto px-5 pt-6">
+    <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 pt-6">
       <h1 className="font-display text-2xl sm:text-3xl text-brand-dark mb-6">
         Hello {firstName}, here's what's coming up
       </h1>
@@ -82,10 +82,10 @@ export default function Dashboard({ subscriber, onOpenList, onGoTab }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-display text-base text-brand-dark leading-tight">
-                  {recipName(l.recipient_id)} &middot; {LIST_LABEL[l.list_type]}
+                  {recipName(l.recipientId)} &middot; {LIST_LABEL[l.listType]}
                 </p>
                 <p className="font-body text-sm text-brand-gold font-medium">
-                  {items.find((i) => i.gift_list_id === l.id)?.retailer_name || "Curated selection"}
+                  {items.find((i) => i.giftListId === l.id)?.retailerName || "Curated selection"}
                 </p>
               </div>
             </div>

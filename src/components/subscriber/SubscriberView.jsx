@@ -52,7 +52,7 @@ export default function SubscriberView({ initialTab = "dashboard", initialEditRe
     let active = true;
     base44.entities.Recipient.get(pendingEditId)
       .then((r) => {
-        if (active && r && r.subscriber_id === subscriber.id) {
+        if (active && r && r.subscriberId === subscriber.id) {
           setEditingRecipient(r);
           setTab("people");
         }

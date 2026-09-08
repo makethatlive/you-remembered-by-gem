@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, ArrowUpCircle, ArrowDownCircle, X, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { gbp, LIST_LABEL, formatShortDate } from "@/lib/format";
+import { gbp, LIST_LABEL, formatShortDate, AGE_BAND_LABEL, GENDER_LABEL } from "@/lib/format";
 import { toast } from "@/components/ui/use-toast";
 import ManualGiftForm from "@/components/admin/ManualGiftForm";
 import CatalogSwapPicker from "@/components/admin/CatalogSwapPicker";
@@ -45,16 +45,16 @@ function GiftCard({ item, action }) {
   // If the image URL fails to load, fall back to the existing tinted panel.
   // onError fires once and removes the <img>, so it can never loop.
   const [broken, setBroken] = useState(false);
-  const link = item.affiliate_url || item.product_url;
+  const link = item.affiliateUrl || item.productUrl;
   return (
     <div className="bg-brand-cream-card rounded-2xl shadow-sm p-4">
       <div className="relative h-36 rounded-xl overflow-hidden bg-brand-gold-soft/30 mb-3">
-        {item.source_type === "curated_product" && (
+        {(item.sourceType || item.source_type) === "curated_product" && (
           <GemsPickBadge className="absolute top-2 left-2 z-10" />
         )}
-        {item.image_url && !broken && (
+        {item.imageUrl && !broken && (
           <img
-            src={item.image_url}
+            src={item.imageUrl}
             alt={item.title}
             onError={() => setBroken(true)}
             className="w-full h-full object-cover"
@@ -67,20 +67,20 @@ function GiftCard({ item, action }) {
           {gbp(item.price)}
         </span>
       </div>
-      {item.retailer_name && (
-        <p className="font-body text-xs text-brand-gold mt-0.5">{item.retailer_name}</p>
+      {item.retailerName && (
+        <p className="font-body text-xs text-brand-gold mt-0.5">{item.retailerName}</p>
       )}
       {item.description && (
         <p className="font-body text-sm italic text-brand-dark/60 mt-2">{item.description}</p>
       )}
-      {item.why_this_gift && (
-        <p className="font-body text-sm text-brand-dark/70 mt-2">{item.why_this_gift}</p>
+      {item.whyThisGift && (
+        <p className="font-body text-sm text-brand-dark/70 mt-2">{item.whyThisGift}</p>
       )}
-      {item.ai_flag_concern && (
-        <p className="font-body text-sm text-brand-dark/70 mt-2">AI flag: {item.ai_flag_concern}</p>
+      {item.aiFlagConcern && (
+        <p className="font-body text-sm text-brand-dark/70 mt-2">AI flag: {item.aiFlagConcern}</p>
       )}
-      {typeof item.suitability_confidence === "number" && (
-        <p className="font-body text-xs text-brand-dark/45 mt-1">AI fit: {item.suitability_confidence}/5</p>
+      {typeof item.suitabilityConfidence === "number" && (
+        <p className="font-body text-xs text-brand-dark/45 mt-1">AI fit: {item.suitabilityConfidence}/5</p>
       )}
       <div className="flex items-center justify-between gap-2 mt-3">
         {link && (
@@ -111,14 +111,14 @@ function computeProfileHash(recipient) {
   const source = JSON.stringify([
     recipient.interests,
     recipient.personality,
-    recipient.gift_types,
-    recipient.hobbies_and_interests,
-    recipient.who_they_are,
-    recipient.things_you_know,
+    recipient.giftTypes,
+    recipient.hobbiesAndInterests,
+    recipient.whoTheyAre,
+    recipient.thingsYouKnow,
     recipient.milestones,
-    recipient.avoid_notes,
+    recipient.avoidNotes,
     recipient.notes,
-    recipient.age_band,
+    recipient.ageBand,
     recipient.gender,
     recipient.relationship,
     TAXONOMY_VERSION,
@@ -153,9 +153,9 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
   // lives on the OLD list (requestGiftRefresh writes it there). refresh_reason is a
   // round-3 Layer-C field — absent on every record until publish; absence is normal.
   const { data: supersededList = null } = useQuery({
-    queryKey: ["superseded-list", list.supersedes_list_id],
-    queryFn: () => base44.entities.GiftList.get(list.supersedes_list_id).catch(() => null),
-    enabled: !!list.supersedes_list_id,
+    queryKey: ["superseded-list", list.supersedesListId],
+    queryFn: () => base44.entities.GiftList.get(list.supersedesListId).catch(() => null),
+    enabled: !!list.supersedesListId,
   });
 
   // True when the recipient's CURRENT hashed fields differ from the profile the last
@@ -169,12 +169,12 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
   // (legacy recipient / failed derive) → no badge. Budget changes sit outside the
   // hash — already visible in the profile card below.
   const profileEditedAfterGeneration = !!(
-    recipient?.derived_profile_hash &&
-    computeProfileHash(recipient) !== recipient.derived_profile_hash
+    recipient?.derivedProfileHash &&
+    computeProfileHash(recipient) !== recipient.derivedProfileHash
   );
 
-  const activeItems = items.filter((i) => i.status === "active");
-  const standbyItems = items.filter((i) => i.status === "standby");
+  const activeItems = items.filter((i) => i.status === "ACTIVE");
+  const standbyItems = items.filter((i) => i.status === "STANDBY");
   const activeCount = activeItems.length;
 
   const refresh = async () => {
@@ -196,7 +196,8 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       await base44.entities.GiftItem.update(item.id, { status: "active" });
       await refresh();
       toast({ description: `${item.title} moved to the Top 5.` });
-    } catch {
+    } catch (error) {
+      console.error("Failed to promote gift:", error);
       toast({ description: "Couldn't promote this gift — please try again." });
     } finally {
       setBusy(false);
@@ -214,7 +215,8 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       await base44.entities.GiftItem.update(item.id, { status: "standby" });
       await refresh();
       toast({ description: `${item.title} moved to backups.` });
-    } catch {
+    } catch (error) {
+      console.error("Failed to demote gift:", error);
       toast({ description: "Couldn't move this gift — please try again." });
     } finally {
       setBusy(false);
@@ -240,7 +242,8 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       setRemovalNote("");
       await refresh();
       toast({ description: `${item.title} removed.` });
-    } catch {
+    } catch (error) {
+      console.error("Failed to remove gift:", error);
       toast({ description: "Couldn't remove this gift — please try again." });
     } finally {
       setBusy(false);
@@ -254,7 +257,7 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       await base44.entities.GiftItem.create({
         gift_list_id: list.id,
         // Carried from the parent list so item-level RLS can scope to the owning subscriber.
-        subscriber_user_id: list.subscriber_user_id,
+        subscriber_user_id: list.subscriberUserId || list.subscriber_user_id,
         product_id: "manual",
         // Hand-entered by Gem — personally curated provenance.
         source_type: "curated_product",
@@ -264,7 +267,8 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       setAddMode(null);
       await refresh();
       toast({ description: "Gift added." });
-    } catch {
+    } catch (error) {
+      console.error("Failed to add manual gift:", error);
       toast({ description: "Couldn't add this gift — please try again." });
     } finally {
       setBusy(false);
@@ -276,7 +280,7 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
     const duplicate = items.some((item) =>
       item.status !== "removed" && (
         item.product_id === product.id ||
-        (item.product_url && item.product_url === product.product_url) ||
+        (item.product_url && item.product_url === (product.product_url || product.productUrl)) ||
         (item.title || "").trim().toLowerCase() === (product.name || "").trim().toLowerCase()
       )
     );
@@ -289,24 +293,25 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       await base44.entities.GiftItem.create({
         gift_list_id: list.id,
         // Carried from the parent list so item-level RLS can scope to the owning subscriber.
-        subscriber_user_id: list.subscriber_user_id,
+        subscriber_user_id: list.subscriberUserId || list.subscriber_user_id,
         product_id: product.id,
         title: product.name,
         description: product.description || "",
         why_this_gift: "",
-        product_url: product.product_url,
-        affiliate_url: product.affiliate_url || product.product_url,
+        product_url: product.product_url || product.productUrl,
+        affiliate_url: product.affiliate_url || product.affiliateUrl || product.product_url || product.productUrl,
         retailer_name: retailerName || "",
         price: product.price,
-        image_url: product.image_url,
+        image_url: product.image_url || product.imageUrl,
         // Provenance carried from the catalogue product.
-        source_type: product.source_type || "legacy_unknown",
+        source_type: product.source_type || product.sourceType || "legacy_unknown",
         status: activeCount < MAX_ACTIVE ? "active" : "standby",
       });
       setAddMode(null);
       await refresh();
       toast({ description: `${product.name} added.` });
-    } catch {
+    } catch (error) {
+      console.error("Failed to add gift from catalog:", error);
       toast({ description: "Couldn't add this gift — please try again." });
     } finally {
       setBusy(false);
@@ -331,28 +336,44 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
         approved_at: new Date().toISOString(),
         visible_to_subscriber: true,
       });
-      if (list.supersedes_list_id) {
-        await base44.entities.GiftList.update(list.supersedes_list_id, {
+      if (list.supersedesListId) {
+        await base44.entities.GiftList.update(list.supersedesListId, {
           visible_to_subscriber: false,
         });
       }
       // The notification email must never block approval — if it fails, the list is
       // still approved and visible to the subscriber. Isolate it so a send error
-      // can't abort the approval flow. A provider failure comes back as HTTP 200
-      // with { status: "failed" }, so read the body too — the catch only sees
-      // network/5xx errors.
+      // can't abort the approval flow.
       try {
-        const emailRes = await base44.functions.invoke("sendApprovalEmail", { giftListId: list.id });
-        if (emailRes?.data?.status === "failed") {
+        // Get subscriber and recipient details for email
+        const response = await fetch('http://localhost:3001/api/email/approval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: subscriber?.email,
+            name: subscriber?.name || subscriber?.firstName,
+            recipientName: recipient?.name,
+            giftCount: activeCount,
+            subscriberId: subscriber?.id,
+            recipientId: recipient?.id,
+            giftListId: list?.id,
+          }),
+        });
+        
+        const result = await response.json();
+        if (!result.success) {
+          console.warn('Approval email failed:', result.error);
           toast({ description: "List approved, but the email didn't send. It's safe to approve again later to re-send." });
         }
-      } catch {
+      } catch (error) {
+        console.warn('Approval email error:', error);
         // Email failed to send; approval itself succeeded.
       }
       await refresh();
       toast({ description: `${recipient?.name || "List"} approved.` });
       onBack();
-    } catch {
+    } catch (error) {
+      console.error("Failed to approve list:", error);
       toast({ description: "Couldn't approve this list — please try again." });
     } finally {
       setBusy(false);
@@ -369,8 +390,8 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       // entry. supersedes_list_id lets approve() hide the old list once the new one
       // is approved.
       const res = await base44.functions.invoke("generateGiftList", {
-        recipient_id: list.recipient_id,
-        list_type: list.list_type,
+        recipient_id: list.recipientId,
+        list_type: list.listType,
         supersedes_list_id: list.id,
       });
       const data = res?.data || {};
@@ -424,7 +445,8 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       await refresh();
       toast({ description: `${recipient?.name || "List"} rejected.` });
       onBack();
-    } catch {
+    } catch (error) {
+      console.error("Failed to reject list:", error);
       toast({ description: "Couldn't reject this list — please try again." });
     } finally {
       setBusy(false);
@@ -432,7 +454,7 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
   };
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <button
         onClick={onBack}
         className="inline-flex items-center gap-1.5 font-body text-sm text-brand-teal font-medium mb-4"
@@ -446,11 +468,11 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
           <div>
             <h1 className="font-display text-2xl text-brand-dark">{recipient?.name}</h1>
             <p className="font-body text-sm text-brand-dark/50">
-              For {subscriber?.name} · {LIST_LABEL[list.list_type]}
+              For {subscriber?.name} · {LIST_LABEL[list.listType]}
             </p>
           </div>
           <p className="font-body text-sm text-brand-dark/60">
-            Birthday {formatShortDate(list.birthday_date)}
+            Birthday {formatShortDate(list.birthdayDate)}
           </p>
         </div>
         {profileEditedAfterGeneration && (
@@ -458,20 +480,20 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
             {recipient?.name || "This recipient"}'s profile was updated after these gifts were generated — Regenerate will use the latest details.
           </p>
         )}
-        {supersededList?.refresh_reason && (
+        {supersededList?.refreshReason && (
           <p className="font-body text-xs text-brand-dark/60 bg-brand-gold-soft/30 rounded-lg px-3 py-2 mb-3">
-            Subscriber's refresh note: "{supersededList.refresh_reason}"
+            Subscriber's refresh note: "{supersededList.refreshReason}"
           </p>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <ProfileRow label="Relationship" value={recipient?.relationship} />
-          <ProfileRow label="Gender" value={recipient?.gender} />
-          <ProfileRow label="Age band" value={recipient?.age_band} />
+          <ProfileRow label="Gender" value={GENDER_LABEL[recipient?.gender] || recipient?.gender} />
+          <ProfileRow label="Age band" value={AGE_BAND_LABEL[recipient?.ageBand] || recipient?.ageBand} />
           <ProfileRow
             label="Budget"
             value={
-              recipient?.budget_min != null || recipient?.budget_max != null
-                ? `${gbp(recipient?.budget_min)} – ${gbp(recipient?.budget_max)}`
+              recipient?.budgetMin != null || recipient?.budgetMax != null
+                ? `${gbp(recipient?.budgetMin)} – ${gbp(recipient?.budgetMax)}`
                 : null
             }
           />
@@ -479,14 +501,14 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
           <ProfileRow label="Interests" value={arr(recipient?.interests)} />
           <ProfileRow label="Personality" value={arr(recipient?.personality)} />
-          <ProfileRow label="Gift types they love" value={arr(recipient?.gift_types)} />
+          <ProfileRow label="Gift types they love" value={arr(recipient?.giftTypes)} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          <ProfileRow label="Who they are" value={recipient?.who_they_are} />
-          <ProfileRow label="Hobbies & interests" value={recipient?.hobbies_and_interests} />
-          <ProfileRow label="Things you know" value={recipient?.things_you_know} />
+          <ProfileRow label="Who they are" value={recipient?.whoTheyAre} />
+          <ProfileRow label="Hobbies & interests" value={recipient?.hobbiesAndInterests} />
+          <ProfileRow label="Things you know" value={recipient?.thingsYouKnow} />
           <ProfileRow label="Milestones" value={recipient?.milestones} />
-          <ProfileRow label="Gifts to avoid" value={recipient?.avoid_notes} />
+          <ProfileRow label="Gifts to avoid" value={recipient?.avoidNotes} />
           <ProfileRow label="Notes" value={recipient?.notes} />
         </div>
       </div>

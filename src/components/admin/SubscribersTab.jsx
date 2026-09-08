@@ -21,8 +21,8 @@ export default function SubscribersTab() {
   const { subscribers, recipients, lists } = useAdminData();
   const [openId, setOpenId] = useState(null);
   const [inviting, setInviting] = useState(false);
-  const countRecip = (id) => recipients.filter((r) => r.subscriber_id === id).length;
-  const countLists = (id) => lists.filter((l) => l.subscriber_id === id).length;
+  const countRecip = (id) => recipients.filter((r) => r.subscriberId === id).length;
+  const countLists = (id) => lists.filter((l) => l.subscriberId === id).length;
 
   const openSub = openId ? subscribers.find((s) => s.id === openId) : null;
   if (openSub) {
@@ -30,7 +30,7 @@ export default function SubscribersTab() {
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-3xl text-brand-dark">Subscribers</h1>
         {!inviting && (
@@ -54,14 +54,14 @@ export default function SubscribersTab() {
                 <p className="font-display text-lg text-brand-dark">{s.name}</p>
                 <p className="font-body text-sm text-brand-dark/50">{s.email}</p>
               </div>
-              <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscriptionStatus] || statusColor.ACTIVE}`}>
-                {STATUS_LABEL[s.subscriptionStatus]}
+              <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscriptionStatus || s.subscription_status] || statusColor.ACTIVE}`}>
+                {STATUS_LABEL[s.subscriptionStatus || s.subscription_status]}
               </span>
             </div>
             <div className="flex gap-6 mt-3 font-body text-sm text-brand-dark/60">
               <span><b className="text-brand-teal">{countRecip(s.id)}</b> people</span>
               <span><b className="text-brand-teal">{countLists(s.id)}</b> lists</span>
-              <span className="ml-auto text-brand-dark/40">Since {formatDate(s.subscribed_since)}</span>
+              <span className="ml-auto text-brand-dark/40">Since {formatDate(s.subscribedSince)}</span>
             </div>
           </button>
         ))}
@@ -88,13 +88,13 @@ export default function SubscribersTab() {
                   <p className="font-body text-xs text-brand-dark/50">{s.email}</p>
                 </td>
                 <td className="px-5 py-4">
-                  <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscriptionStatus] || statusColor.ACTIVE}`}>
-                    {STATUS_LABEL[s.subscriptionStatus]}
+                  <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${statusColor[s.subscriptionStatus || s.subscription_status] || statusColor.ACTIVE}`}>
+                    {STATUS_LABEL[s.subscriptionStatus || s.subscription_status]}
                   </span>
                 </td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark">{countRecip(s.id)}</td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark">{countLists(s.id)}</td>
-                <td className="px-5 py-4 font-body text-sm text-brand-dark/50">{formatDate(s.subscribed_since)}</td>
+                <td className="px-5 py-4 font-body text-sm text-brand-dark/50">{formatDate(s.subscribedSince)}</td>
                 <td className="px-5 py-4 text-right"><ChevronRight className="w-5 h-5 text-brand-dark/30 inline" /></td>
               </tr>
             ))}

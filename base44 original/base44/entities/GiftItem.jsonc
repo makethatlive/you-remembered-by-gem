@@ -1,0 +1,174 @@
+{
+  "name": "GiftItem",
+  "type": "object",
+  "properties": {
+    "gift_list_id": {
+      "type": "string",
+      "description": "Parent gift list id"
+    },
+    "subscriber_user_id": {
+      "type": "string",
+      "description": "Auth user id of the owning subscriber; copied from the parent GiftList at creation for RLS scoping"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "Linked Product id"
+    },
+    "title": {
+      "type": "string",
+      "description": "Product title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description"
+    },
+    "why_this_gift": {
+      "type": "string",
+      "description": "Gem's note on why this gift"
+    },
+    "product_url": {
+      "type": "string",
+      "description": "Retailer product URL"
+    },
+    "affiliate_url": {
+      "type": "string",
+      "description": "Affiliate URL used for click-through tracking; falls back to product_url"
+    },
+    "retailer_name": {
+      "type": "string",
+      "description": "UK retailer name"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price in GBP"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "curated_product",
+        "curated_retailer",
+        "shopify_upload",
+        "legacy_unknown"
+      ],
+      "description": "Provenance copied from the linked Product at creation; curated_product shows the Gem's Pick badge"
+    },
+    "delivery_speed": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "next_day",
+        "experience",
+        "digital"
+      ],
+      "default": "standard",
+      "description": "Delivery speed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "standby",
+        "swapped",
+        "removed"
+      ],
+      "default": "active",
+      "description": "Item status. 'active' = shown to subscriber; 'standby' = verified best-match held back for swapping; 'swapped'/'removed' = discarded"
+    },
+    "subscriber_action": {
+      "type": "string",
+      "enum": [
+        "purchased",
+        "not_purchased"
+      ],
+      "description": "Subscriber purchase action"
+    },
+    "feedback": {
+      "type": "string",
+      "enum": [
+        "loved_it",
+        "bad_suggestion"
+      ],
+      "description": "Subscriber feedback"
+    },
+    "admin_feedback_reason": {
+      "type": "string",
+      "enum": [
+        "wrong_age",
+        "wrong_audience",
+        "not_relevant",
+        "too_generic",
+        "duplicate",
+        "poor_quality",
+        "bad_link_or_data",
+        "other"
+      ],
+      "description": "Reason Gem flagged this gift item"
+    },
+    "admin_feedback_note": {
+      "type": "string",
+      "description": "Optional note from Gem explaining the feedback"
+    },
+    "selection_score": {
+      "type": "number",
+      "description": "Score assigned to this gift item during selection"
+    },
+    "matched_signals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Deterministic scoring evidence captured at selection time, max 4 short strings (round-3 R6). Layer C until publish: absence means the item was generated pre-publish or pre-R6. Display-only; nothing gates on it."
+    },
+    "suitability_confidence": {
+      "type": "number",
+      "description": "AI self-assessed fit 1-5 at selection time"
+    },
+    "suitability_reasoning": {
+      "type": "string",
+      "description": "AI's one-sentence suitability judgment"
+    },
+    "ai_flag_concern": {
+      "type": "string",
+      "description": "Critic-pass concern; presence means the item was auto-demoted to standby for Gem's attention"
+    }
+  },
+  "required": [
+    "gift_list_id",
+    "title",
+    "price",
+    "product_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.subscriber_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -18,7 +18,7 @@ export default function UsersTab() {
   });
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-1">Users</h1>
       <p className="font-body text-sm text-brand-dark/50 mb-6">
         Everyone registered. Toggle the switch to make someone an admin.

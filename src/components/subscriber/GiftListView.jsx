@@ -108,7 +108,7 @@ export default function GiftListView({ listId, onBack }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-5 pt-5">
+    <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 pt-5">
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"
@@ -119,13 +119,13 @@ export default function GiftListView({ listId, onBack }) {
       {list && (
         <div className="mb-5">
           <p className="font-body text-xs uppercase tracking-wide text-brand-gold font-semibold">
-            {TYPE_LABEL[list.list_type]}
+            {TYPE_LABEL[list.listType]}
           </p>
           <h1 className="font-display text-2xl text-brand-dark leading-tight mt-1">
             Gifts for {recipient?.name}
           </h1>
           <p className="font-body text-sm text-brand-dark/50">
-            Birthday {formatDate(list.birthday_date)}
+            Birthday {formatDate(list.birthdayDate)}
           </p>
         </div>
       )}
@@ -141,9 +141,9 @@ export default function GiftListView({ listId, onBack }) {
             return (
               <div key={item.id} className="bg-brand-cream-card rounded-2xl shadow-sm overflow-hidden">
                 <div className="h-44 bg-brand-cream">
-                  {item.image_url && !broken[item.id] && (
+                  {item.imageUrl && !broken[item.id] && (
                     <img
-                      src={item.image_url}
+                      src={item.imageUrl}
                       alt={item.title}
                       onError={() => setBroken((b) => ({ ...b, [item.id]: true }))}
                       className="w-full h-full object-cover"
@@ -157,8 +157,8 @@ export default function GiftListView({ listId, onBack }) {
                       {gbp(item.price)}
                     </span>
                   </div>
-                  {item.retailer_name && (
-                    <p className="font-body text-xs text-brand-gold mt-0.5">{item.retailer_name}</p>
+                  {item.retailerName && (
+                    <p className="font-body text-xs text-brand-gold mt-0.5">{item.retailerName}</p>
                   )}
                   {item.why_this_gift && (
                     <p className="font-body text-sm text-brand-dark/70 mt-2">{item.why_this_gift}</p>
@@ -216,9 +216,9 @@ export default function GiftListView({ listId, onBack }) {
             return (
               <div key={item.id} className="bg-brand-cream-card rounded-2xl shadow-sm overflow-hidden">
                 <div className="h-44 bg-brand-cream">
-                  {item.image_url && !broken[item.id] && (
+                  {item.imageUrl && !broken[item.id] && (
                     <img
-                      src={item.image_url}
+                      src={item.imageUrl}
                       alt={item.title}
                       onError={() => setBroken((b) => ({ ...b, [item.id]: true }))}
                       className="w-full h-full object-cover"
@@ -232,8 +232,8 @@ export default function GiftListView({ listId, onBack }) {
                       {gbp(item.price)}
                     </span>
                   </div>
-                  {item.retailer_name && (
-                    <p className="font-body text-xs text-brand-gold mt-0.5">{item.retailer_name}</p>
+                  {item.retailerName && (
+                    <p className="font-body text-xs text-brand-gold mt-0.5">{item.retailerName}</p>
                   )}
                   {item.why_this_gift && (
                     <p className="font-body text-sm text-brand-dark/70 mt-2">{item.why_this_gift}</p>

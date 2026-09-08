@@ -7,17 +7,25 @@ import StatCard from "./StatCard";
 export default function AdminDashboard({ onGoTab }) {
   const { subscribers, recipients, lists, items } = useAdminData();
 
-  const pending = lists.filter((l) => l.status === "pending_approval");
-  const sent = lists.filter((l) => l.status === "sent");
-  const ready = lists.filter(
-    (l) => (l.status === "approved" || l.status === "sent") && l.visible_to_subscriber !== false
-  );
-  const comingSoon = ready.filter((l) => daysUntil(l.birthday_date) > 30);
+  const pending = lists.filter((l) => {
+    const status = l.status;
+    return status === "PENDING_APPROVAL" || status === "pending_approval";
+  });
+  const sent = lists.filter((l) => {
+    const status = l.status;
+    return status === "SENT" || status === "sent";
+  });
+  const ready = lists.filter((l) => {
+    const status = l.status;
+    const visible = l.visibleToSubscriber ?? l.visible_to_subscriber;
+    return (status === "APPROVED" || status === "approved" || status === "SENT" || status === "sent") && visible !== false;
+  });
+  const comingSoon = ready.filter((l) => daysUntil(l.birthdayDate || l.birthday_date) > 30);
   const urgentList = pending
-    .map((l) => ({ l, d: daysUntil(l.birthday_date) }))
+    .map((l) => ({ l, d: daysUntil(l.birthdayDate || l.birthday_date) }))
     .filter((x) => x.d != null && x.d <= 31)
     .sort((a, b) => a.d - b.d)[0];
-  const urgentRecip = urgentList ? recipients.find((r) => r.id === urgentList.l.recipient_id) : null;
+  const urgentRecip = urgentList ? recipients.find((r) => r.id === urgentList.l.recipientId) : null;
 
   const links = [
     { id: "approvals", label: "Review Approval Queue", icon: Clock, count: pending.length },
@@ -27,12 +35,15 @@ export default function AdminDashboard({ onGoTab }) {
   ];
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-1">Hello Gemma</h1>
       <p className="font-body text-sm text-brand-dark/50 mb-6">Here's how your members are looking today.</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mb-5">
-        <StatCard value={subscribers.filter((s) => s.subscriptionStatus === "ACTIVE" || s.subscriptionStatus === "TRIALLING").length} label="Active Subscribers" onClick={() => onGoTab("subscribers")} />
+        <StatCard value={subscribers.filter((s) => {
+          const status = s.subscriptionStatus || s.subscription_status;
+          return status === "ACTIVE" || status === "active";
+        }).length} label="Active Subscribers" onClick={() => onGoTab("subscribers")} />
         <StatCard value={pending.length} label="Pending Approvals" onClick={() => onGoTab("approvals")} />
         <StatCard value={recipients.filter((r) => { const d = daysUntil(r.birthday); return d != null && d <= 7; }).length} label="Birthday This Week" onClick={() => onGoTab("calendar")} />
         <StatCard value={comingSoon.length} label="Coming Soon" onClick={() => onGoTab("sent")} />

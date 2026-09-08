@@ -34,19 +34,34 @@ export default function RetailerScrapeButton({ retailer }) {
         });
         const data = res?.data || {};
         if (data.error) throw new Error(data.error);
+        
+        // Debug logging to understand what backend returns
+        console.log(`[RetailerScrape] Batch ${i + 1} response:`, {
+          done: data.done,
+          hasCursor: !!data.cursor,
+          newProducts: data.batch?.newProducts,
+          updated: data.batch?.updated,
+          currentRetailer: data.currentRetailer,
+          retailersRemaining: data.retailersRemaining
+        });
+        
         totals.batches++;
-        totals.new_products += data.batch?.new_products || 0;
+        totals.new_products += data.batch?.newProducts || 0;
         totals.updated += data.batch?.updated || 0;
         totals.errors += data.batch?.errors?.length || 0;
         setProgress({ newProducts: totals.new_products, updated: totals.updated, batches: totals.batches });
-        cursor = data.cursor;
-        if (cursor) localStorage.setItem(cursorKey, cursor);
+        
         // "Complete" only when the backend explicitly returned done: true.
         if (data.done === true) {
           finished = true;
           break;
         }
-        if (!cursor) throw new Error("the scraper did not return a continuation token");
+        
+        cursor = data.cursor;
+        if (cursor) localStorage.setItem(cursorKey, cursor);
+        if (!cursor) {
+          throw new Error(`the scraper did not return a continuation token (done=${data.done}, retailers_remaining=${data.retailersRemaining})`);
+        }
         // Cooperative stop (pressed while running): break AFTER the batch and its
         // cursor save, so the next press resumes exactly here. Nothing is lost.
         if (stopRef.current) break;
@@ -59,9 +74,9 @@ export default function RetailerScrapeButton({ retailer }) {
           ? `${retailer.name} scrape stopped after ${totals.batches} batch(es) — progress saved, press Scrape to resume.`
           : `${retailer.name} scrape paused after ${MAX_BATCHES} batches — press Scrape again to continue.` });
       }
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["retailers"] });
-      queryClient.invalidateQueries({ queryKey: ["scrape-state"] });
+      console.log("[RetailerScrape] Refetching queries..."); queryClient.refetchQueries({ queryKey: ["products"] });
+      queryClient.refetchQueries({ queryKey: ["retailers"] });
+      queryClient.refetchQueries({ queryKey: ["scrape-state"] });
     } catch (err) {
       // SDK rejects on non-2xx — the real message lives on the response body.
       const serverError = err?.response?.data?.error;
@@ -75,7 +90,7 @@ export default function RetailerScrapeButton({ retailer }) {
           ? `Another scrape is still running — wait a few minutes, then press Scrape on ${retailer.name} again. Progress is saved.`
           : `${retailer.name} scrape stopped: ${msg}. Press Scrape again to resume from where it stopped.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["retailers"] });
+      queryClient.refetchQueries({ queryKey: ["retailers"] });
     } finally {
       stopRef.current = false;
       setProgress(null);

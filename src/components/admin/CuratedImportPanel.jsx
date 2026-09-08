@@ -155,7 +155,7 @@ export default function CuratedImportPanel({ onDone }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-2xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <button
         onClick={onDone}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"

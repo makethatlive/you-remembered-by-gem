@@ -13,11 +13,11 @@ export default function ApprovalQueue({ onGoTab, initialListId }) {
 
   const subById = (id) => subscribers.find((s) => s.id === id);
   const recById = (id) => recipients.find((r) => r.id === id);
-  const itemCount = (id) => items.filter((i) => i.gift_list_id === id).length;
+  const itemCount = (id) => items.filter((i) => i.giftListId === id).length;
 
   const pending = lists
-    .filter((l) => l.status === "pending_approval")
-    .sort((a, b) => daysUntil(a.birthday_date) - daysUntil(b.birthday_date));
+    .filter((l) => l.status === "PENDING_APPROVAL")
+    .sort((a, b) => daysUntil(a.birthdayDate) - daysUntil(b.birthdayDate));
 
   const birthdaysThisWeek = recipients.filter((r) => {
     const d = daysUntil(r.birthday);
@@ -41,8 +41,8 @@ export default function ApprovalQueue({ onGoTab, initialListId }) {
     return (
       <ApprovalDetail
         list={openList}
-        subscriber={subById(openList.subscriber_id)}
-        recipient={recById(openList.recipient_id)}
+        subscriber={subById(openList.subscriberId)}
+        recipient={recById(openList.recipientId)}
         onBack={() => setOpenListId(null)}
         onRegenerated={setOpenListId}
       />
@@ -50,11 +50,14 @@ export default function ApprovalQueue({ onGoTab, initialListId }) {
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark text-center mb-6">Approval Queue</h1>
 
       <div className="grid grid-cols-4 gap-2.5 sm:gap-3 mb-5">
-        <StatCard value={subscribers.filter((s) => s.subscriptionStatus === "ACTIVE" || s.subscriptionStatus === "TRIALLING").length} label="Active Subscribers" onClick={() => onGoTab?.("subscribers")} />
+        <StatCard value={subscribers.filter((s) => {
+          const status = s.subscriptionStatus || s.subscription_status;
+          return status === "ACTIVE" || status === "active";
+        }).length} label="Active Subscribers" onClick={() => onGoTab?.("subscribers")} />
         <StatCard value={pending.length} label="Pending Approvals" onClick={() => onGoTab?.("approvals")} />
         <StatCard value={birthdaysThisWeek} label="Birthday This Week" onClick={() => onGoTab?.("calendar")} />
         <StatCard value={feedbackCount} label="Feedback Items" onClick={() => onGoTab?.("insights")} />
@@ -62,8 +65,8 @@ export default function ApprovalQueue({ onGoTab, initialListId }) {
 
       <div className="space-y-3">
         {pending.map((l) => {
-          const recipient = recById(l.recipient_id);
-          const subscriber = subById(l.subscriber_id);
+          const recipient = recById(l.recipientId);
+          const subscriber = subById(l.subscriberId);
           const count = itemCount(l.id);
           return (
             <button
@@ -74,15 +77,15 @@ export default function ApprovalQueue({ onGoTab, initialListId }) {
               <div className="min-w-0">
                 <p className="font-display text-base text-brand-dark font-semibold">{recipient?.name}</p>
                 <p className="font-body text-sm text-brand-dark/50 truncate">
-                  For {subscriber?.name} · {LIST_LABEL[l.list_type]} · {count} {count === 1 ? "gift" : "gifts"}
+                  For {subscriber?.name} · {LIST_LABEL[l.listType]} · {count} {count === 1 ? "gift" : "gifts"}
                 </p>
                 <p className="font-body text-xs text-brand-dark/40 mt-1">
-                  Generated {formatDateTime(l.generated_at)}
+                  Generated {formatDateTime(l.generatedAt || l.createdAt)}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className="flex items-center gap-1 font-body text-sm text-brand-dark/60">
-                  <Cake className="w-4 h-4 text-brand-gold" /> {formatShortDate(l.birthday_date)}
+                  <Cake className="w-4 h-4 text-brand-gold" /> {formatShortDate(l.birthdayDate)}
                 </span>
                 <ChevronRight className="w-5 h-5 text-brand-dark/30" />
               </div>

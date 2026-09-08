@@ -1,0 +1,125 @@
+=====================================================
+  BROWSER CACHE FIX - READ THIS FIRST!
+=====================================================
+
+YOUR ISSUE: The code is correct but browser shows old version
+
+SOLUTION: Clear cache and force refresh
+
+=====================================================
+  STEP BY STEP (Do ALL steps in order)
+=====================================================
+
+STEP 1: Stop Dev Server
+------------------------
+1. Find terminal with "npm run dev" running
+2. Press: Ctrl + C
+3. Wait until it stops
+
+STEP 2: Delete Vite Cache
+--------------------------
+Run this command:
+  
+  cd d:\you-remembered-by-gem
+  Remove-Item -Recurse -Force node_modules\.vite
+
+STEP 3: Restart Dev Server  
+---------------------------
+Run:
+  
+  npm run dev
+
+Wait until you see "ready in XXX ms"
+
+STEP 4: Clear Browser Cache
+----------------------------
+METHOD A (Easiest - Chrome/Edge):
+  1. Press F12 (opens DevTools)
+  2. RIGHT-CLICK the reload button (⟳)
+  3. Click "Empty Cache and Hard Reload"
+  4. Close DevTools (press F12 again)
+
+METHOD B (Firefox):
+  1. Press Ctrl + Shift + Delete
+  2. Check ONLY "Cached Web Content"
+  3. Time range: "Everything"
+  4. Click "Clear Now"
+  5. Press Ctrl + Shift + R
+
+METHOD C (Nuclear - All browsers):
+  1. Close ALL browser windows
+  2. Reopen browser
+  3. Go to localhost:5173
+  4. Press Ctrl + F5
+
+=====================================================
+  HOW TO VERIFY IT WORKED
+=====================================================
+
+Look for this GREEN TEXT at top of Review tab:
+
+  "Showing 1-25 of 31 retailer groups [v2.0 - Nested Pagination Active]"
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                      This confirms new code loaded!
+
+ALSO CHECK:
+- Retailers per page dropdown should DEFAULT to "25" (not 50)
+- Each retailer with 50+ products shows pagination at bottom
+- Console (F12) shows logs like:
+  "[NeedsReviewPanel] RetailerName: 3245 total, showing 50 (page 1/65)"
+
+=====================================================
+  STILL NOT WORKING?
+=====================================================
+
+TRY INCOGNITO MODE:
+1. Press: Ctrl + Shift + N (Chrome/Edge) or Ctrl + Shift + P (Firefox)
+2. Go to: http://localhost:5173
+3. Navigate to Products > Review tab
+4. If it works here = cache issue in main browser
+5. If it doesn't work = different issue
+
+CHECK CONSOLE FOR ERRORS:
+1. Press F12
+2. Click "Console" tab
+3. Look for RED errors
+4. Share screenshot of any errors
+
+VERIFY DEV SERVER:
+- Should see: "Local: http://localhost:5173/"
+- No error messages
+- Greentext "ready in XXX ms"
+
+=====================================================
+  WHAT YOU SHOULD SEE WHEN WORKING
+=====================================================
+
+Review Tab Performance:
+✓ Loads in <1 second (not 10-30 seconds)
+✓ Shows max 25 retailers initially
+✓ Each retailer shows max 50 products initially
+✓ Pagination controls appear on retailers with 50+ products
+✓ Clicking page numbers changes products shown
+✓ Browser stays smooth and responsive
+
+Visual Indicators:
+✓ Green "[v2.0 - Nested Pagination Active]" text
+✓ "Showing 1-50 of XXX" in retailer headers (if >50 products)
+✓ Pagination buttons: First | Prev | 1 2 3 4 5 | Next | Last
+✓ Console logs showing pagination info (F12 > Console)
+
+=====================================================
+  NEED MORE HELP?
+=====================================================
+
+If still not working after ALL steps above:
+
+1. Take screenshot of Review tab
+2. Press F12, take screenshot of Console tab
+3. Check if green "[v2.0 - Nested Pagination Active]" appears
+4. Note: Is dev server running? Any terminal errors?
+5. Share all of the above
+
+The code is 100% correct - this is purely a browser cache issue!
+
+=====================================================

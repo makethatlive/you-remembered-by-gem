@@ -18,7 +18,7 @@ const TABS = [
 export default function AdminNav({ active, onChange }) {
   return (
     <div className="sticky top-16 z-30 bg-brand-cream/95 backdrop-blur border-b border-brand-gold/20">
-      <div className="max-w-8xl mx-auto px-3 flex gap-1 overflow-x-auto no-scrollbar">
+      <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 flex gap-1 overflow-x-auto no-scrollbar">
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = active === id;
           return (

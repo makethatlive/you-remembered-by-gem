@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { ArrowLeft, Cake, Gift, Loader2, Sparkles, Trash2, User } from "lucide-react";
-import { daysUntil, formatShortDate, gbp, LIST_LABEL, STATUS_LABEL } from "@/lib/format";
+import { daysUntil, formatShortDate, gbp, LIST_LABEL, STATUS_LABEL, AGE_BAND_LABEL, GENDER_LABEL } from "@/lib/format";
 import { useAdminData } from "@/lib/useAdminData";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -23,11 +23,33 @@ const statusColor = {
 };
 
 const statusPill = {
+  // Uppercase (from database)
+  GENERATING: "bg-blue-100 text-blue-700",
+  PENDING_APPROVAL: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-emerald-100 text-emerald-700",
+  SENT: "bg-emerald-100 text-emerald-700",
+  REJECTED: "bg-red-100 text-red-700",
+  // Legacy lowercase support
   generating: "bg-blue-100 text-blue-700",
   pending_approval: "bg-amber-100 text-amber-700",
   approved: "bg-emerald-100 text-emerald-700",
   sent: "bg-emerald-100 text-emerald-700",
   rejected: "bg-red-100 text-red-700",
+};
+
+const statusLabel = {
+  // Uppercase (from database)
+  GENERATING: "generating",
+  PENDING_APPROVAL: "pending approval",
+  APPROVED: "approved",
+  SENT: "sent",
+  REJECTED: "rejected",
+  // Legacy lowercase support
+  generating: "generating",
+  pending_approval: "pending approval",
+  approved: "approved",
+  sent: "sent",
+  rejected: "rejected",
 };
 
 export default function SubscriberDetail({ subscriber, onBack }) {
@@ -37,9 +59,9 @@ export default function SubscriberDetail({ subscriber, onBack }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const myRecipients = recipients.filter((r) => r.subscriber_id === subscriber.id);
+  const myRecipients = recipients.filter((r) => r.subscriberId === subscriber.id);
   const listsFor = (recipientId) =>
-    lists.filter((l) => l.recipient_id === recipientId).sort((a, b) => daysUntil(a.birthday_date) - daysUntil(b.birthday_date));
+    lists.filter((l) => l.recipientId === recipientId).sort((a, b) => daysUntil(a.birthdayDate) - daysUntil(b.birthdayDate));
 
   const generate = async (recipient) => {
     setGeneratingFor(recipient.id);
@@ -69,10 +91,10 @@ export default function SubscriberDetail({ subscriber, onBack }) {
     setDeleting(true);
     try {
       const recipIds = myRecipients.map((r) => r.id);
-      const myLists = lists.filter((l) => l.subscriber_id === subscriber.id);
+      const myLists = lists.filter((l) => l.subscriberId === subscriber.id);
       const items = await base44.entities.GiftItem.list("-created_date", 5000);
       const listIds = new Set(myLists.map((l) => l.id));
-      const orphanItems = items.filter((i) => listIds.has(i.gift_list_id));
+      const orphanItems = items.filter((i) => listIds.has(i.giftListId));
 
       for (const item of orphanItems) await base44.entities.GiftItem.delete(item.id);
       for (const l of myLists) await base44.entities.GiftList.delete(l.id);
@@ -92,7 +114,7 @@ export default function SubscriberDetail({ subscriber, onBack }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-5 pb-16">
+    <div className="max-w-3xl mx-auto px-8 sm:px-12 lg:px-16 pt-5 pb-16">
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"
@@ -112,14 +134,14 @@ export default function SubscriberDetail({ subscriber, onBack }) {
               <p className="font-body text-sm text-brand-dark/55 truncate">{subscriber.email}</p>
             </div>
           </div>
-          <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full shrink-0 ${statusColor[subscriber.subscriptionStatus] || statusColor.ACTIVE}`}>
-            {STATUS_LABEL[subscriber.subscriptionStatus]}
+          <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full shrink-0 ${statusColor[subscriber.subscriptionStatus || subscriber.subscription_status] || statusColor.ACTIVE}`}>
+            {STATUS_LABEL[subscriber.subscriptionStatus || subscriber.subscription_status]}
           </span>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-1 mt-4 font-body text-sm text-brand-dark/60">
           <span><b className="text-brand-teal">{myRecipients.length}</b> people</span>
-          <span><b className="text-brand-teal">{lists.filter((l) => l.subscriber_id === subscriber.id).length}</b> gift lists</span>
-          {subscriber.subscribed_since && <span className="text-brand-dark/40">Joined {formatShortDate(subscriber.subscribed_since)}</span>}
+          <span><b className="text-brand-teal">{lists.filter((l) => l.subscriberId === subscriber.id).length}</b> gift lists</span>
+          {subscriber.subscribedSince && <span className="text-brand-dark/40">Joined {formatShortDate(subscriber.subscribedSince)}</span>}
         </div>
       </div>
 
@@ -140,16 +162,16 @@ export default function SubscriberDetail({ subscriber, onBack }) {
                   <div className="min-w-0">
                     <p className="font-display text-lg text-brand-dark">{r.name}</p>
                     <p className="font-body text-sm text-brand-dark/50">
-                      {r.relationship} · {r.gender} · {r.age_band}
+                      {r.relationship} · {GENDER_LABEL[r.gender] || r.gender} · {AGE_BAND_LABEL[r.ageBand] || r.ageBand}
                     </p>
                     <p className="font-body text-sm text-brand-dark/60 mt-1 flex items-center gap-1.5">
                       <Cake className="w-4 h-4 text-brand-gold" />
                       {formatShortDate(r.birthday)}
                       {d != null && <span className="text-brand-dark/40">· {d === 0 ? "today" : `${d} day${d === 1 ? "" : "s"} away`}</span>}
                     </p>
-                    {(r.budget_min != null || r.budget_max != null) && (
+                    {(r.budgetMin != null || r.budgetMax != null) && (
                       <p className="font-body text-xs text-brand-dark/45 mt-1">
-                        Budget {gbp(r.budget_min)}–{gbp(r.budget_max)}
+                        Budget {gbp(r.budgetMin)}–{gbp(r.budgetMax)}
                       </p>
                     )}
                   </div>
@@ -174,11 +196,11 @@ export default function SubscriberDetail({ subscriber, onBack }) {
                           <span className="flex items-center gap-2 text-brand-dark/70 min-w-0">
                             <Gift className="w-4 h-4 text-brand-gold shrink-0" />
                             <span className="truncate">
-                              {LIST_LABEL[l.list_type]} · {formatShortDate(l.birthday_date)}
+                              {LIST_LABEL[l.listType]} · {new Date(l.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                             </span>
                           </span>
                           <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${statusPill[l.status] || "bg-slate-100 text-slate-600"}`}>
-                            {l.status.replace(/_/g, " ")}
+                            {statusLabel[l.status] || l.status}
                           </span>
                         </li>
                       ))}

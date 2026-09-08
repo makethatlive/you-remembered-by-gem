@@ -68,6 +68,7 @@ export default function ProductAddForm({ retailers, onDone }) {
       name: form.name.trim(),
       retailer_id: form.retailer_id,
       product_url: form.product_url.trim(),
+      affiliate_url: form.product_url.trim(), // Use product URL as affiliate URL by default
       image_url: form.image_url.trim(),
       price: Number(form.price),
       category: form.category.trim(),
@@ -76,12 +77,12 @@ export default function ProductAddForm({ retailers, onDone }) {
       // Manually added by Gem — personally curated provenance.
       source_type: "curated_product",
       status,
-      added_date: new Date().toISOString().slice(0, 10),
+      added_date: new Date().toISOString(),
     });
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-2xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <button
         onClick={onDone}
         className="flex items-center gap-1.5 text-brand-teal font-body text-sm font-medium mb-4 min-h-[44px]"

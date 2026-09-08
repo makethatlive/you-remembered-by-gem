@@ -15,12 +15,12 @@ export default function GiftItemCard({ item, state, onAction }) {
   return (
     <div className="bg-brand-cream-card rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row">
       <div className="relative md:w-44 h-48 md:h-auto bg-brand-cream shrink-0">
-        {item.source_type === "curated_product" && (
+        {(item.sourceType || item.source_type) === "curated_product" && (
           <GemsPickBadge className="absolute top-2 left-2 z-10" />
         )}
-        {item.image_url && !imgBroken && (
+        {item.imageUrl && !imgBroken && (
           <img
-            src={item.image_url}
+            src={item.imageUrl}
             alt={item.title}
             onError={() => setImgBroken(true)}
             className="w-full h-full object-cover"
@@ -32,7 +32,7 @@ export default function GiftItemCard({ item, state, onAction }) {
           <h3 className="font-display text-lg text-brand-dark leading-tight">{item.title}</h3>
           <span className="font-display text-lg text-brand-gold font-semibold whitespace-nowrap">{gbp(item.price)}</span>
         </div>
-        <p className="font-body text-sm text-brand-gold mt-0.5">{item.retailer_name}</p>
+        <p className="font-body text-sm text-brand-gold mt-0.5">{item.retailerName}</p>
         <p className="font-body text-sm text-brand-dark/60 mt-2">{item.description}</p>
         {item.why_this_gift && (
           <p className="font-body text-xs italic text-brand-dark/50 mt-2 border-l-2 border-brand-gold/40 pl-2">

@@ -19,6 +19,12 @@ import SourceBadge from "./SourceBadge";
 import { provenanceGroup, GROUP_LABELS, GROUP_ORDER } from "@/lib/provenance";
 
 const STATUS_STYLE = {
+  // Uppercase (from database)
+  ACTIVE: "bg-emerald-100 text-emerald-700",
+  INACTIVE: "bg-red-100 text-red-700",
+  NEEDS_REVIEW: "bg-amber-100 text-amber-700",
+  REPORTED_BROKEN: "bg-brand-gold/20 text-brand-dark",
+  // Legacy lowercase support
   active: "bg-emerald-100 text-emerald-700",
   inactive: "bg-red-100 text-red-700",
   needs_review: "bg-amber-100 text-amber-700",
@@ -65,7 +71,7 @@ export default function ProductsTab() {
     const rows = sourceFiltered.filter(
       (p) =>
         (statusFilter === "all" || p.status === statusFilter) &&
-        (retailerFilter === "all" || p.retailer_id === retailerFilter)
+        (retailerFilter === "all" || (p.retailerId || p.retailer_id) === retailerFilter)
     );
     if (!gemFirst) return rows;
     // Stable sort: groups in GROUP_ORDER, newest-first preserved within each group.
@@ -93,19 +99,19 @@ export default function ProductsTab() {
   }, [products]);
 
   const brokenCount = useMemo(
-    () => products.filter((p) => p.status === "reported_broken").length,
+    () => products.filter((p) => p.status === "REPORTED_BROKEN").length,
     [products]
   );
 
   const reviewCount = useMemo(
-    () => products.filter((p) => p.status === "needs_review").length,
+    () => products.filter((p) => p.status === "NEEDS_REVIEW").length,
     [products]
   );
 
   const markActive = useMutation({
     mutationFn: async (ids) => {
       await Promise.all(
-        ids.map((id) => base44.entities.Product.update(id, { status: "active" }))
+        ids.map((id) => base44.entities.Product.update(id, { status: "ACTIVE" }))
       );
     },
     onSuccess: () => {
@@ -116,7 +122,10 @@ export default function ProductsTab() {
 
   // Only needs_review rows can be flipped to active by the bulk tool
   const eligibleSelected = selected.filter(
-    (id) => products.find((p) => p.id === id)?.status === "needs_review"
+    (id) => {
+      const product = products.find((p) => p.id === id);
+      return product && product.status === "NEEDS_REVIEW";
+    }
   );
 
   const toggle = (id) =>
@@ -126,7 +135,7 @@ export default function ProductsTab() {
     return (
       <ProductEditForm
         product={editing}
-        retailerName={retailerName(editing.retailer_id)}
+        retailerName={retailerName(editing.retailerId || editing.retailer_id)}
         onDone={() => setEditing(null)}
       />
     );
@@ -141,7 +150,7 @@ export default function ProductsTab() {
   }
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-3xl text-brand-dark">Products</h1>
         <div className="flex items-center gap-2">
@@ -200,10 +209,10 @@ export default function ProductsTab() {
           <SelectTrigger className="h-10 w-48 bg-brand-cream-card"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="needs_review">Needs review</SelectItem>
-            <SelectItem value="reported_broken">Reported broken</SelectItem>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="INACTIVE">Inactive</SelectItem>
+            <SelectItem value="NEEDS_REVIEW">Needs review</SelectItem>
+            <SelectItem value="REPORTED_BROKEN">Reported broken</SelectItem>
           </SelectContent>
         </Select>
         <Select value={retailerFilter} onValueChange={setRetailerFilter}>
@@ -282,20 +291,20 @@ export default function ProductsTab() {
                   <Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} />
                 </td>
                 <td className="px-4 py-4">
-                  <ProductThumb src={p.image_url} />
+                  <ProductThumb src={p.imageUrl || p.image_url} />
                 </td>
                 <td className="px-4 py-4 font-display text-base text-brand-dark">{p.name}</td>
-                <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{retailerName(p.retailer_id)}</td>
+                <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{retailerName(p.retailerId || p.retailer_id)}</td>
                 <td className="px-4 py-4 font-body text-sm text-brand-dark">{p.price != null ? gbp(p.price) : "—"}</td>
                 <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{p.category || "—"}</td>
-                <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{p.gender_applies_to || "—"}</td>
+                <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{p.genderAppliesTo || p.gender_applies_to || "—"}</td>
                 <td className="px-4 py-4">
                   <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${STATUS_STYLE[p.status] || ""}`}>
                     {STATUS_LABEL[p.status] || p.status}
                   </span>
                 </td>
-                <td className="px-4 py-4 font-body text-sm text-brand-dark/50">{p.last_checked ? formatDate(p.last_checked) : "—"}</td>
-                <td className="px-4 py-4 font-body text-sm text-brand-dark/50">{p.last_verified ? formatDate(p.last_verified) : "—"}</td>
+                <td className="px-4 py-4 font-body text-sm text-brand-dark/50">{(p.lastChecked || p.last_checked) ? formatDate(p.lastChecked || p.last_checked) : "—"}</td>
+                <td className="px-4 py-4 font-body text-sm text-brand-dark/50">{(p.lastVerified || p.last_verified) ? formatDate(p.lastVerified || p.last_verified) : "—"}</td>
                 <td className="px-4 py-4"><SourceBadge product={p} /></td>
                 <td className="px-4 py-4 text-right">
                   <button onClick={() => setEditing(p)} className="inline-flex items-center gap-1 text-brand-teal font-body text-sm font-medium">
@@ -405,7 +414,9 @@ function ViewBtn({ active, onClick, icon: Icon, label }) {
 function SourceFilterSelect({ value, onChange, counts, total }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-10 w-56 bg-brand-cream-card"><SelectValue placeholder="Source" /></SelectTrigger>
+      <SelectTrigger className="h-10 w-56 bg-brand-cream-card">
+        <SelectValue />
+      </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All sources ({total})</SelectItem>
         {GROUP_ORDER.map((g) => (

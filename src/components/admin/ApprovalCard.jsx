@@ -24,9 +24,9 @@ export default function ApprovalCard({ list, subscriber, recipient, items, onApp
         </div>
         <div className="flex items-center gap-3 text-brand-dark/60">
           <span className="flex items-center gap-1 font-body text-sm">
-            <Cake className="w-4 h-4 text-brand-gold" /> {formatShortDate(list.birthday_date)}
+            <Cake className="w-4 h-4 text-brand-gold" /> {formatShortDate(list.birthdayDate)}
           </span>
-          <span className="font-body text-sm text-brand-teal font-medium">{LIST_LABEL[list.list_type]}</span>
+          <span className="font-body text-sm text-brand-teal font-medium">{LIST_LABEL[list.listType]}</span>
         </div>
       </div>
 
@@ -44,9 +44,9 @@ export default function ApprovalCard({ list, subscriber, recipient, items, onApp
         {items.map((item) => (
           <div key={item.id} className="bg-brand-cream rounded-xl p-3">
             <div className="relative h-28 rounded-lg overflow-hidden bg-brand-gold-soft/30">
-              {item.image_url && !broken[item.id] && (
+              {(item.imageUrl || item.image_url) && !broken[item.id] && (
                 <img
-                  src={item.image_url}
+                  src={item.imageUrl || item.image_url}
                   alt={item.title}
                   onError={() => setBroken((b) => ({ ...b, [item.id]: true }))}
                   className="w-full h-full object-cover"
@@ -57,7 +57,7 @@ export default function ApprovalCard({ list, subscriber, recipient, items, onApp
                   URGENT
                 </span>
               )}
-              {item.source_type === "curated_product" && (
+              {(item.sourceType || item.source_type) === "curated_product" && (
                 <GemsPickBadge className="absolute top-1.5 right-1.5" />
               )}
             </div>
@@ -65,14 +65,14 @@ export default function ApprovalCard({ list, subscriber, recipient, items, onApp
               <p className="font-display text-sm text-brand-dark leading-tight">{item.title}</p>
               <span className="font-body text-sm text-brand-gold font-semibold whitespace-nowrap">{gbp(item.price)}</span>
             </div>
-            <p className="font-body text-xs text-brand-gold">{item.retailer_name}</p>
+            <p className="font-body text-xs text-brand-gold">{item.retailerName || item.retailer_name}</p>
             <p className="font-body text-xs italic text-brand-dark/50 mt-1 line-clamp-2">{item.description}</p>
-            {item.why_this_gift && (
-              <p className="font-body text-xs text-brand-dark/60 mt-1 line-clamp-2">{item.why_this_gift}</p>
+            {(item.whyThisGift || item.why_this_gift) && (
+              <p className="font-body text-xs text-brand-dark/60 mt-1 line-clamp-2">{item.whyThisGift || item.why_this_gift}</p>
             )}
             <div className="flex items-center justify-between gap-2 mt-2">
               <a
-                href={item.product_url || "#"}
+                href={item.productUrl || item.product_url || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block font-body text-xs text-brand-teal font-medium underline"

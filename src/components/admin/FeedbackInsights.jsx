@@ -31,9 +31,12 @@ export default function FeedbackInsights() {
   });
   const trend = data?.[0] || null;
 
-  const purchased = items.filter((i) => i.subscriber_action === "purchased").length;
-  const loved = items.filter((i) => i.feedback === "loved_it").length;
-  const bad = items.filter((i) => i.feedback === "bad_suggestion").length;
+  const purchased = items.filter((i) => {
+    const action = i.subscriberAction || i.subscriber_action;
+    return action === "PURCHASED" || action === "purchased";
+  }).length;
+  const loved = items.filter((i) => i.feedback === "LOVED_IT" || i.feedback === "loved_it").length;
+  const bad = items.filter((i) => i.feedback === "BAD_SUGGESTION" || i.feedback === "bad_suggestion").length;
   const totalFeedback = loved + bad;
   const qualityScore = totalFeedback ? Math.round((loved / totalFeedback) * 100) : 0;
 
@@ -43,7 +46,7 @@ export default function FeedbackInsights() {
   ];
 
   const retailerCounts = items.reduce((acc, i) => {
-    const r = i.retailer_name;
+    const r = i.retailerName || i.retailer_name;
     if (r) acc[r] = (acc[r] || 0) + 1;
     return acc;
   }, {});
@@ -52,7 +55,7 @@ export default function FeedbackInsights() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
 
-  const categoryData = (trend?.category_stats || [])
+  const categoryData = ((trend?.categoryStats || trend?.category_stats) || [])
     .slice()
     .sort((a, b) => (b.score || 0) - (a.score || 0))
     .slice(0, 8)
@@ -61,7 +64,7 @@ export default function FeedbackInsights() {
       return { name: name.length > 14 ? name.slice(0, 12) + "…" : name, score: s.score };
     });
 
-  const reasonRows = (trend?.rejection_reason_counts || [])
+  const reasonRows = ((trend?.rejectionReasonCounts || trend?.rejection_reason_counts) || [])
     .slice()
     .sort((a, b) => (b.count || 0) - (a.count || 0));
 
@@ -85,7 +88,7 @@ export default function FeedbackInsights() {
   };
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <h1 className="font-display text-3xl text-brand-dark mb-6">Feedback {"&"} Insights</h1>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -144,7 +147,7 @@ export default function FeedbackInsights() {
           {refreshingTrends ? "Refreshing…" : "Refresh trend stats"}
         </button>
         <p className="font-body text-sm text-brand-dark/70">
-          {trend ? `Last computed: ${formatDateTime(trend.computed_at)}` : "Never computed yet"}
+          {trend ? `Last computed: ${formatDateTime(trend.computedAt || trend.computed_at)}` : "Never computed yet"}
         </p>
       </div>
 
@@ -177,14 +180,14 @@ export default function FeedbackInsights() {
 
           <h3 className="font-display text-base text-brand-dark font-semibold mt-4 mb-2">Recently loved</h3>
           <div className="space-y-3">
-            {(trend.recent_loved_titles || []).map((title, i) => (
+            {((trend.recentLovedTitles || trend.recent_loved_titles) || []).map((title, i) => (
               <Row key={`loved-${i}`} icon={Heart} color="text-rose-500" label={title} value="" />
             ))}
           </div>
 
           <h3 className="font-display text-base text-brand-dark font-semibold mt-4 mb-2">Recently rejected</h3>
           <div className="space-y-3">
-            {(trend.recent_rejected_titles || []).map((title, i) => (
+            {((trend.recentRejectedTitles || trend.recent_rejected_titles) || []).map((title, i) => (
               <Row key={`rejected-${i}`} icon={ThumbsDown} color="text-brand-amber" label={title} value="" />
             ))}
           </div>

@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight, Pencil, Store, Package } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { gbp } from "@/lib/format";
 import { STATUS_LABEL } from "./ProductEditForm";
 import ProductThumb from "./ProductThumb";
@@ -20,6 +23,8 @@ const STATUS_STYLE = {
 // filter active every retailer still shows (active AND inactive — unchanged).
 export default function ProductsByRetailer({ products, retailers, onEdit, hideEmpty = false }) {
   const [open, setOpen] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
 
   const toggle = (id) => setOpen((o) => ({ ...o, [id]: !o[id] }));
 
@@ -27,7 +32,8 @@ export default function ProductsByRetailer({ products, retailers, onEdit, hideEm
   const byRetailer = useMemo(() => {
     const map = new Map();
     for (const p of products) {
-      const key = p.retailer_id || "__none__";
+      // Support both camelCase (from API) and snake_case (legacy)
+      const key = p.retailerId || p.retailer_id || "__none__";
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(p);
     }
@@ -48,9 +54,38 @@ export default function ProductsByRetailer({ products, retailers, onEdit, hideEm
     return hideEmpty ? rows.filter((g) => g.items.length > 0) : rows;
   }, [retailers, byRetailer, hideEmpty]);
 
+  // Pagination calculations
+  const totalGroups = groups.length;
+  const totalPages = Math.ceil(totalGroups / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedGroups = groups.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [hideEmpty, itemsPerPage]);
+
   return (
-    <div className="space-y-3">
-      {groups.map((g) => {
+    <>
+      {/* Per page selector and stats */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-body text-sm text-brand-dark/60">
+          Showing {startIndex + 1}–{Math.min(endIndex, totalGroups)} of {totalGroups} retailer{totalGroups === 1 ? "" : "s"}
+        </p>
+        <Select value={String(itemsPerPage)} onValueChange={(v) => setItemsPerPage(Number(v))}>
+          <SelectTrigger className="h-10 w-32 bg-brand-cream-card"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="25">25 per page</SelectItem>
+            <SelectItem value="50">50 per page</SelectItem>
+            <SelectItem value="100">100 per page</SelectItem>
+            <SelectItem value="200">200 per page</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-3">
+      {paginatedGroups.map((g) => {
         const isOpen = !!open[g.id];
         return (
           <div key={g.id} className="bg-brand-cream-card rounded-2xl shadow-sm overflow-hidden">
@@ -76,7 +111,7 @@ export default function ProductsByRetailer({ products, retailers, onEdit, hideEm
                 ) : (
                   g.items.map((p) => (
                     <div key={p.id} className="flex items-center gap-4 px-5 py-3 border-b border-brand-gold/10 last:border-0">
-                      <ProductThumb src={p.image_url} />
+                      <ProductThumb src={p.imageUrl || p.image_url} />
                       <div className="min-w-0 flex-1">
                         <p className="font-display text-base text-brand-dark truncate">{p.name}</p>
                         <p className="font-body text-sm text-brand-dark/55">
@@ -110,5 +145,75 @@ export default function ProductsByRetailer({ products, retailers, onEdit, hideEm
         </div>
       )}
     </div>
+
+    {/* Pagination Controls */}
+    {totalPages > 1 && (
+      <div className="flex items-center justify-between mt-5">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            First
+          </button>
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {/* Show page numbers */}
+          {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 7) {
+              pageNum = i + 1;
+            } else if (currentPage <= 4) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 3) {
+              pageNum = totalPages - 6 + i;
+            } else {
+              pageNum = currentPage - 3 + i;
+            }
+            
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`w-10 h-10 rounded-lg font-body text-sm ${
+                  currentPage === pageNum
+                    ? 'bg-brand-teal text-brand-cream font-medium'
+                    : 'text-brand-dark/70 hover:bg-brand-cream-card'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-2 rounded-lg font-body text-sm text-brand-dark/70 hover:bg-brand-cream-card disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Last
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

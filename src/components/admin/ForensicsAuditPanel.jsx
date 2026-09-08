@@ -41,7 +41,7 @@ export default function ForensicsAuditPanel() {
   };
 
   return (
-    <div className="max-w-8xl mx-auto px-5 pt-6 pb-16">
+    <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       <div className="flex items-center justify-between mb-2">
         <h1 className="font-display text-3xl text-brand-dark">Catalogue audit</h1>
         <div className="flex items-center gap-3">
