@@ -1390,6 +1390,12 @@ function requireAdmin(req, res, next) {
   // For now, allow all requests in development
   // In production, this should check JWT token or session
   const adminKey = req.headers['x-admin-key'];
+  
+  // Skip check if ADMIN_API_KEY is not set (authentication disabled)
+  if (!process.env.ADMIN_API_KEY) {
+    return next();
+  }
+  
   if (process.env.NODE_ENV === 'production' && adminKey !== process.env.ADMIN_API_KEY) {
     return res.status(403).json({ error: 'Admin access required' });
   }
