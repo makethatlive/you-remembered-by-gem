@@ -95,7 +95,12 @@ export default function CuratedImportPanel({ onDone }) {
           setError(res.data.error);
           break;
         }
-        if (typeof res?.data?.done !== "boolean" || typeof res?.data?.next_row !== "number") {
+        // Check for both snake_case (legacy) and camelCase (current) field names
+        const done = res?.data?.done;
+        const nextRow = res?.data?.nextRow || res?.data?.next_row;
+        
+        if (typeof done !== "boolean" || typeof nextRow !== "number") {
+          console.error('Unexpected response format:', res?.data);
           setError("Unexpected response from import — stopped.");
           break;
         }
@@ -103,38 +108,41 @@ export default function CuratedImportPanel({ onDone }) {
         // every later batch's fresh re-extraction is checked against it server-side
         // (backend W3.3(c) Part 2) — a shrunk/reordered re-extraction 409s instead
         // of silently finishing with done:true and rows missing.
-        if (file_url && !expectedTotal && typeof res?.data?.extracted_total === "number") {
-          expectedTotal = res.data.extracted_total;
+        const extractedTotal = res?.data?.extractedTotal || res?.data?.extracted_total;
+        if (file_url && !expectedTotal && typeof extractedTotal === "number") {
+          expectedTotal = extractedTotal;
         }
 
-        totals.created_active += res.data.created_active || 0;
-        totals.created_needs_review += res.data.created_needs_review || 0;
-        totals.updated_existing += res.data.updated_existing || 0;
-        totals.matched_existing += res.data.matched_existing || 0;
-        totals.fields_filled += res.data.fields_filled || 0;
-        totals.created_retailers = totals.created_retailers.concat(res.data.created_retailers || []);
-        totals.category_conflicts_unresolved = totals.category_conflicts_unresolved.concat(res.data.category_conflicts_unresolved || []);
+        totals.created_active += res.data.createdActive || res.data.created_active || 0;
+        totals.created_needs_review += res.data.createdNeedsReview || res.data.created_needs_review || 0;
+        totals.updated_existing += res.data.updatedExisting || res.data.updated_existing || 0;
+        totals.matched_existing += res.data.matchedExisting || res.data.matched_existing || 0;
+        totals.fields_filled += res.data.fieldsFilled || res.data.fields_filled || 0;
+        totals.created_retailers = totals.created_retailers.concat(res.data.createdRetailers || res.data.created_retailers || []);
+        totals.category_conflicts_unresolved = totals.category_conflicts_unresolved.concat(res.data.categoryConflictsUnresolved || res.data.category_conflicts_unresolved || []);
         // Round-3 (R1d) reports every Interest Category / Gender value the canonical
         // taxonomy did not recognise. Union across batches, first-seen order, so the
         // report can show Gem the real value set in one place: the response arrays are
         // otherwise visible only in the network tab.
+        const unknownCategories = res.data.unknownCategories || res.data.unknown_categories || [];
         totals.unknown_categories = totals.unknown_categories.concat(
-          (res.data.unknown_categories || []).filter((v) => !totals.unknown_categories.includes(v))
+          unknownCategories.filter((v) => !totals.unknown_categories.includes(v))
         );
+        const unknownGenders = res.data.unknownGenders || res.data.unknown_genders || [];
         totals.unknown_genders = totals.unknown_genders.concat(
-          (res.data.unknown_genders || []).filter((v) => !totals.unknown_genders.includes(v))
+          unknownGenders.filter((v) => !totals.unknown_genders.includes(v))
         );
         totals.skipped = totals.skipped.concat(res.data.skipped || []);
         processedCount += res.data.processed || 0;
         setProcessed(processedCount);
         setReport({ ...totals, skipped: totals.skipped.slice() });
 
-        if (res.data.done) break;
-        if (res.data.next_row <= start_row) {
+        if (done) break;
+        if (nextRow <= start_row) {
           setError("Import made no forward progress — stopped.");
           break;
         }
-        start_row = res.data.next_row;
+        start_row = nextRow;
       }
     } catch (e) {
       // functions.invoke rejects on any non-2xx — the function's real JSON body (its

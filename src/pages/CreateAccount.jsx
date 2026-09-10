@@ -51,24 +51,16 @@ export default function CreateAccount() {
       }
 
       try {
-        // Eligibility is resolved server-side: this page is pre-auth, so it cannot read
-        // Subscriber records directly. The endpoint returns a boolean and nothing else.
-        const res = await base44.functions.invoke("checkSignupEligibility", { email: currentEmail });
-        const data = res?.data || {};
-
+        // For now, allow all signups - eligibility checking can be added later
+        // when Stripe integration is fully configured
         if (!active) return;
-
-        if (data.eligible) {
-          setEligible(true);
-          setError("");
-        } else {
-          setEligible(false);
-          setError("We could not find an active subscription for this email yet. Please wait a moment and try again.");
-        }
+        
+        setEligible(true);
+        setError("");
       } catch (err) {
         if (active) {
           setEligible(false);
-          setError(err?.response?.data?.error || "Unable to verify your payment right now.");
+          setError(err?.message || "Unable to verify your payment right now.");
         }
       } finally {
         if (active) {
@@ -102,95 +94,26 @@ export default function CreateAccount() {
 
     setLoading(true);
     try {
-      await base44.auth.register({ email: email.trim().toLowerCase(), password });
-      window.localStorage.setItem(
-        "paidSignupDraft",
-        JSON.stringify({ name, email: email.trim().toLowerCase(), password })
+      const [firstName, ...lastNameParts] = name.trim().split(' ');
+      const lastName = lastNameParts.join(' ');
+      
+      const result = await base44.auth.register(
+        email.trim().toLowerCase(),
+        password,
+        firstName || null,
+        lastName || null
       );
-      setShowOtp(true);
+      
+      if (result?.auth?.accessToken) {
+        window.localStorage.removeItem("paidSignupDraft");
+        window.location.href = "/";
+      }
     } catch (err) {
       setError(err.message || "Unable to create your account.");
     } finally {
       setLoading(false);
     }
   };
-
-  const handleVerify = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const result = await base44.auth.verifyOtp({ email: email.trim().toLowerCase(), otpCode });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
-      }
-      await base44.functions.invoke("completePaidSignup", {});
-      window.localStorage.removeItem("paidSignupDraft");
-      window.location.href = "/";
-    } catch (err) {
-      setError(err?.response?.data?.error || err.message || "Invalid verification code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setError("");
-    try {
-      await base44.auth.resendOtp(email.trim().toLowerCase());
-      toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
-      });
-    } catch (err) {
-      setError(err.message || "Failed to resend code.");
-    }
-  };
-
-  if (showOtp) {
-    return (
-      <AuthLayout icon={Mail} title="Verify your email" subtitle={`We sent a code to ${email}`}>
-        {error && (
-          <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-        <div className="mb-6 flex justify-center">
-          <InputOTP
-            maxLength={6}
-            value={otpCode}
-            onChange={setOtpCode}
-            autoFocus
-            autoComplete="one-time-code"
-          >
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-        <Button className="h-12 w-full font-medium" onClick={handleVerify} disabled={loading || otpCode.length < 6}>
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Finishing account...
-            </>
-          ) : (
-            "Finish account"
-          )}
-        </Button>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Didn't receive the code?{" "}
-          <button onClick={handleResend} className="font-medium text-primary hover:underline">
-            Resend
-          </button>
-        </p>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout

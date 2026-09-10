@@ -124,9 +124,9 @@ ${ctaButton("Add your people →", APP_URL)}
 <p><b>3. Receive five beautiful ideas</b><br/>Four weeks before the occasion, five carefully chosen gift ideas land in your inbox — each one selected with that specific person in mind, with a direct link to buy. No faff, no generic suggestions, no last-minute panic.</p>
 <p>That's it.</p>
 <p><b>And one more thing — your three bonus gift consultations</b><br/>Life doesn't only happen on birthdays. As part of your subscription you have three bonus gift consultations each year — for a wedding, a new baby, a graduation, a first home, a new job, or simply a moment that deserves to be marked properly. Just drop me an email and I'll come back to you with five ideas. Think of them as your secret weapon for every unexpected celebration.</p>
-<p><b>A note from me</b><br/>You Remembered, by Gem is a personal service — there's a real human behind every set of recommendations. If you ever want to update a profile, change a budget, or just tell me something isn't working, reply to any email and I'll come straight back to you.</p>
+<p><b>A note from me</b><br/>You Remembered, by Gem is a personal service — there's a real human behind every set of recommendations. Profile updates, budgets, and adding new people are all quick to do any time in your account — just log in and edit directly. But if anything isn't working, or something doesn't feel right, email me directly and I'll come straight back to you.</p>
 <p>I'm so glad you've trusted me with the people who matter most to you.</p>
-<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com</p>`;
+<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>`;
 
     const footerNote = `You're receiving this because you recently subscribed to You Remembered, by Gem. To manage your account or unsubscribe, click <a href="${APP_URL}" style="color:#164E63;">here</a>.`;
 

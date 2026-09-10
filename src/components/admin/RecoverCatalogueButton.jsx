@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { ArchiveRestore, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export default function RecoverCatalogueButton() {
   const queryClient = useQueryClient();
@@ -15,16 +16,36 @@ export default function RecoverCatalogueButton() {
 
   const runRecovery = async () => {
     setRunning(true);
+    setOpen(false);
+    
     try {
-      const res = await base44.functions.invoke("recoverInactiveProducts", {});
-      const data = res?.data || {};
-      if (data.error) throw new Error(data.error);
+      const response = await fetch(`${API_URL}/api/products/recover-catalogue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Recovery failed');
+      }
+      
+      const data = await response.json();
+      
       toast({
         description: `Checked ${data.checked ?? 0} inactive products — ${data.recovered_to_review ?? 0} moved to review, ${data.confirmed_gone ?? 0} confirmed gone, ${data.excluded_as_junk ?? 0} excluded as junk.`,
       });
+      
+      // Refresh products list
       queryClient.invalidateQueries({ queryKey: ["products"] });
-    } catch {
-      toast({ description: "Recovery couldn't complete — please try again." });
+    } catch (error) {
+      console.error('Recovery error:', error);
+      toast({ 
+        variant: "destructive",
+        description: error.message || "Recovery couldn't complete — please try again." 
+      });
     } finally {
       setRunning(false);
     }

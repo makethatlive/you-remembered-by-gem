@@ -12,17 +12,46 @@ datasource db {
 
 // User entity - handles authentication and authorization
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  role      Role     @default(USER)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  password              String?   // Hashed password
+  firstName             String?   @map("first_name")
+  lastName              String?   @map("last_name")
+  role                  Role      @default(USER)
+  isEmailVerified       Boolean   @default(false) @map("is_email_verified")
+  emailVerificationToken String?  @unique @map("email_verification_token")
+  emailVerifiedAt       DateTime? @map("email_verified_at")
+  passwordResetToken    String?   @unique @map("password_reset_token")
+  passwordResetExpires  DateTime? @map("password_reset_expires")
+  lastLoginAt           DateTime? @map("last_login_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   // Relations
   subscribers Subscriber[]
   recipients  Recipient[]
+  sessions    Session[]
 
   @@map("users")
+}
+
+// Session entity - tracks user sessions
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  token        String   @unique
+  refreshToken String?  @unique @map("refresh_token")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
 }
 
 enum Role {
@@ -198,8 +227,11 @@ model Recipient {
   budgetMin             Decimal?  @map("budget_min") @db.Decimal(10, 2)
   budgetMax             Decimal?  @map("budget_max") @db.Decimal(10, 2)
   interests             String[]
+  interestsDetail       Json?     @map("interests_detail") // Structured interests with follow-ups and other text
   personality           String[]
+  personalityOther      String?   @map("personality_other") @db.Text // Free text when 'Other' personality selected
   giftTypes             String[]  @map("gift_types")
+  giftTypesOther        String?   @map("gift_types_other") @db.Text // Free text when 'Other' gift type selected
   avoidNotes            String?   @map("avoid_notes") @db.Text
   whoTheyAre            String?   @map("who_they_are") @db.Text
   hobbiesAndInterests   String?   @map("hobbies_and_interests") @db.Text

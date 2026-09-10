@@ -192,13 +192,13 @@ Deno.serve(async (req) => {
           const safeOccasion = escapeHtml(occasion);
           const innerHtml = `<p>Hi ${safeGreetName},</p>
 <p>${safeName}'s ${safeOccasion} is coming up on ${dateLabel(occDate)} — which means it's time to start finding something truly special for them.</p>
-<p>I'm putting your curated gift ideas together now, and I want to make sure they're as personal and thoughtful as possible. Here's what you've told me about ${safeName} so far:</p>
+<p>Here's what I've got noted down for ${safeName} so far — have a quick look and see if anything's changed:</p>
 ${knownRows(recipient)}
 <p><b>Does anything need updating?</b><br/>Life moves fast — and the best gift ideas often come from small details. Has anything changed recently? A new hobby? A big life moment? Something they've mentioned wanting?</p>
 ${ctaButton(`Update ${safeName}'s profile →`, editLink)}
 <p>If everything looks good and you're happy for me to go ahead, you don't need to do a thing.</p>
 <p>Your gift ideas will land in your inbox on ${giftIdeasDate}.</p>
-<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com</p>`;
+<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>`;
           const footerNote = `You're receiving this because ${safeName}'s ${safeOccasion} is coming up. To manage your account or unsubscribe, click <a href="${APP_URL}" style="color:#164E63;">here</a>.`;
           let status = "sent";
           try {
@@ -218,6 +218,43 @@ ${ctaButton(`Update ${safeName}'s profile →`, editLink)}
         }
       }
 
+      // ===== 2-week (14 day) reminder =====
+      if (until === 14) {
+        const occDate = nextOccurrence(recipient.birthday);
+        const occYear = occDate.getFullYear();
+
+        if (!(await alreadySent(recipient.id, "2_week_reminder", occYear))) {
+          const safeGreetName = escapeHtml(greetName);
+          const safeName = escapeHtml(name);
+          const safeOccasion = escapeHtml(occasion);
+          const giftIdeasLink = `${APP_URL}/people?edit=${recipient.id}`;
+          const innerHtml = `<p>Hi ${safeGreetName},</p>
+<p>Just a quick one — ${safeName}'s ${safeOccasion} is two weeks away, on ${dateLabel(occDate)}. I know life is busy, so this is just a gentle reminder to make sure the gift ideas I sent over weren't missed.</p>
+<p>Here they are again, ready when you are:</p>
+${ctaButton(`View ${safeName}'s gift ideas →`, giftIdeasLink)}
+<p><b>Not quite right?</b><br/>If none of these feel like the one, just email me directly at concierge@yourememberedbygem.com with a little more detail on ${safeName} and I'll personally look for alternatives — there's still time.</p>
+<p><b>A gentle note on timing:</b><br/>Most retailers can deliver within a week, so there's still time to order comfortably — just worth not leaving it much longer if you'd like anything personalised.</p>
+<p>Here if you need me,</p>
+<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>`;
+          const footerNote = `You're receiving this as part of your You Remembered, by Gem subscription. To manage your account or unsubscribe, click <a href="${APP_URL}" style="color:#164E63;">here</a>.`;
+          let status = "sent";
+          try {
+            await sendBrandedEmail(
+              subscriber.email,
+              `A quick nudge — ${name}'s ${occasion} is in 2 weeks 🔔`,
+              "Two weeks to go",
+              innerHtml,
+              footerNote
+            );
+          } catch {
+            status = "failed";
+          }
+          await logSend(recipient, "2_week_reminder", occYear, status);
+          sent++;
+          results.push({ recipient: name, type: "2_week_reminder", status });
+        }
+      }
+
       // ===== Post-occasion follow-up — automatic, 2 days after =====
       if (since === 2) {
         const occYear = currentYear;
@@ -225,24 +262,18 @@ ${ctaButton(`Update ${safeName}'s profile →`, editLink)}
           const safeGreetName = escapeHtml(greetName);
           const safeName = escapeHtml(name);
           const safeOccasion = escapeHtml(occasion);
+          const feedbackLink = `${APP_URL}/feedback?recipient=${recipient.id}&year=${occYear}`;
           const innerHtml = `<p>Hi ${safeGreetName},</p>
 <p>${safeName}'s ${safeOccasion} was ${since} days ago — and I've been thinking about you.</p>
-<p>Did the gift land well?</p>
-<p>I ask partly because I genuinely want to know, and partly because your feedback makes next year's suggestions even better. A quick reply — even just a line or two — tells me everything I need to refine things for next time.</p>
-<p><b>A few questions if you have a moment:</b></p>
-<p><b>Did you buy one of the suggestions?</b><br/>
-□ Yes — and it went down really well<br/>
-□ Yes — the reaction was mixed<br/>
-□ No — I found something else instead<br/>
-□ No — I didn't end up buying a gift this time</p>
-<p><b>How did they react?</b></p>
-<p><b>Was there anything in the suggestions that didn't feel right?</b></p>
-<p><b>Any other feedback for next year?</b></p>
+<p><b>Did the gift land well?</b></p>
+<p>I ask partly because I genuinely want to know, and partly because your feedback makes next year's suggestions even better. It only takes a minute — just tap below:</p>
+${ctaButton("Share how it went →", feedbackLink)}
+<p>You'll be able to tell me whether you went with one of my suggestions, how ${safeName} reacted, and anything that didn't feel quite right — all of which helps me get next year's ideas even closer to perfect.</p>
 <p><b>One small favour</b><br/>If You Remembered, by Gem made a difference — if it saved you time, helped you give something truly thoughtful, or simply meant you didn't have to panic — I'd be so grateful if you'd share it with one person who might love it too.</p>
 <p>A personal recommendation from you means more than any advertising I could ever do. And if they subscribe, I'll add an extra bonus gift consultation to your account as a thank you.</p>
 ${ctaButton("Share You Remembered, by Gem →", "https://yourememberedbygem.com")}
 <p>And if anything didn't hit the mark this time, please tell me. This is a personal service and I'd rather know — it's the only way to make sure next year is even better.</p>
-<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com</p>`;
+<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>`;
           const footerNote = `You're receiving this as part of your You Remembered, by Gem subscription. To manage your account or unsubscribe, click <a href="${APP_URL}" style="color:#164E63;">here</a>.`;
           let status = "sent";
           try {

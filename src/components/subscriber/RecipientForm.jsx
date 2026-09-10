@@ -9,11 +9,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CheckboxGroup } from "@/components/onboarding/Fields";
+import StructuredInterestsField from "@/components/onboarding/StructuredInterestsField";
 import RelationshipField from "@/components/shared/RelationshipField";
 import OccasionsField from "@/components/onboarding/OccasionsField";
 import {
-  AGE_RANGES, CHILD_AGE_BRACKETS, CHILD_INTERESTS_HELPER, ageBandFromRange, ageBandFromChildBracket,
-  INTEREST_OPTIONS, PERSONALITY_OPTIONS, GIFT_TYPE_OPTIONS,
+  AGE_CATEGORIES, KIDS_AGE_RANGES, ADULT_AGE_RANGES, AGES_UNDER_12, ageBandFromRange, ageBandFromChildBracket,
+  CHILD_INTERESTS_HELPER, PERSONALITY_OPTIONS, GIFT_TYPE_OPTIONS, PERSONAL_OCCASIONS,
 } from "@/components/onboarding/options";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -111,28 +112,50 @@ function occasionsFromRecipient(recipient) {
 export default function RecipientForm({ subscriber, recipient, onDone }) {
   const queryClient = useQueryClient();
   const isEdit = !!recipient?.id;
+  
+  console.log("🔍 RecipientForm: Full recipient object keys:", Object.keys(recipient || {}));
+  console.log("🔍 RecipientForm: recipient data received:", recipient);
+  console.log("🔍 interests_detail from DB:", recipient?.interests_detail);
+  console.log("🔍 interestsDetail from DB (camelCase):", recipient?.interestsDetail);
+  console.log("🔍 personality_other from DB:", recipient?.personality_other);
+  console.log("🔍 personalityOther from DB (camelCase):", recipient?.personalityOther);
+  console.log("🔍 gift_types_other from DB:", recipient?.gift_types_other);
+  console.log("🔍 giftTypesOther from DB (camelCase):", recipient?.giftTypesOther);
+  
+  // Reconstruct interests from stored data (try both camelCase and snake_case)
+  const storedInterests = recipient?.interestsDetail || recipient?.interests_detail || { 
+    interests: recipient?.interests || [], 
+    followUps: {},
+    otherText: ""
+  };
+  
+  console.log("🔍 storedInterests for form:", storedInterests);
+  
   const [form, setForm] = useState({
     name: recipient?.name || "",
     relationship: recipient?.relationship || "",
     occasions: occasionsFromRecipient(recipient),
+    age_category: recipient?.ageRange ? (["1-2", "3-4", "5-6", "7-8", "9-11", "12-17"].includes(recipient.ageRange) ? "Kids" : "All adults") : "",
     age_range: recipient?.ageRange || "",
-    child_age_bracket: recipient?.childAgeBracket || "",
     gender: normalizeGenderForForm(recipient?.gender) || "",
     age_band: recipient?.ageBand || "",
-    interests: recipient?.interests || [],
+    interests: storedInterests,
     personality: recipient?.personality || [],
+    personality_other: recipient?.personalityOther || recipient?.personality_other || "",
     gift_types: recipient?.giftTypes || [],
+    gift_types_other: recipient?.giftTypesOther || recipient?.gift_types_other || "",
     avoid_notes: recipient?.avoidNotes || "",
     who_they_are: recipient?.whoTheyAre || "",
     hobbies_and_interests: recipient?.hobbiesAndInterests || "",
     things_you_know: recipient?.thingsYouKnow || "",
-    milestones: recipient?.milestones || "",
     notes: recipient?.notes || "",
   });
   const [errors, setErrors] = useState({});
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const isChild = form.age_range === "Under 11";
+  const isKids = form.age_category === "Kids";
+  const isUnder12 = isKids && AGES_UNDER_12.includes(form.age_range);
+  const ageRangeOptions = isKids ? KIDS_AGE_RANGES : ADULT_AGE_RANGES;
 
   // Post-save regeneration offer state:
   // null = no offer; { kind: "offer", labels, listId } = ask; { kind: "info", text } = one-button panel.
@@ -204,46 +227,81 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
     if (!form.relationship.trim()) er.relationship = "Relationship is required";
     if (!form.occasions.length) {
       er.occasions = "Please select at least one occasion";
-    } else if (form.occasions.some((o) =>
-      !o.day || !o.month || o.budget_min === "" || o.budget_max === "" || (o.type === "Other" && !o.custom_label.trim())
-    )) {
-      er.occasions = "Please complete the date and budget for each selected occasion";
+    } else {
+      // Validate each occasion
+      const hasInvalidOccasion = form.occasions.some((o) => {
+        const isPersonal = PERSONAL_OCCASIONS.includes(o.type);
+        const missingDate = isPersonal && (!o.day || !o.month);
+        const missingBudget = o.budget_min === "" || o.budget_max === "";
+        const missingCustomLabel = o.type === "Other" && !o.custom_label.trim();
+        return missingDate || missingBudget || missingCustomLabel;
+      });
+      
+      if (hasInvalidOccasion) {
+        er.occasions = "Please complete all required fields for each occasion";
+      } else {
+        // Validate budget values
+        const hasInvalidBudget = form.occasions.some((o) => {
+          const min = Number(o.budget_min);
+          const max = Number(o.budget_max);
+          return min < 0 || max < 0 || min > max;
+        });
+        
+        if (hasInvalidBudget) {
+          er.occasions = "Budget minimum must be ≤ maximum, and both must be positive numbers";
+        }
+      }
     }
     if (!form.gender) er.gender = "Gender is required";
+    if (!form.age_category) er.age_category = "Please select if this person is a child or adult";
     if (!form.age_range) er.age_range = "Age range is required";
-    if (isChild && !form.child_age_bracket) er.child_age_bracket = "Please choose an age bracket";
     setErrors(er);
     if (Object.keys(er).length) return;
 
     const pad = (n) => String(n).padStart(2, "0");
     const primary = form.occasions.find((o) => o.type === "Birthday") || form.occasions[0];
     const primaryLabel = primary.type === "Other" ? (primary.custom_label.trim() || "Other") : primary.type;
-    const day = Number(primary.day);
-    const month = Number(primary.month);
+    
+    // For non-personal occasions (Christmas, etc), use arbitrary date for legacy fields
+    const isPersonalPrimary = PERSONAL_OCCASIONS.includes(primary.type);
+    const day = isPersonalPrimary ? Number(primary.day) : 1;
+    const month = isPersonalPrimary ? Number(primary.month) : 12;
 
-    const { occasions, age_range, child_age_bracket, ...rest } = form;
-    mutation.mutate({
+    const { occasions, age_category, age_range, ...rest } = form;
+    
+    const payload = {
       ...rest,
       gender: normalizeGenderForDB(form.gender),
       age_range,
-      child_age_bracket: isChild ? child_age_bracket : undefined,
-      age_band: isChild ? ageBandFromChildBracket(child_age_bracket) : ageBandFromRange(age_range),
+      age_band: isUnder12 ? ageBandFromChildBracket(age_range) : ageBandFromRange(age_range),
       occasion: primaryLabel,
       occasion_day: day,
       occasion_month: month,
-      birthday: `--${pad(month)}-${pad(day)}`,
-      occasions: occasions.map((o) => ({
-        type: o.type === "Other" ? (o.custom_label.trim() || "Other") : o.type,
-        custom_label: o.type === "Other" ? o.custom_label.trim() : undefined,
-        day: Number(o.day),
-        month: Number(o.month),
-        budget_min: Number(o.budget_min),
-        budget_max: Number(o.budget_max),
-      })),
+      birthday: isPersonalPrimary ? `--${pad(month)}-${pad(day)}` : undefined,
+      occasions: occasions.map((o) => {
+        const isPersonal = PERSONAL_OCCASIONS.includes(o.type);
+        return {
+          type: o.type === "Other" ? (o.custom_label.trim() || "Other") : o.type,
+          custom_label: o.type === "Other" ? o.custom_label.trim() : undefined,
+          day: isPersonal ? Number(o.day) : undefined,
+          month: isPersonal ? Number(o.month) : undefined,
+          budget_min: Number(o.budget_min),
+          budget_max: Number(o.budget_max),
+        };
+      }),
       budget_min: Number(primary.budget_min),
       budget_max: Number(primary.budget_max),
+      interests: form.interests.interests || [],
+      interests_detail: form.interests,
+      personality: form.personality,
+      personality_other: form.personality_other?.trim() || undefined,
+      gift_types: form.gift_types,
+      gift_types_other: form.gift_types_other?.trim() || undefined,
       subscriber_id: subscriber.id,
-    });
+    };
+    
+    console.log("RecipientForm: Submitting payload:", JSON.stringify(payload, null, 2));
+    mutation.mutate(payload);
   };
 
   return (
@@ -269,9 +327,16 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
           <RelationshipField value={form.relationship} onChange={(v) => set("relationship", v)} />
         </Field>
 
-        <Field label="Occasions to remember" error={errors.occasions}>
+        <Field label="Occasions to remember" helper="Select all that apply for this person — you can pick more than one, and each will get its own date and budget below. The occasions shown depend on your relationship to this person." error={errors.occasions}>
           <OccasionsField relationship={form.relationship} value={form.occasions} onChange={(v) => set("occasions", v)} />
         </Field>
+
+        <div className="pt-4 pb-2 border-t border-brand-dark/10">
+          <h2 className="font-display text-xl text-brand-dark mb-1">Tell Me About Them</h2>
+          <p className="font-body text-xs text-brand-dark/60">
+            We recognise that completing this in full takes a little time — and that's completely fine. Fill in what you can now, and I'll send you a reminder email 6 weeks before their occasion with another opportunity to add more detail. Even the basics give me a strong starting point.
+          </p>
+        </div>
 
         <Field label="Gender" error={errors.gender}>
           <Select value={form.gender} onValueChange={(v) => set("gender", v)}>
@@ -286,71 +351,98 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
           </Select>
         </Field>
 
-        <Field label="Approximate age range" error={errors.age_range}>
-          <Select value={form.age_range} onValueChange={(v) => set("age_range", v)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Select age range" />
-            </SelectTrigger>
-            <SelectContent>
-              {AGE_RANGES.map((a) => (
-                <SelectItem key={a} value={a}>{a}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Field label="Approximate age" error={errors.age_category}>
+          <p className="font-body text-sm text-brand-dark/70 mb-3">Is this person a child, or an adult?</p>
+          <div className="flex gap-4">
+            {AGE_CATEGORIES.map((cat) => (
+              <label key={cat} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="age_category"
+                  value={cat}
+                  checked={form.age_category === cat}
+                  onChange={(e) => {
+                    set("age_category", e.target.value);
+                    set("age_range", ""); // Reset age range when category changes
+                  }}
+                  className="w-4 h-4 accent-brand-teal"
+                />
+                <span className="font-body text-sm text-brand-dark">{cat}</span>
+              </label>
+            ))}
+          </div>
         </Field>
 
-        {isChild ? (
+        {form.age_category && (
+          <Field label="Age range" error={errors.age_range}>
+            <Select value={form.age_range} onValueChange={(v) => set("age_range", v)}>
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Please choose" />
+              </SelectTrigger>
+              <SelectContent>
+                {ageRangeOptions.map((a) => (
+                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
+
+        {isUnder12 ? (
           <>
-            <Field label="Detailed age bracket" error={errors.child_age_bracket}>
-              <Select value={form.child_age_bracket} onValueChange={(v) => set("child_age_bracket", v)}>
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Select age bracket" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CHILD_AGE_BRACKETS.map((a) => (
-                    <SelectItem key={a} value={a}>{a}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
             <Field label="What are they into?" helper={CHILD_INTERESTS_HELPER}>
-              <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} />
+              <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} placeholder="e.g. dinosaurs, princesses, building things, animals..." />
             </Field>
-            <Field label="Gifts or categories to avoid" helper="Anything they wouldn't want?">
-              <Textarea value={form.avoid_notes} onChange={(e) => set("avoid_notes", e.target.value)} rows={2} />
+            <Field label="Gifts or categories to avoid" optional>
+              <Textarea value={form.avoid_notes} onChange={(e) => set("avoid_notes", e.target.value)} rows={2} placeholder="e.g. they're vegan, they don't drink, they hate clutter" />
             </Field>
           </>
         ) : (
           <>
-            <Field label="Their interests">
-              <CheckboxGroup options={INTEREST_OPTIONS} value={form.interests} onChange={(v) => set("interests", v)} />
-            </Field>
-            <Field label="Their personality" helper="Select up to 3.">
-              <CheckboxGroup options={PERSONALITY_OPTIONS} value={form.personality} onChange={(v) => set("personality", v)} max={3} />
-            </Field>
-            <Field label="What kind of gifts do they love?">
-              <CheckboxGroup options={GIFT_TYPE_OPTIONS} value={form.gift_types} onChange={(v) => set("gift_types", v)} />
+            <Field label="Their interests" optional helper="Select all that apply. Categories with a ▸ will reveal a short follow-up question to help narrow down the best gift ideas.">
+              <StructuredInterestsField value={form.interests} onChange={(v) => set("interests", v)} />
             </Field>
 
-            <Field label="Gifts or categories to avoid" helper="Anything they wouldn't want?">
-              <Textarea value={form.avoid_notes} onChange={(e) => set("avoid_notes", e.target.value)} rows={2} />
+            <Field label="Their personality" optional helper="Select up to 3. Only tag a trait if it's unmistakably true of the person.">
+              <CheckboxGroup 
+                options={PERSONALITY_OPTIONS} 
+                value={form.personality} 
+                onChange={(v) => set("personality", v)} 
+                max={3}
+                otherText={form.personality_other}
+                onOtherTextChange={(v) => set("personality_other", v)}
+              />
             </Field>
-            <Field label="Who they are" helper="Tell us about them as a person. What are they like?">
-              <Textarea value={form.who_they_are} onChange={(e) => set("who_they_are", e.target.value)} rows={4} />
+
+            <Field label="What kind of gifts do they tend to love?" optional helper="Select all that apply">
+              <CheckboxGroup 
+                options={GIFT_TYPE_OPTIONS} 
+                value={form.gift_types} 
+                onChange={(v) => set("gift_types", v)}
+                otherText={form.gift_types_other}
+                onOtherTextChange={(v) => set("gift_types_other", v)}
+              />
             </Field>
-            <Field label="Hobbies and interests" helper="What do they love doing? Any passions, sports, collections?">
-              <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} />
+
+            <Field label="Gifts or categories to avoid" optional>
+              <Textarea value={form.avoid_notes} onChange={(e) => set("avoid_notes", e.target.value)} rows={2} placeholder="e.g. they're vegan, they don't drink, they hate clutter" />
             </Field>
-            <Field label="Things you know" helper="Anything else that would help us find the perfect gift — favourite brands, colours, things they've mentioned wanting?">
-              <Textarea value={form.things_you_know} onChange={(e) => set("things_you_know", e.target.value)} rows={4} />
+
+            <Field label="Who they are" optional helper="Tell me about them as a person. What are they like?">
+              <Textarea value={form.who_they_are} onChange={(e) => set("who_they_are", e.target.value)} rows={4} placeholder="Their personality, what makes them special..." />
             </Field>
-            <Field label="Any upcoming significant milestones?" helper="A big birthday, a new home, a wedding...">
-              <Textarea value={form.milestones} onChange={(e) => set("milestones", e.target.value)} rows={2} />
+
+            <Field label="Hobbies and interests" optional helper="What do they love doing? Any passions, sports, collections?">
+              <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} placeholder="Free-form detail about what they're passionate about..." />
+            </Field>
+
+            <Field label="Anything else?" optional helper="This is your chance to give me real colour — a recent life change, something they've mentioned wanting, a hobby they've just taken up, their personality and taste level, what's worked brilliantly in the past or fallen completely flat. Small details go a long way — a favourite colour, a football team they support, the style of jewellery they wear. Also let me know if there's a significant milestone coming up — a big birthday, retirement, having a baby, buying a house — anything that might call for something extra special. The more you share, the more personal my suggestions will be.">
+              <Textarea value={form.things_you_know} onChange={(e) => set("things_you_know", e.target.value)} rows={6} placeholder="Favourite brands, colours, things they've mentioned wanting, upcoming milestones..." />
             </Field>
           </>
         )}
 
-        <Field label="Notes" helper="Anything else Gem should know.">
+        <Field label="Notes" optional helper="Anything else Gem should know.">
           <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} />
         </Field>
 

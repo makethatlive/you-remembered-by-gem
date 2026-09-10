@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { ClipboardList, Loader2, ExternalLink } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 
-// Admin "Audit" tab — catalogue forensics for the big scrape run (Kate item 9).
+// Admin "Audit" tab — catalogue forensics for the big scrape run.
 // One invocation, no batching: the backend classifies every product and grades
 // every retailer, optionally snapshotting the detail into the "Scrape Forensics"
 // Google Sheet. Buckets: correctly rejected / needs manual review /
@@ -26,15 +25,27 @@ export default function ForensicsAuditPanel() {
     setRunning(true);
     setResult(null);
     try {
-      const res = await base44.functions.invoke("auditScrapeForensics", { write_sheet: writeSheet });
-      const data = res?.data || {};
-      if (data.error) throw new Error(data.error);
+      const response = await fetch('/api/audit/forensic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ write_sheet: writeSheet }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Audit failed');
+      }
+      
       setResult(data);
-      toast({ description: `Audit complete — ${data.totals?.products ?? 0} products classified.` });
+      toast({ description: `Audit complete — ${data.totals?.products ?? 0} products classified in ${data.executionTimeMs}ms.` });
     } catch (err) {
-      // The SDK rejects on any non-2xx; the real message lives on the response body.
-      const msg = err?.response?.data?.error || err.message || "unexpected error";
-      toast({ description: `Audit failed — ${msg}` });
+      const msg = err.message || "unexpected error";
+      toast({ description: `Audit failed — ${msg}`, variant: "destructive" });
+      console.error('Forensic audit error:', err);
     } finally {
       setRunning(false);
     }
@@ -45,10 +56,12 @@ export default function ForensicsAuditPanel() {
       <div className="flex items-center justify-between mb-2">
         <h1 className="font-display text-3xl text-brand-dark">Catalogue audit</h1>
         <div className="flex items-center gap-3">
+          {/* Google Sheets export not yet implemented
           <label className="flex items-center gap-2 font-body text-sm text-brand-dark/70">
             <Checkbox checked={writeSheet} onCheckedChange={(v) => setWriteSheet(v === true)} />
             Also overwrite the Google Sheet
           </label>
+          */}
           <button
             onClick={run}
             disabled={running}
@@ -65,6 +78,7 @@ export default function ForensicsAuditPanel() {
         — the audit only reads it. Rows needing re-enrichment: run Enrich for that retailer
         (Retailers tab), then run this again.
       </p>
+      {/* Google Sheets warnings removed - feature not yet implemented
       {writeSheet ? (
         <p className="font-body text-sm text-amber-700 bg-amber-50 rounded-xl px-3 py-2 mb-6">
           Sheet writing is on. This run will find (or create) a Google Sheet named Scrape Forensics
@@ -78,26 +92,28 @@ export default function ForensicsAuditPanel() {
           to the Scrape Forensics sheet, which clears and rewrites that whole spreadsheet each run.
         </p>
       )}
+      */}
 
       {result && (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <Stat label="Products" value={result.totals.products} />
-            <Stat label="Correctly rejected" value={result.totals.correctly_rejected} />
-            <Stat label="Needs manual review" value={result.totals.needs_manual_review} />
-            <Stat label="Needs re-enrichment" value={result.totals.needs_re_enrichment} />
+            <Stat label="Correctly rejected" value={result.totals.correctlyRejected} />
+            <Stat label="Needs manual review" value={result.totals.needsManualReview} />
+            <Stat label="Needs re-enrichment" value={result.totals.needsReEnrichment} />
             <Stat label="Healthy (active)" value={result.totals.healthy} />
-            <Stat label="Retailers to rescrape" value={result.totals.retailers_needing_rescrape} />
-            <Stat label="Retailers w/o source URL" value={result.totals.retailers_no_source} />
-            <Stat label="Run-log rows" value={result.totals.run_log_rows} />
+            <Stat label="Retailers to rescrape" value={result.totals.retailersNeedingRescrape} />
+            <Stat label="Retailers w/o source URL" value={result.totals.retailersNoSource} />
+            <Stat label="Run-log rows" value={result.totals.runLogRows} />
           </div>
 
-          {result.totals.pool_truncated && (
+          {result.totals.poolTruncated && (
             <p className="font-body text-sm text-red-700 bg-red-50 rounded-xl px-3 py-2 mb-4">
               The catalogue exceeds the 5,000-row read cap — this audit covers the newest 5,000 products only.
             </p>
           )}
 
+          {/* Google Sheets export not yet implemented
           {result.sheet?.spreadsheet_id && (
             <a
               href={`https://docs.google.com/spreadsheets/d/${result.sheet.spreadsheet_id}`}
@@ -113,6 +129,7 @@ export default function ForensicsAuditPanel() {
               Sheet snapshot failed ({result.sheet.error}) — the summary above is still complete.
             </p>
           )}
+          */}
 
           <h2 className="font-display text-xl text-brand-dark mb-2">Retailer coverage</h2>
           <div className="bg-brand-cream-card rounded-2xl shadow-sm overflow-x-auto mb-8">
@@ -132,7 +149,7 @@ export default function ForensicsAuditPanel() {
               </thead>
               <tbody>
                 {result.coverage.map((c) => (
-                  <tr key={c.retailer_id} className="border-b border-brand-gold/10 last:border-0">
+                  <tr key={c.retailerId} className="border-b border-brand-gold/10 last:border-0">
                     <td className="px-4 py-3 font-body text-sm text-brand-dark">{c.name}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${VERDICT_STYLE[c.verdict] || ""}`}>
@@ -142,30 +159,36 @@ export default function ForensicsAuditPanel() {
                     <td className="px-4 py-3 font-body text-sm">{c.counts.active}</td>
                     <td className="px-4 py-3 font-body text-sm">{c.counts.needs_review}</td>
                     <td className="px-4 py-3 font-body text-sm">{c.counts.inactive}</td>
-                    <td className="px-4 py-3 font-body text-sm">{c.expected_found ?? "—"}</td>
-                    <td className="px-4 py-3 font-body text-sm">{c.coverage_gap ?? "—"}</td>
-                    <td className="px-4 py-3 font-body text-sm">{c.discovery_method || "—"}</td>
-                    <td className="px-4 py-3 font-body text-xs text-brand-dark/50 max-w-[240px] truncate" title={c.last_scrape_error}>{c.last_scrape_error || "—"}</td>
+                    <td className="px-4 py-3 font-body text-sm">{c.expectedFound ?? "—"}</td>
+                    <td className="px-4 py-3 font-body text-sm">{c.coverageGap ?? "—"}</td>
+                    <td className="px-4 py-3 font-body text-sm">{c.discoveryMethod || "—"}</td>
+                    <td className="px-4 py-3 font-body text-xs text-brand-dark/50 max-w-[240px] truncate" title={c.lastScrapeError}>{c.lastScrapeError || "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {["correctly_rejected", "needs_manual_review", "needs_re_enrichment"].map((key) => (
-            <div key={key} className="mb-6">
-              <h2 className="font-display text-xl text-brand-dark mb-2">
-                {key.replaceAll("_", " ")} — first {result.examples[key]?.length ?? 0} of {result.totals[key]}
-              </h2>
-              <div className="space-y-1.5">
-                {(result.examples[key] || []).map((e) => (
-                  <p key={e.id} className="font-body text-sm text-brand-dark/60">
-                    {e.name} <span className="text-brand-dark/40">({e.retailer} · {e.status} · {e.reasons.join(", ")})</span>
-                  </p>
-                ))}
+          {["correctly_rejected", "needs_manual_review", "needs_re_enrichment"].map((key) => {
+            const camelKey = key === 'correctly_rejected' ? 'correctlyRejected' 
+              : key === 'needs_manual_review' ? 'needsManualReview'
+              : 'needsReEnrichment';
+            
+            return (
+              <div key={key} className="mb-6">
+                <h2 className="font-display text-xl text-brand-dark mb-2">
+                  {key.replaceAll("_", " ")} — first {result.examples[key]?.length ?? 0} of {result.totals[camelKey]}
+                </h2>
+                <div className="space-y-1.5">
+                  {(result.examples[key] || []).map((e) => (
+                    <p key={e.id} className="font-body text-sm text-brand-dark/60">
+                      {e.name} <span className="text-brand-dark/40">({e.retailer} · {e.status} · {e.reasons.join(", ")})</span>
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {(result.notes || []).map((n, i) => (
             <p key={i} className="font-body text-xs text-brand-dark/50 mb-1">— {n}</p>

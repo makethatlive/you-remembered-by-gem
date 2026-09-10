@@ -3,7 +3,9 @@
 // Add Someone form (RecipientForm) import from here for consistency.
 
 import {
-  INTEREST_OPTIONS as TAXONOMY_INTEREST_OPTIONS, GIFT_TYPE_OPTIONS as TAXONOMY_GIFT_TYPE_OPTIONS,
+  INTEREST_OPTIONS as TAXONOMY_INTEREST_OPTIONS, 
+  GIFT_TYPE_OPTIONS as TAXONOMY_GIFT_TYPE_OPTIONS,
+  STRUCTURED_INTERESTS,
 } from "@/components/shared/taxonomy";
 
 export const HEARD_ABOUT_OPTIONS = [
@@ -16,7 +18,7 @@ export const HEARD_ABOUT_OPTIONS = [
 ];
 
 export const RELATIONSHIP_OPTIONS = [
-  "Partner",
+  "Partner / spouse",
   "Mother",
   "Father",
   "Sister",
@@ -26,9 +28,12 @@ export const RELATIONSHIP_OPTIONS = [
   "Friend",
   "Grandmother",
   "Grandfather",
-  "Aunt/Uncle",
-  "Nephew/Niece",
+  "Aunt",
+  "Uncle",
+  "Nephew",
+  "Niece",
   "Godchild",
+  "Colleague",
   "Other",
 ];
 
@@ -37,9 +42,18 @@ export const STANDARD_OCCASIONS = ["Birthday", "Christmas"];
 
 // Relationship-specific occasions shown in addition to the standard ones.
 export const RELATIONSHIP_OCCASION_DEFAULTS = {
-  "Partner": ["Valentine's Day", "Anniversary"],
+  "Partner / spouse": ["Valentine's Day", "Anniversary"],
   "Mother": ["Mother's Day"],
+  "Grandmother": ["Mother's Day"],
+  "Aunt": ["Mother's Day"],
   "Father": ["Father's Day"],
+  "Grandfather": ["Father's Day"],
+  "Uncle": ["Father's Day"],
+  "Daughter": ["Easter"],
+  "Son": ["Easter"],
+  "Nephew": ["Easter"],
+  "Niece": ["Easter"],
+  "Godchild": ["Easter"],
 };
 
 // Shown under "+ Additional occasions". "Other" always last and always has a free-text box.
@@ -67,11 +81,26 @@ export const AGE_RANGES = [
   "36-45", "46-55", "56-65", "66-75", "75+",
 ];
 
+// Age category selection (first step)
+export const AGE_CATEGORIES = ["Kids", "All adults"];
+
+// Shown when "Kids" is selected
+export const KIDS_AGE_RANGES = ["1-2", "3-4", "5-6", "7-8", "9-11", "12-17"];
+
+// Shown when "All adults" is selected
+export const ADULT_AGE_RANGES = ["18-25", "26-35", "36-45", "46-55", "56-65", "66-75", "75+"];
+
 // Detailed age brackets collected only when age_range is "Under 11".
 export const CHILD_AGE_BRACKETS = ["1-2", "3-4", "5-6", "7-8", "9-11"];
 
+// Ages that should see only free-text interests (under 12)
+export const AGES_UNDER_12 = ["1-2", "3-4", "5-6", "7-8", "9-11"];
+
+// Personal occasions that require a date field (vs fixed calendar dates)
+export const PERSONAL_OCCASIONS = ["Birthday", "Anniversary", "Other"];
+
 export const CHILD_INTERESTS_HELPER =
-  "What are they into right now? Trucks, dinosaurs, drawing, football, princesses, space, making things — whatever it is, the more specific the better.\n\nAnd if you don't know? That's fine. Leave this blank and I'll find something brilliant for their age.";
+  "Tell me anything about what they love — e.g. dinosaurs, princesses, a particular cartoon, building things, animals. Anything at all helps.\n\nDon't worry if you don't know, or if they're too young to have clear interests yet — I have plenty of age-appropriate ideas I can share regardless.";
 
 // Map the onboarding age range onto the age_band enum the gift logic relies on.
 export function ageBandFromRange(range) {
@@ -113,6 +142,9 @@ export function genderValue(label) {
 // Derived from the canonical taxonomy (src/components/shared/taxonomy.js) —
 // round-3 R1. ui:true entries in canonical order, plus "Other".
 export const INTEREST_OPTIONS = TAXONOMY_INTEREST_OPTIONS;
+
+// Export structured interests for the new categorized UI
+export { STRUCTURED_INTERESTS };
 
 export const PERSONALITY_OPTIONS = [
   "Practical and no-nonsense", "Creative and expressive", "Social and outgoing",

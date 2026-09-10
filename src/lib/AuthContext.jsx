@@ -1,29 +1,37 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Start as loading
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
   const [authError, setAuthError] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false); // Start as not checked
+  const [authChecked, setAuthChecked] = useState(false);
   const [appPublicSettings, setAppPublicSettings] = useState(null);
 
-  // Check for stored user session on mount
+  // Check for stored JWT token and validate on mount
   useEffect(() => {
-    const checkSession = () => {
-      const storedUser = localStorage.getItem('auth_user');
+    const checkSession = async () => {
+      const token = localStorage.getItem('access_token');
       
-      if (storedUser) {
+      if (token) {
         try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          // Set token in API client
+          base44.auth.setToken(token);
+          
+          // Validate token by fetching user profile
+          const userProfile = await base44.auth.me();
+          setUser(userProfile);
           setIsAuthenticated(true);
         } catch (err) {
-          console.error('Failed to parse stored user:', err);
-          localStorage.removeItem('auth_user');
+          console.error('Session validation failed:', err);
+          // Token is invalid or expired, clear it
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          base44.auth.clearToken();
         }
       }
       
@@ -35,10 +43,20 @@ export const AuthProvider = ({ children }) => {
     checkSession();
   }, []);
 
-  const logout = (shouldRedirect = true) => {
+  const logout = async (shouldRedirect = true) => {
+    try {
+      // Call backend logout to invalidate session
+      await base44.auth.logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    
+    // Clear local state
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('auth_user');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    base44.auth.clearToken();
     
     if (shouldRedirect) {
       window.location.href = '/login';
@@ -48,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('auth_user', JSON.stringify(userData));
+    // Token is already stored by Login.jsx, just update user state
   };
 
   const navigateToLogin = () => {
@@ -56,13 +74,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
-    // Mock auth check - already done in useEffect
+    // Auth check is already done in useEffect
     setIsLoadingAuth(false);
     setAuthChecked(true);
   };
 
   const checkAppState = async () => {
-    // Mock app state check
+    // App state check placeholder
     setIsLoadingPublicSettings(false);
   };
 

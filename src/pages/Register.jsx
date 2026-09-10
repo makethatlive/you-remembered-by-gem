@@ -1,24 +1,22 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
-import {
-  InputOTP, InputOTPGroup, InputOTPSlot,
-} from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function Register() {
-  const [stage, setStage] = useState("details"); // "details" | "otp"
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -31,76 +29,39 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await base44.auth.register({ email: email.trim().toLowerCase(), password });
-      // Preserve the name so it can be used when the Subscriber record is created
-      // right after onboarding (Register itself has no Subscriber to write to yet).
-      window.localStorage.setItem("pendingSubscriberName", name.trim());
-      setStage("otp");
+      const [firstName, ...lastNameParts] = name.trim().split(' ');
+      const lastName = lastNameParts.join(' ');
+      
+      console.log('📝 Registering:', { 
+        email: email.trim().toLowerCase(), 
+        firstName: firstName || null, 
+        lastName: lastName || null 
+      });
+      
+      const result = await base44.auth.register(
+        email.trim().toLowerCase(),
+        password,
+        firstName || null,  // Send null instead of empty string
+        lastName || null    // Send null instead of empty string
+      );
+
+      if (result?.auth?.accessToken) {
+        // Tokens are already stored by base44.auth.register()
+        // Update auth context with user profile
+        login(result.user);
+        
+        // Preserve the name for subscriber creation
+        window.localStorage.setItem("pendingSubscriberName", name.trim());
+        
+        // New account → straight into onboarding
+        navigate('/onboarding');
+      }
     } catch (err) {
-      setError(err?.response?.data?.error || err.message || "Unable to create your account.");
+      setError(err.message || "Unable to create your account.");
     } finally {
       setLoading(false);
     }
   };
-
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const result = await base44.auth.verifyOtp({ email: email.trim().toLowerCase(), otpCode: otp });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
-      }
-      // New account → straight into onboarding, then the dashboard.
-      window.location.href = "/onboarding";
-    } catch (err) {
-      setError(err?.response?.data?.error || err.message || "That code didn't work. Please try again.");
-      setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setError("");
-    try {
-      await base44.auth.resendOtp(email.trim().toLowerCase());
-    } catch (err) {
-      setError(err?.response?.data?.error || err.message || "Unable to resend the code.");
-    }
-  };
-
-  if (stage === "otp") {
-    return (
-      <AuthLayout
-        icon={Mail}
-        title="Verify your email"
-        subtitle={`Enter the 6-digit code we sent to ${email}`}
-        footer={
-          <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend code
-          </button>
-        }
-      >
-        {error && (
-          <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
-        )}
-        <form onSubmit={handleVerify} className="space-y-6">
-          <div className="flex justify-center">
-            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-              <InputOTPGroup>
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <InputOTPSlot key={i} index={i} />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
-          <Button type="submit" className="h-12 w-full font-medium" disabled={loading || otp.length < 6}>
-            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verifying...</> : "Verify & Continue"}
-          </Button>
-        </form>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout
@@ -150,6 +111,7 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)} className="h-12 pl-10" required
             />
           </div>
+          <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
         </div>
 
         <div className="space-y-2">

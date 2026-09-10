@@ -51,8 +51,6 @@ export const CANONICAL_INTERESTS = [
     keywords: ["gaming", "game", "console", "puzzle", "video game"] },
   { key: "Film & TV", ui: true,
     keywords: ["film", "cinema", "movie", "television", " tv ", "screen"] },
-  { key: "Cars & motoring", ui: true,
-    keywords: ["motoring", "driving experience", "track day", "motorsport", "classic car", "car care", "formula 1"] },
   { key: "Cycling", ui: true,
     keywords: ["cycling", "cyclist", "bicycle", "bike"] },
   { key: "Children & family activities", ui: true,

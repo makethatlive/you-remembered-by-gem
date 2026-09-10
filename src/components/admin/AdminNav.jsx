@@ -11,7 +11,7 @@ const TABS = [
   { id: "sent", label: "Sent", icon: Send },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "audit", label: "Audit", icon: ClipboardList },
-  { id: "users", label: "Users", icon: UserCog },
+  // { id: "users", label: "Users", icon: UserCog }, // Hidden per admin request
   { id: "help", label: "Help", icon: BookOpen },
 ];
 

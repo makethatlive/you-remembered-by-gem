@@ -6,10 +6,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 import { PrismaClient } from '@prisma/client';
 import { sendEmail, sendWelcomeEmail, sendApprovalEmail, sendBirthdayReminder } from './services/email/resend-client.js';
+import authRoutes from './routes/auth-routes.js';
+import { runForensicAudit } from './services/audit/forensic-audit-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,8 +63,12 @@ const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 
 // Serve static files from dist folder in production
 if (NODE_ENV === 'production') {
@@ -76,6 +84,9 @@ app.get('/api/health', (req, res) => {
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Test route works!' });
 });
+
+// ==================== AUTHENTICATION ====================
+app.use('/api/auth', authRoutes);
 
 // ==================== SUBSCRIBERS ====================
 
@@ -189,18 +200,8 @@ app.post('/api/subscribers', async (req, res) => {
       }
     });
     
-    // Send welcome email (non-blocking - don't wait for it)
-    sendWelcomeEmail(subscriber.email, subscriber.firstName || subscriber.name, subscriber.id)
-      .then(result => {
-        if (result.success) {
-          console.log(`✅ Welcome email sent to ${subscriber.email}`);
-        } else {
-          console.warn(`⚠️ Welcome email failed for ${subscriber.email}:`, result.error);
-        }
-      })
-      .catch(error => {
-        console.warn(`⚠️ Welcome email error for ${subscriber.email}:`, error);
-      });
+    // NOTE: Welcome email is sent during registration (auth-routes.js)
+    // Don't send it here to avoid duplicates
     
     res.status(201).json(subscriber);
   } catch (error) {
@@ -296,7 +297,7 @@ app.post('/api/recipients', async (req, res) => {
     // Transform gender to uppercase enum if provided
     let gender = data.gender;
     if (gender && typeof gender === 'string') {
-      gender = gender.toUpperCase();
+      gender = gender.toUpperCase().replace(/\s+/g, '_');
     }
     
     // Transform ageBand to uppercase enum if provided
@@ -361,8 +362,11 @@ app.post('/api/recipients', async (req, res) => {
         budgetMin: data.budgetMin || data.budget_min,
         budgetMax: data.budgetMax || data.budget_max,
         interests: data.interests || [],
+        interestsDetail: data.interestsDetail || data.interests_detail,
         personality: data.personality || [],
+        personalityOther: data.personalityOther || data.personality_other,
         giftTypes: data.giftTypes || data.gift_types || [],
+        giftTypesOther: data.giftTypesOther || data.gift_types_other,
         avoidNotes: data.avoidNotes || data.avoid_notes,
         whoTheyAre: data.whoTheyAre || data.who_they_are,
         hobbiesAndInterests: data.hobbiesAndInterests || data.hobbies_and_interests,
@@ -392,7 +396,7 @@ app.patch('/api/recipients/:id', async (req, res) => {
     // Transform gender to uppercase enum if provided
     let gender = data.gender;
     if (gender && typeof gender === 'string') {
-      gender = gender.toUpperCase();
+      gender = gender.toUpperCase().replace(/\s+/g, '_');
     }
     
     // Transform ageBand to uppercase enum if provided
@@ -438,8 +442,11 @@ app.patch('/api/recipients/:id', async (req, res) => {
         budgetMin: data.budgetMin || data.budget_min,
         budgetMax: data.budgetMax || data.budget_max,
         interests: data.interests,
+        interestsDetail: data.interestsDetail || data.interests_detail,
         personality: data.personality,
+        personalityOther: data.personalityOther || data.personality_other,
         giftTypes: data.giftTypes || data.gift_types,
+        giftTypesOther: data.giftTypesOther || data.gift_types_other,
         avoidNotes: data.avoidNotes || data.avoid_notes,
         whoTheyAre: data.whoTheyAre || data.who_they_are,
         hobbiesAndInterests: data.hobbiesAndInterests || data.hobbies_and_interests,
@@ -1255,6 +1262,30 @@ app.post('/api/products/check-availability-batch', requireAdmin, async (req, res
   }
 });
 
+/**
+ * POST /api/products/recover-catalogue
+ * Recover old catalogue - sift through inactive products and move plausible ones to needs_review
+ * Admin-only. Useful after an overzealous link-check.
+ */
+app.post('/api/products/recover-catalogue', requireAdmin, async (req, res) => {
+  try {
+    console.log('🔄 Starting catalogue recovery...');
+
+    // Import catalogue recovery service
+    const { recoverInactiveCatalogue } = await import('./services/products/recover-catalogue.js');
+
+    // Execute recovery
+    const result = await recoverInactiveCatalogue(prisma);
+
+    console.log(`✅ Recovery complete: checked ${result.checked}, recovered ${result.recovered_to_review}, confirmed gone ${result.confirmed_gone}, excluded ${result.excluded_as_junk}`);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error in catalogue recovery:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== GIFT GENERATION ====================
 
 /**
@@ -1593,6 +1624,81 @@ app.post('/api/scrape/monthly', requireAdmin, async (req, res) => {
 // ==================== ENRICHMENT ENDPOINTS ====================
 
 /**
+ * POST /api/products/import-curated
+ * Import curated products from uploaded CSV/XLSX files
+ * Processes in batches with cursor-based pagination
+ */
+app.post('/api/products/import-curated', requireAdmin, async (req, res) => {
+  console.log('📥 Import request received');
+  console.log('   Body:', JSON.stringify(req.body, null, 2));
+  
+  try {
+    const {
+      file_url,
+      start_row = 2,
+      batch_size = 40,
+      expected_total = 0,
+    } = req.body;
+    
+    if (!file_url) {
+      console.error('❌ No file_url provided');
+      return res.status(400).json({ 
+        error: 'file_url is required. Upload a file first using /api/upload-file' 
+      });
+    }
+    
+    console.log(`📥 Starting curated import batch`);
+    console.log(`   File URL: ${file_url}`);
+    console.log(`   Start row: ${start_row}`);
+    console.log(`   Batch size: ${batch_size}`);
+    console.log(`   Expected total: ${expected_total}`);
+    
+    // Import the service
+    const { importCuratedBatch } = await import('./services/products/import-curated.js');
+    
+    // Execute import
+    const result = await importCuratedBatch(prisma, {
+      fileUrl: file_url,
+      startRow: Number(start_row),
+      batchSize: Math.max(1, Math.min(50, Number(batch_size))),
+      expectedTotal: Number(expected_total) || 0,
+    });
+    
+    console.log(`✅ Import batch complete`);
+    console.log(`   Result:`, JSON.stringify(result, null, 2));
+    
+    // Ensure we're returning the expected format
+    const response = {
+      done: Boolean(result.done),
+      next_row: Number(result.next_row),
+      processed: Number(result.processed),
+      extracted_total: result.extracted_total,
+      created_active: result.created_active || 0,
+      created_needs_review: result.created_needs_review || 0,
+      updated_existing: result.updated_existing || 0,
+      matched_existing: result.matched_existing || 0,
+      fields_filled: result.fields_filled || 0,
+      created_retailers: result.created_retailers || [],
+      unknown_categories: result.unknown_categories || [],
+      unknown_genders: result.unknown_genders || [],
+      skipped: result.skipped || [],
+    };
+    
+    console.log(`   Sending response with done=${response.done}, next_row=${response.next_row}`);
+    
+    res.json(response);
+  } catch (error) {
+    console.error('❌ Error in curated import:', error.message);
+    console.error('   Error stack:', error.stack);
+    res.status(500).json({ 
+      error: error.message || 'Import failed',
+      found_headers: error.foundHeaders || undefined,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
+  }
+});
+
+/**
  * POST /api/products/enrich-batch
  * Enrich a batch of products with tags, descriptions, quality scores, and AI classification
  */
@@ -1755,6 +1861,69 @@ app.post('/api/email/birthday-reminder', async (req, res) => {
   }
 });
 
+// ==================== FILE UPLOAD ====================
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
+
+/**
+ * Upload a file
+ * POST /api/upload-file
+ * 
+ * Used by CuratedImportPanel to upload XLSX/CSV files for product import
+ */
+app.post('/api/upload-file', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Return the file path so it can be used in importCuratedProducts function
+    const file_url = path.resolve(req.file.path);
+    
+    res.json({ file_url });
+  } catch (error) {
+    console.error('❌ File upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== FORENSIC AUDIT ====================
+
+/**
+ * Run forensic audit
+ * POST /api/audit/forensic
+ * 
+ * Body: { write_sheet: boolean } (optional)
+ * 
+ * Returns comprehensive catalogue health analysis:
+ * - Product classification (healthy, correctly_rejected, needs_manual_review, needs_re_enrichment)
+ * - Retailer coverage grading
+ * - Summary statistics
+ * - Sample examples
+ */
+app.post('/api/audit/forensic', async (req, res) => {
+  try {
+    console.log('🔍 Running forensic audit...');
+    
+    const auditResults = await runForensicAudit(prisma);
+    
+    console.log(`✅ Forensic audit complete: ${auditResults.totals.products} products analyzed in ${auditResults.executionTimeMs}ms`);
+    
+    res.json(auditResults);
+  } catch (error) {
+    console.error('❌ Forensic audit error:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      error: error.message,
+      details: error.stack,
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 API Server running on http://localhost:${PORT}`);
@@ -1784,6 +1953,7 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/email/welcome`);
   console.log(`   - POST /api/email/approval`);
   console.log(`   - POST /api/email/birthday-reminder`);
+  console.log(`   - POST /api/audit/forensic (admin)`);
   console.log(`\n✨ Ready to serve data from your PostgreSQL database!\n`);
 });
 

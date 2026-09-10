@@ -32,7 +32,7 @@ export default function AdminView() {
       {tab === "sent" && <SentHistory />}
       {tab === "insights" && <FeedbackInsights />}
       {tab === "audit" && <ForensicsAuditPanel />}
-      {tab === "users" && <UsersTab />}
+      {/* {tab === "users" && <UsersTab />} */} {/* Hidden per admin request */}
       {tab === "help" && <HelpTab />}
     </div>
   );

@@ -176,11 +176,11 @@ Deno.serve(async (req) => {
 <p>Take your time browsing — every link goes directly to the retailer.</p>
 <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;color:#1a1a2e;margin:24px 0 14px;">Five ideas for ${recipientName}</p>
 ${itemsHtml}
-<p><b>A little something extra</b><br/>If none of these feel quite right — or if you'd like a different direction, a higher budget, or ideas for a completely different category — visit your profile page and leave a note, and I'll come back to you with alternatives. That's what I'm here for.</p>
-${ctaButton("Update your preferences →", editLink)}
-<p><b>A reminder on timing:</b><br/>${recipientName}'s ${occasion} is ${weeks != null ? `${weeks} week${weeks === 1 ? '' : 's'} away` : 'coming up soon'}. Most retailers deliver within 3–5 working days — if ordering anything personalised, place your order this week.</p>
+<p><b>A thought before you buy</b><br/>These are five ideas I genuinely think ${recipientName} would love — but you'll always know your ${recipient?.relationship || 'person'} better than I do. Have a browse through what I've suggested, and if something's not quite right — a different colour, a slightly different style — feel free to have a look around the retailer's site for an alternative. Spending just a few minutes tailoring my suggestions to what you know about them will make the end result even more perfect.</p>
+<p><b>Not quite right?</b><br/>If none of these feel quite right, just email me directly at concierge@yourememberedbygem.com with a little more detail on ${recipientName} — anything at all that might help — and I'll personally look for alternatives. That's genuinely what I'm here for.</p>
+<p><b>Worth knowing:</b><br/>Most retailers can deliver within a week, so if something needs a personal touch added — engraving, wrapping, a handwritten note — it's worth ordering in good time.</p>
 <p>Enjoy giving,</p>
-<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com</p>`;
+<p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>`;
 
     const footerNote = `You're receiving this as part of your You Remembered, by Gem subscription. To update ${recipientName}'s profile for next year, visit <a href="${editLink}" style="color:#164E63;">this link</a>. To manage your account or unsubscribe, click <a href="${APP_URL}" style="color:#164E63;">here</a>.`;
 

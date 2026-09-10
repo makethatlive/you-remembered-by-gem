@@ -77,7 +77,11 @@
     "age_range": {
       "type": "string",
       "enum": [
-        "Under 11",
+        "1-2",
+        "3-4",
+        "5-6",
+        "7-8",
+        "9-11",
         "12-17",
         "18-25",
         "26-35",
@@ -85,9 +89,10 @@
         "46-55",
         "56-65",
         "66-75",
-        "75+"
+        "75+",
+        "Under 11"
       ],
-      "description": "Approximate age range as captured at onboarding"
+      "description": "Approximate age range as captured at onboarding (includes old 'Under 11' for backward compatibility)"
     },
     "child_age_bracket": {
       "type": "string",
@@ -126,7 +131,28 @@
       "items": {
         "type": "string"
       },
-      "description": "Their interests"
+      "description": "Their interests (flat array for backward compatibility)"
+    },
+    "interests_detail": {
+      "type": "object",
+      "description": "Structured interests with categories, follow-ups, and other text",
+      "properties": {
+        "interests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Selected interest names"
+        },
+        "followUps": {
+          "type": "object",
+          "description": "Map of interest name to selected follow-up options"
+        },
+        "otherText": {
+          "type": "string",
+          "description": "Free text when 'Other' interest is selected"
+        }
+      }
     },
     "personality": {
       "type": "array",
@@ -135,12 +161,20 @@
       },
       "description": "Their personality traits (up to 3)"
     },
+    "personality_other": {
+      "type": "string",
+      "description": "Free text when 'Other' personality is selected"
+    },
     "gift_types": {
       "type": "array",
       "items": {
         "type": "string"
       },
       "description": "Kinds of gifts they love"
+    },
+    "gift_types_other": {
+      "type": "string",
+      "description": "Free text when 'Other' gift type is selected"
     },
     "avoid_notes": {
       "type": "string",

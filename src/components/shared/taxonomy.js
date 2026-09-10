@@ -85,9 +85,6 @@ export const CANONICAL_INTERESTS = [
   { key: "Film & TV", ui: true,
     keywords: ["film", "cinema", "movie", "television", " tv ", "screen"],
     aliases: ["film and tv", "tv and film", "movies"] },
-  { key: "Cars & motoring", ui: true,
-    keywords: ["motoring", "driving experience", "track day", "motorsport", "classic car", "car care", "formula 1"],
-    aliases: ["cars", "motoring"] },
   { key: "Cycling", ui: true,
     keywords: ["cycling", "cyclist", "bicycle", "bike"],
     aliases: [] },
@@ -137,11 +134,101 @@ export const CANONICAL_GIFT_TYPES = [
 
 // ===== Frontend-only derivations below this line =====
 
+// Structured interests with categories, subcategories, and follow-up questions
+// Based on August 2026 client specification
+export const STRUCTURED_INTERESTS = {
+  "Food & Drink": {
+    items: [
+      { key: "Cooking & food", hasFollowUp: false },
+      { 
+        key: "Wine & Drinks", 
+        hasFollowUp: true,
+        followUpOptions: ["Wine", "Beer", "Cocktails", "Whisky", "Gin", "Rum", "Tequila", "No particular preference"]
+      },
+      { key: "Coffee & tea", hasFollowUp: false },
+    ]
+  },
+  "Lifestyle & Wellbeing": {
+    items: [
+      { key: "Travel & adventure", hasFollowUp: false },
+      { key: "Wellness & self-care", hasFollowUp: false },
+      { key: "Beauty & skincare", hasFollowUp: false },
+      { key: "Sustainability & eco living", hasFollowUp: false },
+      { key: "Spirituality", hasFollowUp: false },
+    ]
+  },
+  "Sport & Fitness": {
+    items: [
+      { key: "Running", hasFollowUp: false },
+      { key: "Yoga & Pilates", hasFollowUp: false },
+      { key: "Swimming", hasFollowUp: false },
+      { key: "Football", hasFollowUp: false },
+      { key: "Rugby", hasFollowUp: false },
+      { key: "Cricket", hasFollowUp: false },
+      { key: "Motorsports", hasFollowUp: false },
+      { key: "Tennis", hasFollowUp: false },
+      { key: "Golf", hasFollowUp: false },
+      { key: "Cycling", hasFollowUp: false },
+      { key: "Outdoor pursuits", hasFollowUp: false },
+    ]
+  },
+  "Creative & Culture": {
+    items: [
+      { key: "Reading & books", hasFollowUp: false },
+      { key: "Art & culture", hasFollowUp: false },
+      { 
+        key: "Music", 
+        hasFollowUp: true,
+        followUpOptions: ["Listening", "Playing an instrument", "Vinyl collecting", "Concerts & live music"]
+      },
+      { key: "Theatre & performing arts", hasFollowUp: false },
+      { key: "Photography", hasFollowUp: false },
+      { key: "Crafts & making things", hasFollowUp: false },
+      { key: "Film & TV", hasFollowUp: false },
+      { key: "Podcasts & audiobooks", hasFollowUp: false },
+    ]
+  },
+  "Home, Style & Objects": {
+    items: [
+      { key: "Fashion & accessories", hasFollowUp: false },
+      { key: "Watches", hasFollowUp: false },
+      { key: "Jewellery", hasFollowUp: false },
+      { key: "Home & interiors", hasFollowUp: false },
+      { key: "Gardening", hasFollowUp: false },
+      { key: "DIY & tools", hasFollowUp: false },
+    ]
+  },
+  "Tech, Games & Curiosity": {
+    items: [
+      { key: "Tech & gadgets", hasFollowUp: false },
+      { 
+        key: "Gaming (video games)", 
+        hasFollowUp: true,
+        followUpOptions: ["Console", "PC", "Mobile", "Retro/collector"]
+      },
+      { key: "Board games & puzzles", hasFollowUp: false },
+      { key: "Science & nature", hasFollowUp: false },
+      { key: "History & politics", hasFollowUp: false },
+    ]
+  },
+  "Family & Pets": {
+    items: [
+      { key: "Children & family activities", hasFollowUp: false },
+      { 
+        key: "Pets", 
+        hasFollowUp: true,
+        followUpOptions: ["Dog", "Cat", "Other pet"]
+      },
+    ]
+  },
+};
+
+// Flat list for backward compatibility (all interests extracted from structured format)
+export const INTEREST_OPTIONS = Object.values(STRUCTURED_INTERESTS)
+  .flatMap(category => category.items.map(item => item.key))
+  .concat(["Other"]);
+
 // Subscriber-facing checkbox lists ("Other" is UI furniture, appended here).
-export const INTEREST_OPTIONS = [
-  ...CANONICAL_INTERESTS.filter((e) => e.ui).map((e) => e.key),
-  "Other",
-];
 export const GIFT_TYPE_OPTIONS = [
   ...CANONICAL_GIFT_TYPES.filter((e) => e.ui).map((e) => e.key),
   "Other",

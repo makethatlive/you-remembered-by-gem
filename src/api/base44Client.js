@@ -5,6 +5,39 @@ const API_BASE = import.meta.env.PROD
   ? '/api'  // Production: same domain
   : 'http://localhost:3001/api';  // Development: separate server
 
+// ==================== AUTH TOKEN MANAGEMENT ====================
+const TOKEN_KEY = 'access_token';
+const REFRESH_KEY = 'refresh_token';
+const USER_KEY = 'auth_user';
+
+function saveAuth(auth, user) {
+  if (auth?.accessToken) localStorage.setItem(TOKEN_KEY, auth.accessToken);
+  if (auth?.refreshToken) localStorage.setItem(REFRESH_KEY, auth.refreshToken);
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+function getAccessToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function getRefreshToken() {
+  return localStorage.getItem(REFRESH_KEY);
+}
+
+function clearAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+function getAuthHeaders() {
+  const token = getAccessToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+}
+
 // Helper to convert snake_case to camelCase for responses
 function toCamelCase(obj) {
   if (Array.isArray(obj)) {
@@ -22,38 +55,292 @@ function toCamelCase(obj) {
 }
 
 // Helper to convert camelCase to snake_case for requests
-function toSnakeCase(obj) {
+// Preserves certain fields that should be sent as-is (like interestsDetail which is JSON)
+function toSnakeCase(obj, parentKey = null) {
   if (Array.isArray(obj)) {
-    return obj.map(toSnakeCase);
+    return obj.map(item => toSnakeCase(item, parentKey));
   }
   if (obj && typeof obj === 'object' && obj.constructor === Object) {
     const newObj = {};
     for (const [key, value] of Object.entries(obj)) {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      newObj[snakeKey] = toSnakeCase(value);
+      
+      // Preserve interests_detail as JSON without further transformation
+      if (snakeKey === 'interests_detail' || parentKey === 'interests_detail') {
+        newObj[snakeKey] = value;
+      } else {
+        newObj[snakeKey] = toSnakeCase(value, snakeKey);
+      }
     }
     return newObj;
   }
   return obj;
 }
 
+// ==================== AUTHENTICATION API ====================
+export const auth = {
+  // Register new user
+  register: async (email, password, firstName, lastName) => {
+    const payload = { email, password, firstName, lastName };
+    console.log('📤 Registering with:', { ...payload, password: '***' });
+    
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('❌ Registration error:', error);
+      throw new Error(error.error || 'Registration failed');
+    }
+
+    const data = await response.json();
+    console.log('✅ Registration successful:', { ...data, auth: '***' });
+    saveAuth(data.auth, data.user);
+    return data;
+  },
+
+  // Login user
+  login: async (email, password) => {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
+    }
+
+    const data = await response.json();
+    saveAuth(data.auth, data.user);
+    return data;
+  },
+
+  // Logout current session
+  logout: async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+    } finally {
+      clearAuth();
+    }
+  },
+
+  // Logout all devices
+  logoutAll: async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout-all`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+    } finally {
+      clearAuth();
+    }
+  },
+
+  // Get current user
+  me: async () => {
+    const response = await fetch(`${API_BASE}/auth/me`, {
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      clearAuth();
+      return null;
+    }
+
+    const data = await response.json();
+    return data.user;
+  },
+
+  // Update profile
+  updateProfile: async (firstName, lastName) => {
+    const response = await fetch(`${API_BASE}/auth/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ firstName, lastName })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Profile update failed');
+    }
+
+    const data = await response.json();
+    saveAuth(null, data.user);
+    return data.user;
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await fetch(`${API_BASE}/auth/change-password`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Password change failed');
+    }
+
+    return await response.json();
+  },
+
+  // Forgot password
+  forgotPassword: async (email) => {
+    const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Request failed');
+    }
+
+    return await response.json();
+  },
+
+  // Reset password
+  resetPassword: async (token, password) => {
+    const response = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Password reset failed');
+    }
+
+    return await response.json();
+  },
+
+  // Verify email
+  verifyEmail: async (token) => {
+    const response = await fetch(`${API_BASE}/auth/verify-email?token=${token}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Verification failed');
+    }
+
+    return await response.json();
+  },
+
+  // Resend verification email
+  resendVerification: async () => {
+    const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to resend verification');
+    }
+
+    return await response.json();
+  },
+
+  // Refresh token
+  refreshToken: async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+
+    if (!response.ok) {
+      clearAuth();
+      throw new Error('Token refresh failed');
+    }
+
+    const data = await response.json();
+    saveAuth(data.auth, data.user);
+    return data;
+  },
+
+  // Get active sessions
+  getSessions: async () => {
+    const response = await fetch(`${API_BASE}/auth/sessions`, {
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get sessions');
+    }
+
+    const data = await response.json();
+    return data.sessions;
+  },
+
+  // Check if authenticated
+  isAuthenticated: () => {
+    return !!getAccessToken();
+  },
+
+  // Get stored user (without API call)
+  getStoredUser: () => {
+    const user = localStorage.getItem(USER_KEY);
+    return user ? JSON.parse(user) : null;
+  },
+};
+
 // API client that mimics the Base44 SDK API
 export const base44 = {
   auth: {
-    me: async () => {
-      // Get current user from localStorage (set by AuthContext)
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        return JSON.parse(storedUser);
-      }
-      return null;
+    // Core auth methods
+    register: auth.register,
+    login: auth.login,
+    logout: auth.logout,
+    logoutAll: auth.logoutAll,
+    me: auth.me,
+    
+    // Profile management
+    updateProfile: auth.updateProfile,
+    changePassword: auth.changePassword,
+    
+    // Password reset
+    forgotPassword: auth.forgotPassword,
+    resetPassword: auth.resetPassword,
+    
+    // Email verification
+    verifyEmail: auth.verifyEmail,
+    resendVerification: auth.resendVerification,
+    
+    // Token management
+    refreshToken: auth.refreshToken,
+    isAuthenticated: auth.isAuthenticated,
+    getStoredUser: auth.getStoredUser,
+    
+    // Token helpers for Login.jsx and AuthContext
+    setToken: (token) => {
+      if (token) localStorage.setItem(TOKEN_KEY, token);
     },
-    logout: (redirectUrl) => {
-      localStorage.removeItem('auth_user');
-      if (redirectUrl) {
-        window.location.href = redirectUrl;
-      }
+    clearToken: () => {
+      clearAuth();
     },
+    
+    // Sessions
+    getSessions: auth.getSessions,
+    
+    // Navigation helper
     redirectToLogin: (returnUrl) => {
       window.location.href = '/login';
     },
@@ -487,7 +774,23 @@ export const base44 = {
   },
   
   integrations: {
-    // Mock integrations
+    Core: {
+      UploadFile: async ({ file }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`${API_BASE}/upload-file`, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('File upload failed');
+        }
+        
+        return await response.json();
+      }
+    }
   },
   
   functions: {
@@ -587,6 +890,28 @@ export const base44 = {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: response.statusText }));
           const error = new Error(errorData.error || 'Enrichment failed');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+
+      // Import Curated Products function
+      if (functionName === 'importCuratedProducts') {
+        const response = await fetch(`${API_BASE}/products/import-curated`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': localStorage.getItem('admin_key') || '',
+          },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Import failed');
           error.response = { status: response.status, data: errorData };
           throw error;
         }

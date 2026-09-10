@@ -100,41 +100,55 @@ export default function Onboarding() {
       const primaryLabel = primary.type === "Other" ? (primary.custom_label.trim() || "Other") : primary.type;
       const day = Number(primary.day);
       const month = Number(primary.month);
-      const isChild = p.age_range === "Under 11";
+      
+      // For non-personal occasions (Christmas, etc), use arbitrary date for legacy fields
+      const isPersonalPrimary = ["Birthday", "Anniversary", "Other"].includes(primary.type);
+      const legacyDay = isPersonalPrimary ? day : 1;
+      const legacyMonth = isPersonalPrimary ? month : 12;
+      
+      const isUnder12 = p.age_category === "Kids" && ["1-2", "3-4", "5-6", "7-8", "9-11"].includes(p.age_range);
 
-      await base44.entities.Recipient.create({
+      const payload = {
         subscriber_id: subscriber?.id,
         name: p.name.trim(),
         relationship,
         occasion: primaryLabel,
-        occasion_day: day,
-        occasion_month: month,
-        occasions: p.occasions.map((o) => ({
-          type: o.type === "Other" ? (o.custom_label.trim() || "Other") : o.type,
-          custom_label: o.type === "Other" ? o.custom_label.trim() : undefined,
-          day: Number(o.day),
-          month: Number(o.month),
-          budget_min: Number(o.budget_min),
-          budget_max: Number(o.budget_max),
-        })),
+        occasion_day: legacyDay,
+        occasion_month: legacyMonth,
+        occasions: p.occasions.map((o) => {
+          const isPersonal = ["Birthday", "Anniversary", "Other"].includes(o.type);
+          return {
+            type: o.type === "Other" ? (o.custom_label.trim() || "Other") : o.type,
+            custom_label: o.type === "Other" ? o.custom_label.trim() : undefined,
+            day: isPersonal ? Number(o.day) : undefined,
+            month: isPersonal ? Number(o.month) : undefined,
+            budget_min: Number(o.budget_min),
+            budget_max: Number(o.budget_max),
+          };
+        }),
         // Occasion date stored as yearless fragment so all reminder timing keeps working.
-        birthday: `--${pad(month)}-${pad(day)}`,
+        birthday: isPersonalPrimary ? `--${pad(legacyMonth)}-${pad(legacyDay)}` : undefined,
         gender: genderValue(p.gender),
         age_range: p.age_range,
-        child_age_bracket: isChild ? p.child_age_bracket : undefined,
-        age_band: isChild ? ageBandFromChildBracket(p.child_age_bracket) : ageBandFromRange(p.age_range),
+        child_age_bracket: isUnder12 ? p.age_range : undefined,
+        age_band: isUnder12 ? ageBandFromChildBracket(p.age_range) : ageBandFromRange(p.age_range),
         budget_min: Number(primary.budget_min),
         budget_max: Number(primary.budget_max),
-        interests: p.interests,
+        interests: p.interests.interests || [], // Extract just the interest names from structured format
+        interests_detail: p.interests, // Store full structured data including follow-ups and otherText
         personality: p.personality,
+        personality_other: p.personality_other?.trim() || undefined,
         gift_types: p.gift_types,
+        gift_types_other: p.gift_types_other?.trim() || undefined,
         avoid_notes: p.avoid_notes.trim() || undefined,
         hobbies_and_interests: p.hobbies_and_interests.trim() || undefined,
         things_you_know: p.things_you_know.trim() || undefined,
-        milestones: p.milestones.trim() || undefined,
         who_they_are: p.who_they_are.trim() || undefined,
         notes: p.notes.trim() || undefined,
-      });
+      };
+
+      console.log("Onboarding: Creating recipient with payload:", JSON.stringify(payload, null, 2));
+      await base44.entities.Recipient.create(payload);
 
       setLastName(p.name.trim());
       setCount((c) => c + 1);
@@ -227,11 +241,13 @@ function Done({ count, onGo }) {
   return (
     <div className="text-center pt-8">
       <h1 className="font-display text-3xl text-brand-dark mb-3 leading-snug">
-        You're all set!
+        Thank you!
       </h1>
       <p className="font-body text-sm text-brand-dark/55 mb-8">
-        Gem now has {count} {word} to look after. You'll hear from her ahead of each occasion
-        with thoughtful gift ideas.
+        I'll be in touch shortly to confirm your profile is set up. Your first curated gift ideas will arrive one month before your earliest upcoming occasion. In the meantime, if you have any questions or want to add anything you've forgotten, just reply to your welcome email or get in touch.
+      </p>
+      <p className="font-body text-sm text-brand-dark/55 mb-8">
+        — Gem x
       </p>
       <button
         onClick={onGo}

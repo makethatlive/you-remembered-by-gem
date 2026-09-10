@@ -100,6 +100,32 @@ function stripHtml(html) {
  * Send welcome email to new subscriber
  */
 export async function sendWelcomeEmail(subscriberEmail, subscriberName, subscriberId) {
+  // Check if welcome email already sent to this EMAIL (deduplication)
+  try {
+    // Find any subscriber with this email
+    const subscriber = await prisma.subscriber.findFirst({
+      where: { email: subscriberEmail },
+      include: {
+        emailLogs: {
+          where: { emailType: 'WELCOME' },
+          take: 1
+        }
+      }
+    });
+    
+    if (subscriber && subscriber.emailLogs.length > 0) {
+      console.log(`ℹ️  Welcome email already sent to ${subscriberEmail}, skipping`);
+      return {
+        success: true,
+        skipped: true,
+        reason: 'already_sent'
+      };
+    }
+  } catch (error) {
+    console.error('Error checking email log:', error);
+    // Continue anyway - better to send duplicate than not send at all
+  }
+  
   const subject = '🎁 Welcome to You Remembered By Gem!';
   
   const html = `
