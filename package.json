@@ -28,7 +28,7 @@
     "migrate:from-base44": "node scripts/migrate-from-base44.js",
     "test:auth": "node scripts/test-auth-system.js",
     "verify:auth": "node scripts/verify-auth-integration.js",
-    "postinstall": "prisma generate"
+    "postinstall": "npx prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
