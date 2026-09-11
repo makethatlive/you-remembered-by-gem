@@ -206,7 +206,7 @@ export function welcomeEmail(user, dashboardUrl) {
   `;
 
   return {
-    subject: 'Welcome to You Remembered, by Gem — let's get started ✨',
+    subject: 'Welcome to You Remembered, by Gem - let\'s get started',
     html: wrapBrandedEmail('Welcome', innerHtml, footerNote),
   };
 }
