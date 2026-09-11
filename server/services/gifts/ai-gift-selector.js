@@ -25,7 +25,7 @@ export default class AIGiftSelector {
     console.log('\n🎁 ===== AI GIFT SELECTION STARTING =====');
     console.log(`   Recipient: ${recipient.name}`);
     console.log(`   Candidates: ${candidates.length} products`);
-    console.log(`   Requested: 3-10 gifts (Claude decides)`);
+    console.log(`   Requested: 7-15 gifts (Claude decides)`);
     console.log(`   Using: Claude AI\n`);
 
     // Validate candidates meet quality standards
@@ -112,7 +112,7 @@ CANDIDATE PRODUCTS:
 ${productsFormatted}
 
 TASK:
-Select between 3 and 10 of the BEST gift ideas from the candidates above. Choose the number that feels right for this person and occasion - it doesn't have to be exactly ${count}. Your goal is to create a thoughtful, varied gift list that:
+Select between 7 and 15 of the BEST gift ideas from the candidates above. Choose the number that feels right for this person and occasion - aim for 10-12 but it doesn't have to be exact. Your goal is to create a thoughtful, varied gift list that:
 1. Matches the recipient's interests and personality authentically
 2. Includes diverse types of gifts (not all jewelry, not all wine, etc.)
 3. Spans the budget range appropriately
@@ -127,8 +127,8 @@ IMPORTANT:
 - Use product_index to reference products (1-${candidates.length})
 - Make sure your reasoning is specific to both the person AND the product
 - Vary your selections across different categories where possible
-- Choose as many gifts as makes sense (3-10), prioritizing quality over hitting a specific number
-- If there aren't enough good matches, it's better to return fewer excellent gifts than padding with mediocre ones`;
+- Choose as many gifts as makes sense (7-15), prioritizing quality over hitting a specific number
+- If there aren't enough good matches, it's better to return fewer excellent gifts than padding with mediocre ones (but aim for at least 7)`;
   }
 
   /**
@@ -142,7 +142,7 @@ IMPORTANT:
       properties: {
         selections: {
           type: 'array',
-          description: `Array of 3-10 selected gifts (choose the right number based on quality matches)`,
+          description: `Array of 7-15 selected gifts (aim for 10-12, choose based on quality matches)`,
           items: {
             type: 'object',
             properties: {
@@ -191,14 +191,14 @@ IMPORTANT:
       }
     }
 
-    // Accept 3-10 gifts as valid
-    if (validSelections.length < 3) {
+    // Accept 7-15 gifts as valid
+    if (validSelections.length < 7) {
       console.warn(`Only ${validSelections.length} valid selections, using fallback`);
-      return this.fallbackSelection(candidates, Math.max(3, count));
+      return this.fallbackSelection(candidates, Math.max(7, count));
     }
 
     // Return what Claude selected (don't artificially limit to count)
-    return validSelections.slice(0, 10); // Max 10 to keep manageable
+    return validSelections.slice(0, 15); // Max 15 to keep manageable
   }
 
   /**
