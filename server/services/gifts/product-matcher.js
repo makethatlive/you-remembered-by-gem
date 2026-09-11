@@ -68,8 +68,8 @@ export default class ProductMatcher {
         gte: this.MIN_QUALITY_SCORE, // Only quality products
       },
       // Ensure product has basic required data
-      name: {
-        not: null,
+      NOT: {
+        name: null,
       },
     };
 
