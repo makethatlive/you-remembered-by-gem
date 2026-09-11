@@ -38,7 +38,7 @@ export default function GiftListsTab({ subscriber, onOpen }) {
   const visible = lists.filter((l) => l.visibleToSubscriber === true);
 
   const activeCount = (listId) =>
-    items.filter((i) => i.giftListId === listId && i.status === "active").length;
+    items.filter((i) => i.giftListId === listId && i.status?.toUpperCase() === "ACTIVE").length;
   const recipName = (id) => recipients.find((r) => r.id === id)?.name || "";
 
   // Group by recipient, lists ordered by birthday_date ascending.

@@ -32,7 +32,7 @@ export default function Dashboard({ subscriber, onOpenList, onGoTab }) {
     .sort((a, b) => a._days - b._days);
 
   const readyLists = lists
-    .filter((l) => l.status === "approved" || l.status === "sent")
+    .filter((l) => l.status?.toUpperCase() === "APPROVED" || l.status?.toUpperCase() === "SENT")
     .filter((l) => l.visibleToSubscriber !== false)
     .filter((l) => daysUntil(l.birthdayDate) <= 30);
 

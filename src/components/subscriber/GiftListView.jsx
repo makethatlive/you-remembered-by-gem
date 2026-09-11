@@ -49,10 +49,10 @@ export default function GiftListView({ listId, onBack }) {
   });
 
   const visibleItems = items.filter(
-    (i) => i.status === "active" && !hidden.includes(i.id)
+    (i) => i.status?.toUpperCase() === "ACTIVE" && !hidden.includes(i.id)
   );
   const standbyItems = items.filter(
-    (i) => i.status === "standby" && !hidden.includes(i.id)
+    (i) => i.status?.toUpperCase() === "STANDBY" && !hidden.includes(i.id)
   );
 
   const confirmReport = async () => {
