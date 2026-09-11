@@ -28,8 +28,23 @@ export default class AIGiftSelector {
     console.log(`   Requested: 3-10 gifts (Claude decides)`);
     console.log(`   Using: Claude AI\n`);
 
+    // Validate candidates meet quality standards
+    const qualityCandidates = candidates.filter(c => {
+      if (!c.name || !c.description || !c.score) {
+        return false;
+      }
+      // Must have at least score of 20 to be considered
+      return c.score >= 20;
+    });
+
+    console.log(`   ${qualityCandidates.length} candidates meet quality threshold (score >= 20)`);
+
+    if (qualityCandidates.length < 3) {
+      throw new Error(`Insufficient quality candidates: only ${qualityCandidates.length} products scored 20+. Need at least 3.`);
+    }
+
     // Take top candidates for AI consideration (max 50 to keep prompt manageable)
-    const topCandidates = candidates.slice(0, Math.min(50, candidates.length));
+    const topCandidates = qualityCandidates.slice(0, Math.min(50, qualityCandidates.length));
 
     const prompt = this.buildSelectionPrompt(recipient, topCandidates, count || 5);
     const schema = this.getSelectionSchema(count || 5);

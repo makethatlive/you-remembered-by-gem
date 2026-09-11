@@ -7,7 +7,44 @@
 
 export default class ProductMatcher {
   constructor() {
-    this.MIN_SCORE_THRESHOLD = 10;
+    this.MIN_SCORE_THRESHOLD = 20; // Increased from 10 to ensure better quality
+    this.MIN_QUALITY_SCORE = 50; // Reject products with poor quality
+  }
+
+  /**
+   * Validate product has required data quality
+   * @param {object} product - Product to validate
+   * @returns {boolean} Is valid
+   */
+  isValidProduct(product) {
+    // Must have name
+    if (!product.name || product.name === 'undefined' || product.name.length < 3) {
+      return false;
+    }
+
+    // Must have description (not just "sss" or similar)
+    if (!product.description || product.description.length < 10 || /^s+$/.test(product.description)) {
+      return false;
+    }
+
+    // Must have interest tags or gift type tags
+    const hasTags = (product.interestTags && product.interestTags.length > 0) ||
+                    (product.giftTypeTags && product.giftTypeTags.length > 0);
+    if (!hasTags) {
+      return false;
+    }
+
+    // Must have product URL
+    if (!product.productUrl || product.productUrl === 'N/A') {
+      return false;
+    }
+
+    // Must not have critical data quality flags
+    if (product.dataQualityFlags && product.dataQualityFlags.includes('missing_description')) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -27,6 +64,13 @@ export default class ProductMatcher {
         gte: budgetMin || 0,
         lte: budgetMax || 1000,
       },
+      qualityScore: {
+        gte: this.MIN_QUALITY_SCORE, // Only quality products
+      },
+      // Ensure product has basic required data
+      name: {
+        not: null,
+      },
     };
 
     // Fetch products with retailers
@@ -38,14 +82,26 @@ export default class ProductMatcher {
       take: 500, // Limit for performance
     });
 
+    console.log(`   Fetched ${products.length} products from catalogue`);
+    
+    // Validate product data quality before scoring
+    const validProducts = products.filter(p => this.isValidProduct(p));
+    console.log(`   ${validProducts.length} products passed quality validation`);
+
     // Score and filter products
-    const scoredProducts = products
+    const scoredProducts = validProducts
       .map(product => ({
         ...product,
         ...this.scoreProduct(product, recipient, derived),
       }))
       .filter(p => p.score >= this.MIN_SCORE_THRESHOLD)
       .sort((a, b) => b.score - a.score);
+
+    console.log(`   ${scoredProducts.length} products scored above threshold (${this.MIN_SCORE_THRESHOLD})`);
+
+    if (scoredProducts.length === 0) {
+      console.warn(`   ⚠️  WARNING: No products found matching interests: ${recipient.interests?.join(', ')}`);
+    }
 
     return scoredProducts.slice(0, 100); // Top 100 candidates for AI selection
   }
@@ -67,21 +123,36 @@ export default class ProductMatcher {
       signals.push(`Quality: ${product.qualityScore}/100`);
     }
 
-    // Interest matching
-    const interests = [
-      ...(recipient.interests || []),
-      ...(derived.canonical_interests || [])
-    ];
+    // Interest matching - STRICT: Use interestTags array directly
+    const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase());
+    const productInterestTags = (product.interestTags || []).map(t => t.toLowerCase());
     
-    interests.forEach(interest => {
+    // Direct tag matching (highest value)
+    const directMatches = recipientInterests.filter(interest => 
+      productInterestTags.includes(interest)
+    );
+    
+    if (directMatches.length > 0) {
+      const matchScore = directMatches.length * 30; // 30 points per exact match
+      score += matchScore;
+      directMatches.forEach(match => {
+        signals.push(`✓ Interest: ${match}`);
+      });
+    }
+    
+    // Partial text matching (lower value, fallback)
+    const additionalMatches = recipientInterests.filter(interest => {
       const interestLower = interest.toLowerCase();
-      const productText = this.getProductText(product).toLowerCase();
-      
-      if (productText.includes(interestLower)) {
-        score += 15;
-        signals.push(`Interest: ${interest}`);
-      }
+      return !directMatches.includes(interest) && 
+             productInterestTags.some(tag => tag.includes(interestLower) || interestLower.includes(tag));
     });
+    
+    if (additionalMatches.length > 0) {
+      score += additionalMatches.length * 15; // 15 points per partial match
+      additionalMatches.forEach(match => {
+        signals.push(`~ Interest: ${match}`);
+      });
+    }
 
     // Gift type matching
     const giftTypes = [

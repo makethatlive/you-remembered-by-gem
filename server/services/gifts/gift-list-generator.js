@@ -9,6 +9,7 @@
 import ProfileAnalyzer from './profile-analyzer.js';
 import ProductMatcher from './product-matcher.js';
 import AIGiftSelector from './ai-gift-selector.js';
+import GiftQualityMonitor from './gift-quality-monitor.js';
 
 export default class GiftListGenerator {
   constructor(claudeClient, prisma) {
@@ -16,6 +17,7 @@ export default class GiftListGenerator {
     this.profileAnalyzer = new ProfileAnalyzer(claudeClient);
     this.productMatcher = new ProductMatcher();
     this.giftSelector = new AIGiftSelector(claudeClient);
+    this.qualityMonitor = new GiftQualityMonitor(prisma);
   }
 
   /**
@@ -62,7 +64,20 @@ export default class GiftListGenerator {
       console.log(`Selecting best gifts from ${candidates.length} candidates...`);
       const selectedGifts = await this.giftSelector.selectGifts(candidates, recipient);
 
-      // Step 5: Create gift list and items in database
+      // Step 5: Validate gift list quality before saving
+      const validation = this.validateGiftListQuality(selectedGifts, recipient);
+      if (!validation.isValid) {
+        console.error('❌ Gift list failed quality validation:', validation.reasons.join(', '));
+        return {
+          status: 'quality_check_failed',
+          message: `Gift list quality check failed: ${validation.reasons.join(', ')}`,
+          recipient: { id: recipient.id, name: recipient.name },
+          failedReasons: validation.reasons,
+          giftsGenerated: selectedGifts.length,
+        };
+      }
+
+      // Step 6: Create gift list and items in database
       console.log('Saving gift list to database...');
       const giftList = await this.persistGiftList({
         recipient,
@@ -71,6 +86,31 @@ export default class GiftListGenerator {
         daysUntil,
         supersedesListId,
       });
+
+      // Step 7: Run quality monitoring check
+      console.log('Running quality monitoring check...');
+      const qualityReport = await this.qualityMonitor.checkGiftListQuality(giftList.id);
+
+      // If quality check fails, mark as rejected
+      if (qualityReport.status === 'failed') {
+        await this.prisma.giftList.update({
+          where: { id: giftList.id },
+          data: {
+            status: 'REJECTED',
+            visibleToSubscriber: false,
+          }
+        });
+
+        return {
+          status: 'rejected_quality',
+          message: 'Gift list rejected due to quality issues',
+          giftList: {
+            id: giftList.id,
+            status: 'REJECTED',
+          },
+          qualityReport,
+        };
+      }
 
       return {
         status: 'pending_approval',
@@ -89,11 +129,75 @@ export default class GiftListGenerator {
           giftsSelected: selectedGifts.length,
           aiStrategy: selectedGifts[0]?.aiStrategy || 'Standard selection',
         },
+        qualityReport,
       };
     } catch (error) {
       console.error('Gift list generation failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Validate gift list meets quality standards
+   * @param {array} gifts - Selected gifts
+   * @param {object} recipient - Recipient data
+   * @returns {object} Validation result
+   */
+  validateGiftListQuality(gifts, recipient) {
+    const reasons = [];
+    
+    // Must have at least 3 gifts
+    if (gifts.length < 3) {
+      reasons.push(`Too few gifts: ${gifts.length} (minimum 3 required)`);
+    }
+
+    // All gifts must have reasoning
+    const missingReasoning = gifts.filter(g => !g.whyThisGift || g.whyThisGift.length < 20);
+    if (missingReasoning.length > 0) {
+      reasons.push(`${missingReasoning.length} gifts missing proper reasoning`);
+    }
+
+    // Calculate average relevance score
+    const avgScore = gifts.reduce((sum, g) => sum + (g.score || 0), 0) / gifts.length;
+    if (avgScore < 30) {
+      reasons.push(`Average relevance too low: ${avgScore.toFixed(1)} (minimum 30 required)`);
+    }
+
+    // At least 60% of gifts must directly match recipient interests
+    const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase());
+    const matchingGifts = gifts.filter(gift => {
+      const giftInterests = (gift.interestTags || []).map(t => t.toLowerCase());
+      return recipientInterests.some(ri => giftInterests.includes(ri));
+    });
+
+    const matchPercentage = (matchingGifts.length / gifts.length) * 100;
+    if (matchPercentage < 60) {
+      reasons.push(`Only ${matchPercentage.toFixed(0)}% of gifts match interests (minimum 60% required)`);
+    }
+
+    // Check for diversity (no more than 40% from same retailer)
+    const retailerCounts = {};
+    gifts.forEach(g => {
+      const retailer = g.retailer?.name || 'Unknown';
+      retailerCounts[retailer] = (retailerCounts[retailer] || 0) + 1;
+    });
+
+    const maxFromOneRetailer = Math.max(...Object.values(retailerCounts));
+    const retailerPercentage = (maxFromOneRetailer / gifts.length) * 100;
+    if (retailerPercentage > 40) {
+      reasons.push(`Too many gifts from one retailer: ${retailerPercentage.toFixed(0)}%`);
+    }
+
+    return {
+      isValid: reasons.length === 0,
+      reasons,
+      stats: {
+        giftCount: gifts.length,
+        avgScore: avgScore.toFixed(1),
+        matchPercentage: matchPercentage.toFixed(0),
+        retailerDiversity: Object.keys(retailerCounts).length,
+      },
+    };
   }
 
   /**
