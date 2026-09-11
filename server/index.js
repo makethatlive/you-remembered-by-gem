@@ -613,6 +613,36 @@ app.patch('/api/gift-lists/:id', async (req, res) => {
       }
     });
     
+    // If status changed to APPROVED, send approval email
+    if (updateData.status === 'APPROVED' && giftList.subscriber && giftList.recipient) {
+      try {
+        // Get gift items count
+        const giftItems = await prisma.giftItem.count({
+          where: { 
+            giftListId: giftList.id,
+            status: 'ACTIVE'
+          }
+        });
+        
+        console.log(`📧 Sending approval email for gift list ${giftList.id} to ${giftList.subscriber.email}`);
+        
+        await sendApprovalEmail(
+          giftList.subscriber.email,
+          giftList.subscriber.firstName || giftList.subscriber.name,
+          giftList.recipient.name,
+          giftItems,
+          giftList.subscriberId,
+          giftList.recipientId,
+          giftList.id
+        );
+        
+        console.log(`✅ Approval email sent successfully`);
+      } catch (emailError) {
+        console.error('❌ Error sending approval email:', emailError);
+        // Don't fail the approval if email fails
+      }
+    }
+    
     res.json(giftList);
   } catch (error) {
     console.error('Error updating gift list:', error);
