@@ -28,7 +28,7 @@
     "migrate:from-base44": "node scripts/migrate-from-base44.js",
     "test:auth": "node scripts/test-auth-system.js",
     "verify:auth": "node scripts/verify-auth-integration.js",
-    "postinstall": "npx prisma generate"
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -38,7 +38,7 @@
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "5.22.0",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -129,7 +129,7 @@
     "eslint-plugin-unused-imports": "^4.3.0",
     "globals": "^15.14.0",
     "postcss": "^8.5.3",
-    "prisma": "^5.22.0",
+    "prisma": "5.22.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2",
     "vite": "^6.1.0"
