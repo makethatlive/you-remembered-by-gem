@@ -804,6 +804,65 @@ app.post('/api/gift-items', async (req, res) => {
   }
 });
 
+// ==================== GIFT FEEDBACK ====================
+
+// Submit gift feedback from subscriber (standalone endpoint matching base44)
+app.post('/api/functions/submitGiftFeedback', async (req, res) => {
+  try {
+    const { gift_item_id, feedback, subscriber_action } = req.body;
+    
+    // Validation
+    if (!gift_item_id) {
+      return res.status(400).json({ error: 'gift_item_id is required' });
+    }
+    if (!feedback && !subscriber_action) {
+      return res.status(400).json({ error: 'feedback or subscriber_action is required' });
+    }
+    
+    const FEEDBACK_VALUES = ['LOVED_IT', 'BAD_SUGGESTION'];
+    const ACTION_VALUES = ['PURCHASED', 'NOT_PURCHASED'];
+    
+    if (feedback && !FEEDBACK_VALUES.includes(feedback.toUpperCase())) {
+      return res.status(400).json({ error: 'Invalid feedback value' });
+    }
+    if (subscriber_action && !ACTION_VALUES.includes(subscriber_action.toUpperCase())) {
+      return res.status(400).json({ error: 'Invalid subscriber_action value' });
+    }
+    
+    // Get gift item and verify ownership
+    const item = await prisma.giftItem.findUnique({
+      where: { id: gift_item_id },
+      include: {
+        giftList: true
+      }
+    });
+    
+    if (!item || !item.giftList) {
+      return res.status(404).json({ error: 'Gift item not found' });
+    }
+    
+    // Check if list is visible to subscriber
+    if (item.giftList.visibleToSubscriber !== true) {
+      return res.status(404).json({ error: 'Gift item not found' });
+    }
+    
+    // Update feedback
+    const updates = {};
+    if (feedback) updates.feedback = feedback.toUpperCase();
+    if (subscriber_action) updates.subscriberAction = subscriber_action.toUpperCase();
+    
+    await prisma.giftItem.update({
+      where: { id: gift_item_id },
+      data: updates
+    });
+    
+    res.json({ status: 'ok', ...updates });
+  } catch (error) {
+    console.error('Error submitting gift feedback:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== EMAIL LOGS ====================
 
 // Get all email logs
