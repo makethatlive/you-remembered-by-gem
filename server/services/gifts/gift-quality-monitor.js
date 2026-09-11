@@ -40,18 +40,12 @@ export default class GiftQualityMonitor {
     const recipient = giftList.recipient;
     const gifts = giftList.giftItems;
 
-    // Check 1: Minimum gift count
-    if (gifts.length < 3) {
+    // Check 1: Must have exactly 10 gifts (5 primary + 5 backups)
+    if (gifts.length !== 10) {
       issues.push({
         severity: 'critical',
-        code: 'INSUFFICIENT_GIFTS',
-        message: `Only ${gifts.length} gifts generated (minimum 3 required)`,
-      });
-    } else if (gifts.length < 5) {
-      warnings.push({
-        severity: 'warning',
-        code: 'LOW_GIFT_COUNT',
-        message: `Only ${gifts.length} gifts generated (5+ recommended)`,
+        code: 'INCORRECT_GIFT_COUNT',
+        message: `Expected 10 gifts (5 primary + 5 backups), got ${gifts.length}`,
       });
     }
 
@@ -206,8 +200,8 @@ export default class GiftQualityMonitor {
     // Deduct for warnings
     score -= warnings.length * 5;
     
-    // Bonus for high gift count
-    if (giftCount >= 7) {
+    // Bonus for exact count (10 gifts as expected)
+    if (giftCount === 10) {
       score += 5;
     }
     

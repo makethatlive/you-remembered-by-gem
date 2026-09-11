@@ -146,9 +146,9 @@ export default class GiftListGenerator {
   validateGiftListQuality(gifts, recipient) {
     const reasons = [];
     
-    // Must have at least 7 gifts
-    if (gifts.length < 7) {
-      reasons.push(`Too few gifts: ${gifts.length} (minimum 7 required)`);
+    // Must have exactly 10 gifts (5 primary + 5 backups)
+    if (gifts.length !== 10) {
+      reasons.push(`Expected 10 gifts (5 primary + 5 backups), got ${gifts.length}`);
     }
 
     // All gifts must have reasoning

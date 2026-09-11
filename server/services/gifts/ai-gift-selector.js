@@ -25,7 +25,7 @@ export default class AIGiftSelector {
     console.log('\n🎁 ===== AI GIFT SELECTION STARTING =====');
     console.log(`   Recipient: ${recipient.name}`);
     console.log(`   Candidates: ${candidates.length} products`);
-    console.log(`   Requested: 7-15 gifts (Claude decides)`);
+    console.log(`   Requested: 20 products (system uses first 10: 5 primary + 5 backups)`);
     console.log(`   Using: Claude AI\n`);
 
     // Validate candidates meet quality standards
@@ -39,15 +39,15 @@ export default class AIGiftSelector {
 
     console.log(`   ${qualityCandidates.length} candidates meet quality threshold (score >= 20)`);
 
-    if (qualityCandidates.length < 3) {
-      throw new Error(`Insufficient quality candidates: only ${qualityCandidates.length} products scored 20+. Need at least 3.`);
+    if (qualityCandidates.length < 10) {
+      throw new Error(`Insufficient quality candidates: only ${qualityCandidates.length} products scored 20+. Need at least 10 for 5 primary gifts + 5 backups.`);
     }
 
     // Take top candidates for AI consideration (max 50 to keep prompt manageable)
     const topCandidates = qualityCandidates.slice(0, Math.min(50, qualityCandidates.length));
 
-    const prompt = this.buildSelectionPrompt(recipient, topCandidates, count || 5);
-    const schema = this.getSelectionSchema(count || 5);
+    const prompt = this.buildSelectionPrompt(recipient, topCandidates, 20); // Always request 20
+    const schema = this.getSelectionSchema(20);
 
     try {
       // Don't pass temperature for Claude Sonnet 5
@@ -112,7 +112,9 @@ CANDIDATE PRODUCTS:
 ${productsFormatted}
 
 TASK:
-Select between 7 and 15 of the BEST gift ideas from the candidates above. Choose the number that feels right for this person and occasion - aim for 10-12 but it doesn't have to be exact. Your goal is to create a thoughtful, varied gift list that:
+Choose exactly 20 products, ranked best match first. The system will validate your ranked choices in order and use the first 10: 5 primary gifts and 5 backups.
+
+Your goal is to create a thoughtful, varied gift list that:
 1. Matches the recipient's interests and personality authentically
 2. Includes diverse types of gifts (not all jewelry, not all wine, etc.)
 3. Spans the budget range appropriately
@@ -127,8 +129,9 @@ IMPORTANT:
 - Use product_index to reference products (1-${candidates.length})
 - Make sure your reasoning is specific to both the person AND the product
 - Vary your selections across different categories where possible
-- Choose as many gifts as makes sense (7-15), prioritizing quality over hitting a specific number
-- If there aren't enough good matches, it's better to return fewer excellent gifts than padding with mediocre ones (but aim for at least 7)`;
+- Make the first 5 entries varied gift concepts — never dominated by one shop or one category
+- Use no more than 2 products from any single retailer
+- Return exactly 20 products ranked by match quality`;
   }
 
   /**
@@ -142,7 +145,7 @@ IMPORTANT:
       properties: {
         selections: {
           type: 'array',
-          description: `Array of 7-15 selected gifts (aim for 10-12, choose based on quality matches)`,
+          description: `Array of exactly 20 selected gifts, ranked best match first`,
           items: {
             type: 'object',
             properties: {
@@ -191,14 +194,14 @@ IMPORTANT:
       }
     }
 
-    // Accept 7-15 gifts as valid
-    if (validSelections.length < 7) {
+    // Accept 10-20 gifts (use first 10)
+    if (validSelections.length < 10) {
       console.warn(`Only ${validSelections.length} valid selections, using fallback`);
-      return this.fallbackSelection(candidates, Math.max(7, count));
+      return this.fallbackSelection(candidates, 10);
     }
 
-    // Return what Claude selected (don't artificially limit to count)
-    return validSelections.slice(0, 15); // Max 15 to keep manageable
+    // Return first 10 validated gifts (5 primary + 5 backups)
+    return validSelections.slice(0, 10);
   }
 
   /**
@@ -209,9 +212,9 @@ IMPORTANT:
    */
   fallbackSelection(candidates, count) {
     console.log('\n⚠️  USING FALLBACK SELECTION (No Claude AI)');
-    console.log(`   Selecting top ${count} by score only\n`);
+    console.log(`   Selecting top 10 by score only (5 primary + 5 backups)\n`);
     
-    return candidates.slice(0, count).map(product => ({
+    return candidates.slice(0, 10).map(product => ({
       ...product,
       whyThisGift: this.generateFallbackReason(product),
       aiStrategy: 'Fallback: Score-based selection (AI unavailable)',
