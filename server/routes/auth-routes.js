@@ -110,10 +110,7 @@ router.post('/register',
         }
       });
 
-      // Send verification email
-      await sendEmailVerification(user);
-
-      // Create session
+      // Create session (NO email verification - matches base44 original)
       const session = await createSession(user, req);
 
       // Send welcome email with proper subscriberId (non-blocking)
@@ -122,7 +119,7 @@ router.post('/register',
 
       res.status(201).json({
         success: true,
-        message: 'Account created successfully. Please check your email to verify your account.',
+        message: 'Account created successfully. Welcome!',
         user: {
           id: user.id,
           email: user.email,

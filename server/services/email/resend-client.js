@@ -7,6 +7,7 @@
 
 import { Resend } from 'resend';
 import { PrismaClient } from '@prisma/client';
+import { welcomeEmail } from './email-template.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const prisma = new PrismaClient();
@@ -98,6 +99,7 @@ function stripHtml(html) {
 
 /**
  * Send welcome email to new subscriber
+ * Uses branded template matching base44 original + client spec
  */
 export async function sendWelcomeEmail(subscriberEmail, subscriberName, subscriberId) {
   // Check if welcome email already sent to this EMAIL (deduplication)
@@ -126,57 +128,13 @@ export async function sendWelcomeEmail(subscriberEmail, subscriberName, subscrib
     // Continue anyway - better to send duplicate than not send at all
   }
   
-  const subject = '🎁 Welcome to You Remembered By Gem!';
-  
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #0D5C63; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
-          .button { display: inline-block; background: #0D5C63; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎁 Welcome to You Remembered By Gem!</h1>
-          </div>
-          <div class="content">
-            <p>Hi ${subscriberName || 'there'},</p>
-            
-            <p>Thank you for joining You Remembered By Gem! We're thrilled to help you find the perfect gifts for your loved ones.</p>
-            
-            <p><strong>What's next?</strong></p>
-            <ul>
-              <li>Add the important people in your life</li>
-              <li>Tell us about their interests and preferences</li>
-              <li>Let our AI find personalized gift suggestions</li>
-              <li>Never miss a special occasion again!</li>
-            </ul>
-            
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="button">Get Started</a>
-            
-            <p>If you have any questions, just reply to this email - we're here to help!</p>
-            
-            <p>Best regards,<br>The Gem Team</p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} You Remembered By Gem. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+  const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`;
+  const emailData = welcomeEmail({ firstName: subscriberName, email: subscriberEmail }, dashboardUrl);
 
   const result = await sendEmail({
     to: subscriberEmail,
-    subject,
-    html,
+    subject: emailData.subject,
+    html: emailData.html,
   });
 
   // Create email log

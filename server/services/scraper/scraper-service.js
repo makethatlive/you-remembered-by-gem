@@ -131,7 +131,7 @@ async function processRetailer({
   retailer,
   cursor,
   prisma,
-  geminiClient,
+  claudeClient,
   existingMap,
   pending,
   counts,
@@ -281,7 +281,7 @@ async function processRetailer({
         } else {
           // No structured data, try AI fallback using the already-fetched HTML
           const html = extractResult.html || "";
-          const aiResult = await extractWithAI(geminiClient, html, aiLeft.value);
+          const aiResult = await extractWithAI(claudeClient, html, aiLeft.value);
           
           if (aiResult.usedAI) aiLeft.value--;
           
@@ -415,11 +415,15 @@ async function processRetailer({
 /**
  * Execute one batch of scraping
  * @param {object} options
+ * @param {object} options.prisma - Prisma client instance
+ * @param {string} options.retailerId - Optional specific retailer ID
+ * @param {string} options.cursorToken - Optional continuation token
+ * @param {string} options.claudeApiKey - Claude API key for AI fallback
  * @returns {Promise<object>} Batch response
  */
-export async function executeBatch({ prisma, retailerId = null, cursorToken = null, geminiApiKey = null }) {
-  // Initialize Gemini client if API key is available
-  const geminiClient = geminiApiKey ? new GeminiClient(geminiApiKey) : null;
+export async function executeBatch({ prisma, retailerId = null, cursorToken = null, claudeApiKey = null }) {
+  // Initialize Claude client if API key is available
+  const claudeClient = claudeApiKey ? new ClaudeClient(claudeApiKey) : null;
   
   // Decode cursor or create initial
   let cursor = cursorToken ? decodeCursor(cursorToken) : null;
@@ -501,7 +505,7 @@ export async function executeBatch({ prisma, retailerId = null, cursorToken = nu
       retailer,
       cursor,
       prisma,
-      geminiClient,
+      claudeClient,
       existingMap,
       pending,
       counts,

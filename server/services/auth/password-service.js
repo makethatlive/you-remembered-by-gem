@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { sendEmail } from '../email/resend-client.js';
+import { passwordResetEmail, emailVerificationEmail } from '../email/email-template.js';
 
 const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
@@ -103,48 +104,12 @@ export async function generatePasswordResetToken(email) {
     // Send email
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
     
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .button { 
-            display: inline-block; 
-            padding: 12px 24px; 
-            background-color: #7c3aed; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 6px; 
-            margin: 20px 0;
-          }
-          .footer { margin-top: 30px; font-size: 12px; color: #666; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h2>🔐 Password Reset Request</h2>
-          <p>Hi ${user.firstName || 'there'},</p>
-          <p>We received a request to reset your password for your You Remembered By Gem account.</p>
-          <p>Click the button below to reset your password:</p>
-          <a href="${resetUrl}" class="button">Reset Password</a>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #7c3aed;">${resetUrl}</p>
-          <p><strong>This link will expire in 1 hour.</strong></p>
-          <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
-          <div class="footer">
-            <p>Best regards,<br>The You Remembered By Gem Team</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    const emailData = passwordResetEmail(user, resetUrl);
 
     await sendEmail({
       to: user.email,
-      subject: '🔐 Reset Your Password',
-      html: emailHtml,
+      subject: emailData.subject,
+      html: emailData.html,
     });
 
     return { 
@@ -256,46 +221,12 @@ export async function sendEmailVerification(user) {
     const token = await generateEmailVerificationToken(user.id);
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
 
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .button { 
-            display: inline-block; 
-            padding: 12px 24px; 
-            background-color: #7c3aed; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 6px; 
-            margin: 20px 0;
-          }
-          .footer { margin-top: 30px; font-size: 12px; color: #666; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h2>✉️ Verify Your Email Address</h2>
-          <p>Hi ${user.firstName || 'there'},</p>
-          <p>Welcome to You Remembered By Gem! Please verify your email address to get started.</p>
-          <a href="${verificationUrl}" class="button">Verify Email</a>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #7c3aed;">${verificationUrl}</p>
-          <p>If you didn't create an account, you can safely ignore this email.</p>
-          <div class="footer">
-            <p>Best regards,<br>The You Remembered By Gem Team</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    const emailData = emailVerificationEmail(user, verificationUrl);
 
     await sendEmail({
       to: user.email,
-      subject: '✉️ Verify Your Email Address',
-      html: emailHtml,
+      subject: emailData.subject,
+      html: emailData.html,
     });
 
     return { success: true };

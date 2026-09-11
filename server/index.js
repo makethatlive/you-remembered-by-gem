@@ -1483,7 +1483,7 @@ app.post('/api/scrape/catalogue-batch', requireAdmin, async (req, res) => {
         prisma,
         retailerId: retailer_id || null,
         cursorToken: cursor || null,
-        geminiApiKey: process.env.GEMINI_API_KEY || null,
+        claudeApiKey: process.env.ANTHROPIC_API_KEY || null,
       });
       
       res.json(batchResult);
@@ -1583,7 +1583,7 @@ app.post('/api/scrape/monthly', requireAdmin, async (req, res) => {
           prisma,
           retailerId: null,
           cursorToken: cursor,
-          geminiApiKey: process.env.GEMINI_API_KEY || null,
+          claudeApiKey: process.env.ANTHROPIC_API_KEY || null,
         });
         
         totalNewProducts += batchResult.batch.new_products;
