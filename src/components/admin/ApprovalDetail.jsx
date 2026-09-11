@@ -403,9 +403,39 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
       // and never touch the Recipient, so they must not pay for a full refetch.
       await queryClient.invalidateQueries({ queryKey: ["recipients-all"] });
 
+      // Handle quality check failures with detailed messages
+      if (data.status === "quality_check_failed") {
+        const reasons = data.failedReasons?.join(", ") || "Quality standards not met";
+        const giftCount = data.giftsGenerated || 0;
+        await refresh();
+        toast({ 
+          title: "Quality Check Failed",
+          description: `Generated ${giftCount} gifts but rejected: ${reasons}. Try adjusting recipient interests or add more products.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+        return;
+      }
+
+      if (data.status === "insufficient_products") {
+        const candidatesFound = data.candidatesFound || 0;
+        await refresh();
+        toast({ 
+          title: "Insufficient Products",
+          description: `Only found ${candidatesFound} matching products (need at least 3). Add more products with matching interests to the catalogue.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+        return;
+      }
+
       if (data.error || data.status !== "pending_approval" || !data.giftListId) {
         await refresh();
-        toast({ description: data.error || "Regeneration didn't produce a usable list — please review manually." });
+        toast({ 
+          title: "Regeneration Failed",
+          description: data.message || data.error || "Regeneration didn't produce a usable list — please review manually.",
+          variant: "destructive",
+        });
         onBack();
         return;
       }
@@ -423,7 +453,11 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
         onBack();
       }
     } catch {
-      toast({ description: "Couldn't regenerate this list — please try again." });
+      toast({ 
+        title: "Error",
+        description: "Couldn't regenerate this list — please try again.",
+        variant: "destructive",
+      });
     } finally {
       setRegenerating(false);
     }

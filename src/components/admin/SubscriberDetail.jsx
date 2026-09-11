@@ -71,17 +71,47 @@ export default function SubscriberDetail({ subscriber, onBack }) {
         list_type: "curated",
         days_until: daysUntil(recipient.birthday),
       });
-      if (res?.data?.status === "pending_approval") {
-        toast({ description: `Gift list generated for ${recipient.name} — it's now in your approval queue.` });
-      } else if (res?.data?.status === "rejected") {
-        toast({ description: `Couldn't build a clean list for ${recipient.name} — flagged for you to review.` });
+      
+      const data = res?.data;
+      
+      if (data?.status === "pending_approval") {
+        toast({ description: `✅ Gift list generated for ${recipient.name} — it's now in your approval queue.` });
+      } else if (data?.status === "rejected") {
+        toast({ description: `⚠️ Couldn't build a clean list for ${recipient.name} — flagged for you to review.` });
+      } else if (data?.status === "quality_check_failed") {
+        // Show detailed quality failure reasons
+        const reasons = data.failedReasons?.join(", ") || "Quality standards not met";
+        const giftCount = data.giftsGenerated || 0;
+        toast({ 
+          title: `❌ Quality Check Failed for ${recipient.name}`,
+          description: `Generated ${giftCount} gifts but rejected: ${reasons}. Try adjusting interests or add more products to catalogue.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+      } else if (data?.status === "insufficient_products") {
+        // Not enough products in catalogue
+        const candidatesFound = data.candidatesFound || 0;
+        toast({ 
+          title: `⚠️ Insufficient Products for ${recipient.name}`,
+          description: `Only found ${candidatesFound} matching products (need at least 3). Add more products with interests: ${recipient.interests?.join(", ") || "their interests"}.`,
+          variant: "destructive",
+          duration: 8000,
+        });
       } else {
-        toast({ description: res?.data?.error || "Couldn't generate a list right now — please try again." });
+        toast({ 
+          title: "Generation Failed",
+          description: data?.message || data?.error || "Couldn't generate a list right now — please try again.",
+          variant: "destructive",
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["giftlists-all"] });
       queryClient.invalidateQueries({ queryKey: ["giftitems-all"] });
     } catch (err) {
-      toast({ description: err?.response?.data?.error || "Couldn't generate a list right now — please try again." });
+      toast({ 
+        title: "Error",
+        description: err?.response?.data?.error || "Couldn't generate a list right now — please try again.",
+        variant: "destructive",
+      });
     } finally {
       setGeneratingFor(null);
     }
