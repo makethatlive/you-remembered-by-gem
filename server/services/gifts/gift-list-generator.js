@@ -175,7 +175,7 @@ export default class GiftListGenerator {
       reasons.push(`Only ${matchPercentage.toFixed(0)}% of gifts match interests (minimum 60% required)`);
     }
 
-    // Check for diversity (no more than 40% from same retailer)
+    // Check for diversity (no more than 70% from same retailer during catalogue growth)
     const retailerCounts = {};
     gifts.forEach(g => {
       const retailer = g.retailer?.name || 'Unknown';
@@ -184,7 +184,7 @@ export default class GiftListGenerator {
 
     const maxFromOneRetailer = Math.max(...Object.values(retailerCounts));
     const retailerPercentage = (maxFromOneRetailer / gifts.length) * 100;
-    if (retailerPercentage > 40) {
+    if (retailerPercentage > 70) { // Temporarily relaxed from 40% to allow 3-gift lists
       reasons.push(`Too many gifts from one retailer: ${retailerPercentage.toFixed(0)}%`);
     }
 
