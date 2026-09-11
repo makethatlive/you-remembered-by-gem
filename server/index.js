@@ -863,6 +863,195 @@ app.post('/api/functions/submitGiftFeedback', async (req, res) => {
   }
 });
 
+// Report Broken Gift function
+app.post('/api/functions/reportBrokenGift', async (req, res) => {
+  try {
+    const { gift_item_id } = req.body;
+    
+    if (!gift_item_id) {
+      return res.status(400).json({ error: 'gift_item_id is required' });
+    }
+    
+    // Get gift item and verify ownership
+    const item = await prisma.giftItem.findUnique({
+      where: { id: gift_item_id },
+      include: {
+        giftList: true
+      }
+    });
+    
+    if (!item || !item.giftList) {
+      return res.status(404).json({ error: 'Gift item not found' });
+    }
+    
+    // Check if list is visible to subscriber
+    if (item.giftList.visibleToSubscriber !== true) {
+      return res.status(404).json({ error: 'Gift item not found' });
+    }
+    
+    // Mark product as broken if it exists
+    if (item.productId && item.productId !== 'manual') {
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: {
+          status: 'REPORTED_BROKEN',
+          reportedBrokenAt: new Date()
+        }
+      }).catch(() => null);
+    }
+    
+    // Mark item as removed
+    await prisma.giftItem.update({
+      where: { id: item.id },
+      data: {
+        status: 'REMOVED',
+        adminFeedbackReason: 'BAD_LINK_OR_DATA',
+        adminFeedbackNote: 'Reported by subscriber'
+      }
+    });
+    
+    // Get standby items sorted by score
+    const standbyItems = await prisma.giftItem.findMany({
+      where: {
+        giftListId: item.giftListId,
+        status: 'STANDBY'
+      },
+      orderBy: {
+        selectionScore: 'desc'
+      }
+    });
+    
+    const replacement = standbyItems[0] || null;
+    if (replacement) {
+      await prisma.giftItem.update({
+        where: { id: replacement.id },
+        data: { status: 'ACTIVE' }
+      });
+    }
+    
+    res.json({
+      replaced: !!replacement,
+      replacement_title: replacement?.title || ''
+    });
+  } catch (error) {
+    console.error('Error reporting broken gift:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Request Gift Refresh function
+app.post('/api/functions/requestGiftRefresh', async (req, res) => {
+  try {
+    const { gift_list_id, refresh_reason } = req.body;
+    
+    if (!gift_list_id) {
+      return res.status(400).json({ error: 'gift_list_id is required' });
+    }
+    
+    // Get gift list and verify ownership
+    const list = await prisma.giftList.findUnique({
+      where: { id: gift_list_id }
+    });
+    
+    if (!list || list.visibleToSubscriber !== true) {
+      return res.status(404).json({ error: 'Gift list not found' });
+    }
+    
+    // Save refresh reason if provided
+    const reason = typeof refresh_reason === 'string' ? refresh_reason.trim().slice(0, 300) : '';
+    if (reason) {
+      await prisma.giftList.update({
+        where: { id: list.id },
+        data: { refreshReason: reason }
+      }).catch(() => {});
+    }
+    
+    // Check if refresh already pending
+    const pendingLists = await prisma.giftList.findMany({
+      where: {
+        recipientId: list.recipientId,
+        status: 'PENDING_APPROVAL',
+        supersedesListId: list.id
+      }
+    });
+    
+    if (pendingLists.length > 0) {
+      return res.json({ status: 'already_requested' });
+    }
+    
+    // Check cooldown (24 hours)
+    const cooldownCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (list.refreshRequestedAt && list.refreshRequestedAt > cooldownCutoff) {
+      return res.json({ status: 'already_requested' });
+    }
+    
+    // Check for recently rejected lists
+    const rejectedLists = await prisma.giftList.findMany({
+      where: {
+        recipientId: list.recipientId,
+        status: 'REJECTED',
+        supersedesListId: list.id,
+        createdAt: { gte: cooldownCutoff }
+      }
+    });
+    
+    if (rejectedLists.length > 0) {
+      return res.json({ status: 'already_requested' });
+    }
+    
+    // Update refresh requested timestamp
+    await prisma.giftList.update({
+      where: { id: list.id },
+      data: { refreshRequestedAt: new Date() }
+    });
+    
+    // Get current items to exclude
+    const currentItems = await prisma.giftItem.findMany({
+      where: { giftListId: list.id },
+      select: { productId: true }
+    });
+    
+    const excludeProductIds = currentItems
+      .map(item => item.productId)
+      .filter(id => id && id !== 'manual');
+    
+    // Generate new gift list
+    try {
+      const generateResponse = await fetch(`${process.env.API_URL || 'http://localhost:3001'}/api/generate-gift-list`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_id: list.recipientId,
+          list_type: list.listType,
+          exclude_product_ids: excludeProductIds,
+          supersedes_list_id: list.id
+        })
+      });
+      
+      const generateData = await generateResponse.json();
+      
+      if (!generateResponse.ok || generateData.error || generateData.status !== 'pending_approval') {
+        return res.status(422).json({
+          error: generateData.error || 'Fresh suggestions could not be prepared'
+        });
+      }
+      
+      return res.json({
+        status: 'pending_approval',
+        giftListId: generateData.giftListId || generateData.data?.giftListId
+      });
+    } catch (error) {
+      console.error('Error generating new gift list:', error);
+      return res.status(422).json({
+        error: 'Fresh suggestions could not be prepared'
+      });
+    }
+  } catch (error) {
+    console.error('Error requesting gift refresh:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== EMAIL LOGS ====================
 
 // Get all email logs

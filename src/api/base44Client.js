@@ -920,6 +920,63 @@ export const base44 = {
         return { data: toCamelCase(result) };
       }
 
+      // Submit Gift Feedback function (subscriber actions)
+      if (functionName === 'submitGiftFeedback') {
+        const response = await fetch(`${API_BASE}/functions/submitGiftFeedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Failed to submit feedback');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+
+      // Report Broken Gift function
+      if (functionName === 'reportBrokenGift') {
+        const response = await fetch(`${API_BASE}/functions/reportBrokenGift`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Failed to report gift');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+
+      // Request Gift Refresh function
+      if (functionName === 'requestGiftRefresh') {
+        const response = await fetch(`${API_BASE}/functions/requestGiftRefresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(toSnakeCase(data)),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: response.statusText }));
+          const error = new Error(errorData.error || 'Failed to request refresh');
+          error.response = { status: response.status, data: errorData };
+          throw error;
+        }
+        
+        const result = await response.json();
+        return { data: toCamelCase(result) };
+      }
+
       // Mock other functions
       console.warn(`Mock: Function ${functionName} not yet implemented`, data);
       
