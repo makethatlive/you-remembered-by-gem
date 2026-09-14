@@ -33,11 +33,11 @@ export default class AIGiftSelector {
       if (!c.name || !c.description || !c.score) {
         return false;
       }
-      // Must have at least score of 20 to be considered
-      return c.score >= 20;
+      // Must have at least score of 15 to be considered
+      return c.score >= 15;
     });
 
-    console.log(`   ${qualityCandidates.length} candidates meet quality threshold (score >= 20)`);
+    console.log(`   ${qualityCandidates.length} candidates meet quality threshold (score >= 15)`);
 
     if (qualityCandidates.length < 10) {
       throw new Error(`Insufficient quality candidates: only ${qualityCandidates.length} products scored 20+. Need at least 10 for 5 primary gifts + 5 backups.`);
