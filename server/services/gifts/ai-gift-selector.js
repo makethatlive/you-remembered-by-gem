@@ -28,6 +28,14 @@ export default class AIGiftSelector {
     console.log(`   Requested: 20 products (system uses first 10: 5 primary + 5 backups)`);
     console.log(`   Using: Claude AI\n`);
 
+    // Set context for AI call logging
+    this.claudeClient.setContext({
+      callType: 'GIFT_SELECTION',
+      operation: 'select_gifts',
+      recipientId: recipient.id,
+      recipientName: recipient.name,
+    });
+
     // Validate candidates meet quality standards
     const qualityCandidates = candidates.filter(c => {
       if (!c.name || !c.description || !c.score) {

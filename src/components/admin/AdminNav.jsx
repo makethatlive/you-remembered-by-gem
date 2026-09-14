@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, CheckSquare, Users, CalendarDays, Send, BarChart3, Store, Package, UserCog, ClipboardList, BookOpen } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Users, CalendarDays, Send, BarChart3, Store, Package, UserCog, ClipboardList, BookOpen, Activity } from "lucide-react";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const TABS = [
   { id: "sent", label: "Sent", icon: Send },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "audit", label: "Audit", icon: ClipboardList },
+  { id: "ai-logs", label: "AI Logs", icon: Activity },
   // { id: "users", label: "Users", icon: UserCog }, // Hidden per admin request
   { id: "help", label: "Help", icon: BookOpen },
 ];

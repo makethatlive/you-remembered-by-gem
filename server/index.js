@@ -14,11 +14,42 @@ import { PrismaClient } from '@prisma/client';
 import { sendEmail, sendWelcomeEmail, sendApprovalEmail, sendBirthdayReminder } from './services/email/resend-client.js';
 import authRoutes from './routes/auth-routes.js';
 import { runForensicAudit } from './services/audit/forensic-audit-service.js';
+import ClaudeClient from './services/ai/claude-client.js';
+import GiftListGenerator from './services/gifts/gift-list-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Utility functions for case conversion
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Calculate days until next occurrence of a birthday
+ * @param {number} day - Day of month (1-31)
+ * @param {number} month - Month (1-12)
+ * @returns {number|null} Days until birthday, or null if invalid date
+ */
+function calculateDaysUntilBirthday(day, month) {
+  if (!day || !month) return null;
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  
+  // Create date for this year's birthday
+  let nextBirthday = new Date(currentYear, month - 1, day);
+  
+  // If birthday has already passed this year, use next year
+  if (nextBirthday < now) {
+    nextBirthday = new Date(currentYear + 1, month - 1, day);
+  }
+  
+  // Calculate difference in days
+  const diffTime = nextBirthday.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
+}
+
+// ==================== UTILITY FUNCTIONS ====================
 function toCamelCase(str) {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
@@ -379,6 +410,51 @@ app.post('/api/recipients', async (req, res) => {
         createdById: createdById,
       }
     });
+
+    // AUTO-GENERATE GIFT LIST (6-WEEK LOGIC)
+    // Calculate days until next birthday
+    const daysUntil = calculateDaysUntilBirthday(
+      data.occasionDay || data.occasion_day, 
+      data.occasionMonth || data.occasion_month
+    );
+    
+    console.log(`\n🎂 Recipient created: ${recipient.name}`);
+    console.log(`   Days until birthday: ${daysUntil}`);
+    
+    // If birthday is within 6 weeks (42 days), auto-generate gift list
+    if (daysUntil !== null && daysUntil <= 42) {
+      console.log(`   ⚡ Auto-generating gift list (≤ 6 weeks away)...`);
+      
+      // Trigger gift generation asynchronously (don't wait for it)
+      setImmediate(async () => {
+        try {
+          const apiKey = process.env.ANTHROPIC_API_KEY;
+          if (!apiKey) {
+            console.error('   ❌ Cannot auto-generate: ANTHROPIC_API_KEY not set');
+            return;
+          }
+          
+          const claudeClient = new ClaudeClient(apiKey, prisma);
+          const generator = new GiftListGenerator(claudeClient, prisma);
+          
+          const result = await generator.generateGiftList({
+            recipientId: recipient.id,
+            listType: 'curated',
+            daysUntil: daysUntil,
+          });
+          
+          if (result.status === 'pending_approval') {
+            console.log(`   ✅ Auto-generated gift list: ${result.giftListId}`);
+          } else {
+            console.log(`   ⚠️  Generation result: ${result.status} - ${result.message}`);
+          }
+        } catch (error) {
+          console.error(`   ❌ Auto-generation failed: ${error.message}`);
+        }
+      });
+    } else if (daysUntil !== null) {
+      console.log(`   ⏰ Gift list will auto-generate when recipient reaches 6 weeks before birthday`);
+    }
     
     res.status(201).json(recipient);
   } catch (error) {
@@ -1609,7 +1685,7 @@ app.post('/api/generate-gift-list', async (req, res) => {
 
     // Initialize services
     console.log('🤖 Initializing Claude AI client...');
-    const claudeClient = new ClaudeClient(apiKey);
+    const claudeClient = new ClaudeClient(apiKey, prisma);
     const generator = new GiftListGenerator(claudeClient, prisma);
 
     // Generate the gift list
@@ -1710,6 +1786,291 @@ function requireAdmin(req, res, next) {
   }
   next();
 }
+
+// ==================== AI API CALL LOGS ENDPOINTS ====================
+
+/**
+ * GET /api/admin/ai-logs
+ * Get paginated list of AI API call logs with filters
+ * Query params:
+ *   - page: Page number (default: 1)
+ *   - limit: Items per page (default: 50, max: 200)
+ *   - status: Filter by status (SUCCESS, ERROR, TIMEOUT)
+ *   - callType: Filter by call type (PROFILE_ANALYSIS, GIFT_SELECTION, PRODUCT_CLASSIFICATION)
+ *   - recipientId: Filter by recipient
+ *   - giftListId: Filter by gift list
+ *   - startDate: Filter from date (ISO string)
+ *   - endDate: Filter to date (ISO string)
+ */
+app.get('/api/admin/ai-logs', requireAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      status,
+      callType,
+      recipientId,
+      giftListId,
+      startDate,
+      endDate
+    } = req.query;
+    
+    // Parse and validate pagination
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
+    const skip = (pageNum - 1) * limitNum;
+    
+    // Build where clause
+    const where = {};
+    
+    if (status) {
+      where.status = status.toUpperCase();
+    }
+    
+    if (callType) {
+      where.callType = callType.toUpperCase();
+    }
+    
+    if (recipientId) {
+      where.recipientId = recipientId;
+    }
+    
+    if (giftListId) {
+      where.giftListId = giftListId;
+    }
+    
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+    
+    // Get total count for pagination
+    const total = await prisma.aIApiCallLog.count({ where });
+    
+    // Get logs
+    const logs = await prisma.aIApiCallLog.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limitNum,
+      include: {
+        recipient: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        giftList: {
+          select: {
+            id: true,
+            status: true,
+          }
+        }
+      }
+    });
+    
+    res.json({
+      logs,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        hasNext: pageNum * limitNum < total,
+        hasPrev: pageNum > 1,
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching AI logs:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/ai-stats
+ * Get aggregated statistics for AI API calls
+ * Query params:
+ *   - startDate: Filter from date (ISO string)
+ *   - endDate: Filter to date (ISO string)
+ *   - groupBy: Group by period (day, week, month) - optional
+ */
+app.get('/api/admin/ai-stats', requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, groupBy } = req.query;
+    
+    // Build where clause for date range
+    const where = {};
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+    
+    // Get all logs in range for aggregation
+    const logs = await prisma.aIApiCallLog.findMany({
+      where,
+      select: {
+        id: true,
+        callType: true,
+        status: true,
+        provider: true,
+        model: true,
+        inputTokens: true,
+        outputTokens: true,
+        cost: true,
+        duration: true,
+        createdAt: true,
+      }
+    });
+    
+    // Calculate overall stats
+    const totalCalls = logs.length;
+    const successfulCalls = logs.filter(log => log.status === 'SUCCESS').length;
+    const errorCalls = logs.filter(log => log.status === 'ERROR').length;
+    const timeoutCalls = logs.filter(log => log.status === 'TIMEOUT').length;
+    
+    const totalCost = logs.reduce((sum, log) => sum + (log.cost || 0), 0);
+    const totalInputTokens = logs.reduce((sum, log) => sum + (log.inputTokens || 0), 0);
+    const totalOutputTokens = logs.reduce((sum, log) => sum + (log.outputTokens || 0), 0);
+    const totalTokens = totalInputTokens + totalOutputTokens;
+    
+    const avgDuration = logs.length > 0 
+      ? logs.reduce((sum, log) => sum + (log.duration || 0), 0) / logs.length 
+      : 0;
+    
+    // Stats by call type
+    const byCallType = {};
+    logs.forEach(log => {
+      if (!byCallType[log.callType]) {
+        byCallType[log.callType] = {
+          count: 0,
+          successCount: 0,
+          errorCount: 0,
+          totalCost: 0,
+          totalTokens: 0,
+          avgDuration: 0,
+        };
+      }
+      
+      byCallType[log.callType].count++;
+      if (log.status === 'SUCCESS') byCallType[log.callType].successCount++;
+      if (log.status === 'ERROR') byCallType[log.callType].errorCount++;
+      byCallType[log.callType].totalCost += log.cost || 0;
+      byCallType[log.callType].totalTokens += (log.inputTokens || 0) + (log.outputTokens || 0);
+    });
+    
+    // Calculate averages for each call type
+    Object.keys(byCallType).forEach(type => {
+      const stats = byCallType[type];
+      const typeLogs = logs.filter(log => log.callType === type);
+      stats.avgDuration = typeLogs.length > 0
+        ? typeLogs.reduce((sum, log) => sum + (log.duration || 0), 0) / typeLogs.length
+        : 0;
+    });
+    
+    // Stats by provider
+    const byProvider = {};
+    logs.forEach(log => {
+      if (!byProvider[log.provider]) {
+        byProvider[log.provider] = {
+          count: 0,
+          totalCost: 0,
+          totalTokens: 0,
+        };
+      }
+      
+      byProvider[log.provider].count++;
+      byProvider[log.provider].totalCost += log.cost || 0;
+      byProvider[log.provider].totalTokens += (log.inputTokens || 0) + (log.outputTokens || 0);
+    });
+    
+    // Time-based grouping (if requested)
+    let timeSeriesData = null;
+    if (groupBy && ['day', 'week', 'month'].includes(groupBy)) {
+      timeSeriesData = groupLogsByTime(logs, groupBy);
+    }
+    
+    res.json({
+      overall: {
+        totalCalls,
+        successfulCalls,
+        errorCalls,
+        timeoutCalls,
+        successRate: totalCalls > 0 ? (successfulCalls / totalCalls * 100).toFixed(2) : 0,
+        totalCost: parseFloat(totalCost.toFixed(4)),
+        totalInputTokens,
+        totalOutputTokens,
+        totalTokens,
+        avgDuration: parseFloat(avgDuration.toFixed(2)),
+      },
+      byCallType,
+      byProvider,
+      ...(timeSeriesData && { timeSeries: timeSeriesData }),
+      dateRange: {
+        start: startDate || null,
+        end: endDate || null,
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching AI stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Helper function to group logs by time period
+ */
+function groupLogsByTime(logs, period) {
+  const groups = {};
+  
+  logs.forEach(log => {
+    let key;
+    const date = new Date(log.createdAt);
+    
+    if (period === 'day') {
+      key = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    } else if (period === 'week') {
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      key = weekStart.toISOString().split('T')[0];
+    } else if (period === 'month') {
+      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+    
+    if (!groups[key]) {
+      groups[key] = {
+        period: key,
+        count: 0,
+        successCount: 0,
+        errorCount: 0,
+        totalCost: 0,
+        totalTokens: 0,
+      };
+    }
+    
+    groups[key].count++;
+    if (log.status === 'SUCCESS') groups[key].successCount++;
+    if (log.status === 'ERROR') groups[key].errorCount++;
+    groups[key].totalCost += log.cost || 0;
+    groups[key].totalTokens += (log.inputTokens || 0) + (log.outputTokens || 0);
+  });
+  
+  // Convert to array and sort by period
+  return Object.values(groups).sort((a, b) => a.period.localeCompare(b.period));
+}
+
+// ==================== SCRAPING & ADMIN ENDPOINTS ====================
 
 /**
  * POST /api/scrape/catalogue-batch
@@ -2232,6 +2593,8 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/email/approval`);
   console.log(`   - POST /api/email/birthday-reminder`);
   console.log(`   - POST /api/audit/forensic (admin)`);
+  console.log(`   - GET  /api/admin/ai-logs (admin)`);
+  console.log(`   - GET  /api/admin/ai-stats (admin)`);
   console.log(`\n✨ Ready to serve data from your PostgreSQL database!\n`);
 });
 

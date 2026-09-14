@@ -423,7 +423,7 @@ async function processRetailer({
  */
 export async function executeBatch({ prisma, retailerId = null, cursorToken = null, claudeApiKey = null }) {
   // Initialize Claude client if API key is available
-  const claudeClient = claudeApiKey ? new ClaudeClient(claudeApiKey) : null;
+  const claudeClient = claudeApiKey ? new ClaudeClient(claudeApiKey, prisma) : null;
   
   // Decode cursor or create initial
   let cursor = cursorToken ? decodeCursor(cursorToken) : null;

@@ -11,12 +11,16 @@
 import cron from 'node-cron';
 import { PrismaClient } from '@prisma/client';
 import { sendWelcomeEmail, sendApprovalEmail, sendBirthdayReminder } from '../services/email/resend-client.js';
+import { startAutoGenerationJob } from './auto-gift-generation.js';
 
 const prisma = new PrismaClient();
 
 console.log('📅 ========================================');
 console.log('📅 Email Scheduler Starting...');
 console.log('📅 ========================================');
+
+// Start Auto Gift Generation Job (runs daily at 9:00 AM)
+startAutoGenerationJob();
 
 /**
  * Onboarding Email Job
@@ -388,4 +392,5 @@ function createPostOccasionEmail(subscriberName, recipientName, occasion) {
 console.log('✅ Email scheduler is running');
 console.log('📅 Onboarding emails: every 10 minutes');
 console.log('📅 Birthday reminders: daily at 9:00 AM');
+console.log('📅 Auto gift generation: daily at 9:00 AM');
 console.log('📅 Press Ctrl+C to stop\n');

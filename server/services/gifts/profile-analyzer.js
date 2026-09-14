@@ -55,6 +55,14 @@ export default class ProfileAnalyzer {
       console.log(`   Profile Hash: ${hash}`);
       console.log(`   Using: Claude AI\n`);
 
+      // Set context for AI call logging
+      this.claudeClient.setContext({
+        callType: 'PROFILE_ANALYSIS',
+        operation: 'derive_profile',
+        recipientId: recipient.id,
+        recipientName: recipient.name,
+      });
+
       // Interest and gift type taxonomies
       const interestKeys = [
         'Cooking & food', 'Music', 'Wellness & self-care', 'Wine & drinks',

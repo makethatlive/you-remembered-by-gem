@@ -3,18 +3,37 @@
  * 
  * Professional wrapper for Anthropic Claude API interactions.
  * Handles API communication, error handling, and response parsing.
+ * Now includes comprehensive API call logging.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import APICallLogger from './api-call-logger.js';
 
 export default class ClaudeClient {
-  constructor(apiKey) {
+  constructor(apiKey, prisma) {
     if (!apiKey) {
       throw new Error('Claude API key is required');
     }
     this.client = new Anthropic({
       apiKey: apiKey,
     });
+    this.logger = prisma ? new APICallLogger(prisma) : null;
+    this.context = {}; // Store context for logging (recipientId, giftListId, etc.)
+  }
+
+  /**
+   * Set context for the next API call (for logging purposes)
+   * @param {object} context - Context data (recipientId, recipientName, giftListId, operation, callType)
+   */
+  setContext(context) {
+    this.context = { ...this.context, ...context };
+  }
+
+  /**
+   * Clear context after API call
+   */
+  clearContext() {
+    this.context = {};
   }
 
   /**
@@ -92,12 +111,53 @@ export default class ClaudeClient {
       console.log(`   ✅ JSON parsed successfully`);
       console.log('=============================\n');
       
+      // Log the API call to database
+      if (this.logger) {
+        await this.logger.logCall({
+          callType: this.context.callType || 'OTHER',
+          provider: 'claude',
+          model: response.model,
+          recipientId: this.context.recipientId || null,
+          recipientName: this.context.recipientName || null,
+          giftListId: this.context.giftListId || null,
+          operation: this.context.operation || 'generate_structured_content',
+          inputTokens: response.usage?.input_tokens || 0,
+          outputTokens: response.usage?.output_tokens || 0,
+          durationMs: duration,
+          status: 'SUCCESS',
+          requestData: { prompt: prompt.substring(0, 500) + '...' }, // First 500 chars
+          responseData: { result: JSON.stringify(parsed).substring(0, 500) + '...' }, // First 500 chars
+        });
+        this.clearContext();
+      }
+      
       return parsed;
     } catch (error) {
       const duration = Date.now() - startTime;
       console.error(`\n❌ CLAUDE API ERROR (after ${duration}ms)`);
       console.error(`   Error: ${error.message}`);
       console.error('=============================\n');
+      
+      // Log the failed API call
+      if (this.logger) {
+        await this.logger.logCall({
+          callType: this.context.callType || 'OTHER',
+          provider: 'claude',
+          model: model,
+          recipientId: this.context.recipientId || null,
+          recipientName: this.context.recipientName || null,
+          giftListId: this.context.giftListId || null,
+          operation: this.context.operation || 'generate_structured_content',
+          inputTokens: error.response?.usage?.input_tokens || 0,
+          outputTokens: 0,
+          durationMs: duration,
+          status: 'FAILED',
+          errorMessage: error.message,
+          requestData: { prompt: prompt.substring(0, 500) + '...' },
+        });
+        this.clearContext();
+      }
+      
       throw new Error(`Failed to generate content: ${error.message}`);
     }
   }

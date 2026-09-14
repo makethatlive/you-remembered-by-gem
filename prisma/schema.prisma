@@ -534,3 +534,52 @@ model TrendStats {
 
   @@map("trend_stats")
 }
+
+// AIApiCallLog - tracks all AI API calls for monitoring and debugging
+model AIApiCallLog {
+  id              String        @id @default(cuid())
+  callType        AICallType    @map("call_type")
+  provider        String        // "claude" or "gemini"
+  model           String?       // e.g. "claude-sonnet-4", "gemini-1.5-pro"
+  recipientId     String?       @map("recipient_id")
+  recipientName   String?       @map("recipient_name")
+  giftListId      String?       @map("gift_list_id")
+  operation       String        // "profile_analysis", "gift_selection", "enrichment"
+  inputTokens     Int?          @map("input_tokens")
+  outputTokens    Int?          @map("output_tokens")
+  totalTokens     Int?          @map("total_tokens")
+  costUsd         Float?        @map("cost_usd") // Calculated cost
+  durationMs      Int?          @map("duration_ms")
+  status          AICallStatus  @default(SUCCESS)
+  errorMessage    String?       @map("error_message") @db.Text
+  requestData     String?       @map("request_data") @db.Text // JSON string of request
+  responseData    String?       @map("response_data") @db.Text // JSON string of response
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([callType])
+  @@index([provider])
+  @@index([recipientId])
+  @@index([giftListId])
+  @@index([createdAt])
+  @@index([status])
+  @@map("ai_api_call_logs")
+}
+
+enum AICallType {
+  PROFILE_ANALYSIS
+  GIFT_SELECTION
+  PRODUCT_ENRICHMENT
+  IMAGE_ANALYSIS
+  OTHER
+
+  @@map("ai_call_type")
+}
+
+enum AICallStatus {
+  SUCCESS
+  FAILED
+  TIMEOUT
+  RATE_LIMITED
+
+  @@map("ai_call_status")
+}

@@ -12,6 +12,7 @@ import FeedbackInsights from "./FeedbackInsights";
 import UsersTab from "./UsersTab";
 import ForensicsAuditPanel from "./ForensicsAuditPanel";
 import HelpTab from "@/components/admin/HelpTab";
+import AICallLogs from "./AICallLogs";
 
 export default function AdminView() {
   // Deep-link support: admin alert emails link to /?tab=approvals&list=<id>.
@@ -32,6 +33,7 @@ export default function AdminView() {
       {tab === "sent" && <SentHistory />}
       {tab === "insights" && <FeedbackInsights />}
       {tab === "audit" && <ForensicsAuditPanel />}
+      {tab === "ai-logs" && <AICallLogs />}
       {/* {tab === "users" && <UsersTab />} */} {/* Hidden per admin request */}
       {tab === "help" && <HelpTab />}
     </div>

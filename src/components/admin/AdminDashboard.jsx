@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronRight, Clock, Users, Send, Gift } from "lucide-react";
+import { ChevronRight, Clock, Users, Send, Gift, Activity } from "lucide-react";
 import { daysUntil } from "@/lib/format";
 import { useAdminData } from "@/lib/useAdminData";
 import StatCard from "./StatCard";
@@ -32,6 +32,7 @@ export default function AdminDashboard({ onGoTab }) {
     { id: "subscribers", label: "Manage Subscribers", icon: Users, count: subscribers.length },
     { id: "calendar", label: "Birthday Calendar", icon: Gift, count: recipients.length },
     { id: "sent", label: "Sent History", icon: Send, count: sent.length },
+    { id: "ai-logs", label: "AI Call Logs", icon: Activity, count: "→" },
   ];
 
   return (
