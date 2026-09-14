@@ -5,7 +5,6 @@ import {
   AlertCircle, 
   CheckCircle, 
   Clock,
-  DollarSign,
   Zap,
   Filter,
   Download,
@@ -126,11 +125,6 @@ export default function AICallLogs() {
     });
   };
   
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `$${amount.toFixed(4)}`;
-  };
-  
   // Get status badge
   const getStatusBadge = (status) => {
     const styles = {
@@ -189,20 +183,13 @@ export default function AICallLogs() {
 
       {/* Statistics Dashboard */}
       {!statsLoading && stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           <StatCard
             icon={Activity}
             label="Total Calls"
             value={stats.overall.totalCalls}
             subtitle={`${stats.overall.successRate}% success`}
             color="teal"
-          />
-          <StatCard
-            icon={DollarSign}
-            label="Total Cost"
-            value={formatCurrency(stats.overall.totalCost)}
-            subtitle="Lifetime"
-            color="gold"
           />
           <StatCard
             icon={Zap}
@@ -243,10 +230,6 @@ export default function AICallLogs() {
                   <div className="flex justify-between">
                     <span>Errors:</span>
                     <span className="font-medium text-red-600">{data.errorCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cost:</span>
-                    <span className="font-medium">{formatCurrency(data.totalCost)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Avg Duration:</span>
@@ -370,9 +353,6 @@ export default function AICallLogs() {
                       Tokens
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-brand-dark uppercase tracking-wider">
-                      Cost
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-brand-dark uppercase tracking-wider">
                       Duration
                     </th>
                   </tr>
@@ -394,8 +374,8 @@ export default function AICallLogs() {
                         {getStatusBadge(log.status)}
                       </td>
                       <td className="px-4 py-3 text-sm text-brand-dark">
-                        {log.recipient ? (
-                          <span className="font-medium">{log.recipient.name}</span>
+                        {log.recipientName ? (
+                          <span className="font-medium">{log.recipientName}</span>
                         ) : (
                           <span className="text-brand-dark/30">—</span>
                         )}
@@ -406,10 +386,7 @@ export default function AICallLogs() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-brand-dark text-right font-mono">
-                        {log.cost ? formatCurrency(log.cost) : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-brand-dark text-right font-mono">
-                        {log.duration ? `${log.duration}ms` : '—'}
+                        {log.durationMs ? `${log.durationMs}ms` : '—'}
                       </td>
                     </tr>
                   ))}

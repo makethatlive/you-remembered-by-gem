@@ -1858,20 +1858,6 @@ app.get('/api/admin/ai-logs', requireAdmin, async (req, res) => {
       orderBy: { createdAt: 'desc' },
       skip,
       take: limitNum,
-      include: {
-        recipient: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-        giftList: {
-          select: {
-            id: true,
-            status: true,
-          }
-        }
-      }
     });
     
     res.json({
@@ -1927,8 +1913,8 @@ app.get('/api/admin/ai-stats', requireAdmin, async (req, res) => {
         model: true,
         inputTokens: true,
         outputTokens: true,
-        cost: true,
-        duration: true,
+        costUsd: true,
+        durationMs: true,
         createdAt: true,
       }
     });
@@ -1936,16 +1922,16 @@ app.get('/api/admin/ai-stats', requireAdmin, async (req, res) => {
     // Calculate overall stats
     const totalCalls = logs.length;
     const successfulCalls = logs.filter(log => log.status === 'SUCCESS').length;
-    const errorCalls = logs.filter(log => log.status === 'ERROR').length;
+    const errorCalls = logs.filter(log => log.status === 'FAILED').length;
     const timeoutCalls = logs.filter(log => log.status === 'TIMEOUT').length;
     
-    const totalCost = logs.reduce((sum, log) => sum + (log.cost || 0), 0);
+    const totalCost = logs.reduce((sum, log) => sum + (log.costUsd || 0), 0);
     const totalInputTokens = logs.reduce((sum, log) => sum + (log.inputTokens || 0), 0);
     const totalOutputTokens = logs.reduce((sum, log) => sum + (log.outputTokens || 0), 0);
     const totalTokens = totalInputTokens + totalOutputTokens;
     
     const avgDuration = logs.length > 0 
-      ? logs.reduce((sum, log) => sum + (log.duration || 0), 0) / logs.length 
+      ? logs.reduce((sum, log) => sum + (log.durationMs || 0), 0) / logs.length 
       : 0;
     
     // Stats by call type
@@ -1964,8 +1950,8 @@ app.get('/api/admin/ai-stats', requireAdmin, async (req, res) => {
       
       byCallType[log.callType].count++;
       if (log.status === 'SUCCESS') byCallType[log.callType].successCount++;
-      if (log.status === 'ERROR') byCallType[log.callType].errorCount++;
-      byCallType[log.callType].totalCost += log.cost || 0;
+      if (log.status === 'FAILED') byCallType[log.callType].errorCount++;
+      byCallType[log.callType].totalCost += log.costUsd || 0;
       byCallType[log.callType].totalTokens += (log.inputTokens || 0) + (log.outputTokens || 0);
     });
     
@@ -1974,7 +1960,7 @@ app.get('/api/admin/ai-stats', requireAdmin, async (req, res) => {
       const stats = byCallType[type];
       const typeLogs = logs.filter(log => log.callType === type);
       stats.avgDuration = typeLogs.length > 0
-        ? typeLogs.reduce((sum, log) => sum + (log.duration || 0), 0) / typeLogs.length
+        ? typeLogs.reduce((sum, log) => sum + (log.durationMs || 0), 0) / typeLogs.length
         : 0;
     });
     
@@ -1990,7 +1976,7 @@ app.get('/api/admin/ai-stats', requireAdmin, async (req, res) => {
       }
       
       byProvider[log.provider].count++;
-      byProvider[log.provider].totalCost += log.cost || 0;
+      byProvider[log.provider].totalCost += log.costUsd || 0;
       byProvider[log.provider].totalTokens += (log.inputTokens || 0) + (log.outputTokens || 0);
     });
     
@@ -2061,8 +2047,8 @@ function groupLogsByTime(logs, period) {
     
     groups[key].count++;
     if (log.status === 'SUCCESS') groups[key].successCount++;
-    if (log.status === 'ERROR') groups[key].errorCount++;
-    groups[key].totalCost += log.cost || 0;
+    if (log.status === 'FAILED') groups[key].errorCount++;
+    groups[key].totalCost += log.costUsd || 0;
     groups[key].totalTokens += (log.inputTokens || 0) + (log.outputTokens || 0);
   });
   
