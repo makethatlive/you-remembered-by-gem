@@ -172,14 +172,9 @@ export default function PersonForm({ index, total, saving, onSubmit }) {
         </Field>
 
         {isUnder12 ? (
-          <>
-            <Field label="Tell me anything about what they love" optional helper={CHILD_INTERESTS_HELPER}>
-              <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} placeholder="e.g. dinosaurs, princesses, building things, animals..." />
-            </Field>
-            <Field label="Gifts or categories to avoid" optional>
-              <Textarea value={form.avoid_notes} onChange={(e) => set("avoid_notes", e.target.value)} rows={2} placeholder="e.g. they're vegan, they don't drink, they hate clutter, they have a specific allergy" />
-            </Field>
-          </>
+          <Field label="Tell me anything about what they love" optional helper={CHILD_INTERESTS_HELPER}>
+            <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} placeholder="e.g. dinosaurs, princesses, building things, animals..." />
+          </Field>
         ) : (
           <>
             <Field label="Their interests" optional helper="Select all that apply. Categories with a ▸ will reveal a short follow-up question to help narrow down the best gift ideas.">
@@ -207,27 +202,11 @@ export default function PersonForm({ index, total, saving, onSubmit }) {
               />
             </Field>
 
-            <Field label="Gifts or categories to avoid" optional>
-              <Textarea value={form.avoid_notes} onChange={(e) => set("avoid_notes", e.target.value)} rows={2} placeholder="e.g. they're vegan, they don't drink, they hate clutter, they have a specific allergy" />
-            </Field>
-
-            <Field label="Who they are" optional helper="Tell me about them as a person. What are they like?">
-              <Textarea value={form.who_they_are} onChange={(e) => set("who_they_are", e.target.value)} rows={4} placeholder="Their personality, what makes them special..." />
-            </Field>
-
-            <Field label="Hobbies and interests" optional helper="What do they love doing? Any passions, sports, collections?">
-              <Textarea value={form.hobbies_and_interests} onChange={(e) => set("hobbies_and_interests", e.target.value)} rows={4} placeholder="Free-form detail about what they're passionate about..." />
-            </Field>
-
             <Field label="Anything else?" optional helper="This is your chance to give me real colour — a recent life change, something they've mentioned wanting, a hobby they've just taken up, their personality and taste level, what's worked brilliantly in the past or fallen completely flat. Small details go a long way — a favourite colour, a football team they support, the style of jewellery they wear. Also let me know if there's a significant milestone coming up — a big birthday, retirement, having a baby, buying a house — anything that might call for something extra special. The more you share, the more personal my suggestions will be.">
               <Textarea value={form.things_you_know} onChange={(e) => set("things_you_know", e.target.value)} rows={6} placeholder="Favourite brands, colours, things they've mentioned wanting, upcoming milestones..." />
             </Field>
           </>
         )}
-
-        <Field label="Notes" optional helper="Anything else Gem should know.">
-          <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} />
-        </Field>
 
         <button
           type="submit"
