@@ -57,131 +57,188 @@ export default class ProductMatcher {
     const { budgetMin, budgetMax, ageBand, gender } = recipient;
     const derived = recipient.derivedProfile || {};
 
-    // Build interest filter conditions for SQL
-    const recipientInterests = recipient.interests || [];
-    const interestConditions = recipientInterests.length > 0 
-      ? {
-          OR: recipientInterests.map(interest => ({
-            interestTags: {
-              has: interest
-            }
-          }))
-        }
-      : {};
+    console.log(`\n🔍 Finding products for ${recipient.name}`);
+    console.log(`   Budget: £${budgetMin}-£${budgetMax} (with ±5% margin)`);
+    console.log(`   Gender: ${gender}`);
+    console.log(`   Age Band: ${ageBand}`);
 
-    // Build product query filters with QUALITY + INTEREST pre-filtering
-    const where = {
+    // HARD FILTERS - Applied before AI sees anything
+    // Budget with ±5% margin
+    const budgetMinWithMargin = (budgetMin || 0) * 0.95;
+    const budgetMaxWithMargin = (budgetMax || 1000) * 1.05;
+
+    // Gender filter logic (per client spec)
+    let genderFilter;
+    if (gender === 'MALE' || gender === 'Male') {
+      genderFilter = { in: ['MALE', 'Male', 'UNISEX', 'Unisex'] };
+    } else if (gender === 'FEMALE' || gender === 'Female') {
+      genderFilter = { in: ['FEMALE', 'Female', 'UNISEX', 'Unisex'] };
+    } else if (gender === 'NON_BINARY' || gender === 'PREFER_NOT_TO_SAY') {
+      genderFilter = { in: ['UNISEX', 'Unisex'] };
+    } else {
+      // Default: allow all if gender not specified
+      genderFilter = undefined;
+    }
+
+    console.log(`   Gender filter: ${genderFilter ? genderFilter.in.join(', ') : 'None (all products)'}`);
+
+    // Build base filters (always applied)
+    const baseFilters = {
       status: 'ACTIVE',
       price: {
-        gte: budgetMin || 0,
-        lte: budgetMax || 1000,
+        gte: budgetMinWithMargin,
+        lte: budgetMaxWithMargin,
       },
       qualityScore: {
-        gte: this.MIN_QUALITY_SCORE, // Only quality products (50+)
+        gte: this.MIN_QUALITY_SCORE,
       },
-      // QUALITY PRE-FILTER: Only products with valid data
-      name: {
-        not: null,
-      },
-      description: {
-        not: null,
-      },
-      productUrl: {
-        not: null,
-      },
-      // INTEREST PRE-FILTER: Only products matching recipient interests
-      ...interestConditions,
+      name: { not: null },
+      description: { not: null },
+      productUrl: { not: null },
     };
 
-    console.log(`   Filtering by interests: ${recipientInterests.join(', ')}`);
+    // Add gender filter if defined
+    if (genderFilter) {
+      baseFilters.genderAppliesTo = genderFilter;
+    }
 
-    // Fetch products with retailers, ordered by quality
-    const products = await prisma.product.findMany({
-      where,
-      include: {
-        retailer: true,
-      },
-      orderBy: {
-        qualityScore: 'desc', // Get highest quality products first
-      },
-      take: 1000, // Increased from 500 to 1000 for better coverage
+    const recipientInterests = recipient.interests || [];
+    
+    // TIER 1: Curated + Interest Match (Priority)
+    console.log(`\n📦 TIER 1: Curated products with interest match`);
+    console.log(`   Interests: ${recipientInterests.join(', ') || 'None'}`);
+    
+    const tier1Where = {
+      ...baseFilters,
+      source: 'CURATED',
+    };
+
+    // Add interest filter if interests exist
+    if (recipientInterests.length > 0) {
+      tier1Where.OR = recipientInterests.map(interest => ({
+        interestTags: { has: interest }
+      }));
+    }
+
+    const tier1Products = await prisma.product.findMany({
+      where: tier1Where,
+      include: { retailer: true },
+      orderBy: { qualityScore: 'desc' },
+      take: 100,
     });
 
-    console.log(`   Fetched ${products.length} products from catalogue (filtered by interests)`);
-    
-    // Validate product data quality before scoring
-    const validProducts = products.filter(p => this.isValidProduct(p));
-    console.log(`   ${validProducts.length} products passed quality validation`);
+    console.log(`   Found ${tier1Products.length} curated products with interest match`);
 
-    // Score and filter products
-    const scoredProducts = validProducts
-      .map(product => ({
+    // Score and validate Tier 1
+    const tier1Valid = tier1Products.filter(p => this.isValidProduct(p));
+    const tier1Scored = tier1Valid.map(product => ({
+      ...product,
+      ...this.scoreProduct(product, recipient, derived),
+      tier: 'CURATED_INTEREST',
+    }));
+
+    // TIER 2: Scraped + Interest Match (if Tier 1 insufficient)
+    let tier2Scored = [];
+    if (tier1Scored.length < 15 && recipientInterests.length > 0) {
+      console.log(`\n📦 TIER 2: Scraped products with interest match (need ${15 - tier1Scored.length} more)`);
+      
+      const tier2Where = {
+        ...baseFilters,
+        source: 'SCRAPED',
+        OR: recipientInterests.map(interest => ({
+          interestTags: { has: interest }
+        })),
+      };
+
+      const tier2Products = await prisma.product.findMany({
+        where: tier2Where,
+        include: { retailer: true },
+        orderBy: { qualityScore: 'desc' },
+        take: 100,
+      });
+
+      console.log(`   Found ${tier2Products.length} scraped products with interest match`);
+
+      const tier2Valid = tier2Products.filter(p => this.isValidProduct(p));
+      tier2Scored = tier2Valid.map(product => ({
         ...product,
         ...this.scoreProduct(product, recipient, derived),
-      }))
-      .filter(p => p.score >= this.MIN_SCORE_THRESHOLD)
-      .sort((a, b) => b.score - a.score);
-
-    console.log(`   ${scoredProducts.length} products scored above threshold (${this.MIN_SCORE_THRESHOLD})`);
-
-    // FALLBACK: If too few matches, try without interest filter
-    if (scoredProducts.length < 20 && recipientInterests.length > 0) {
-      console.log(`   ⚠️  Only ${scoredProducts.length} interest matches - fetching additional quality products...`);
-      
-      const fallbackWhere = {
-        status: 'ACTIVE',
-        price: {
-          gte: budgetMin || 0,
-          lte: budgetMax || 1000,
-        },
-        qualityScore: {
-          gte: this.MIN_QUALITY_SCORE,
-        },
-        name: {
-          not: null,
-        },
-        description: {
-          not: null,
-        },
-        productUrl: {
-          not: null,
-        },
-      };
-      
-      const fallbackProducts = await prisma.product.findMany({
-        where: fallbackWhere,
-        include: {
-          retailer: true,
-        },
-        orderBy: {
-          qualityScore: 'desc',
-        },
-        take: 500,
-      });
-      
-      console.log(`   Fetched ${fallbackProducts.length} additional products (no interest filter)`);
-      
-      const fallbackValid = fallbackProducts.filter(p => this.isValidProduct(p));
-      const fallbackScored = fallbackValid
-        .map(product => ({
-          ...product,
-          ...this.scoreProduct(product, recipient, derived),
-        }))
-        .filter(p => p.score >= 10) // Lower threshold for fallback
-        .filter(p => !scoredProducts.find(sp => sp.id === p.id)); // Exclude already matched
-      
-      console.log(`   ${fallbackScored.length} fallback products scored above 10`);
-      
-      // Merge and resort
-      scoredProducts.push(...fallbackScored);
-      scoredProducts.sort((a, b) => b.score - a.score);
+        tier: 'SCRAPED_INTEREST',
+      }));
     }
+
+    // TIER 3: ANY product (gender + age + budget only, no interest required)
+    let tier3Scored = [];
+    const totalSoFar = tier1Scored.length + tier2Scored.length;
+    
+    if (totalSoFar < 15) {
+      console.log(`\n📦 TIER 3: Any products matching gender/age/budget (need ${15 - totalSoFar} more)`);
+      console.log(`   ⚠️  Relaxing interest requirements - graceful degradation`);
+      
+      const tier3Where = {
+        ...baseFilters,
+        // No source filter - both curated and scraped
+        // No interest filter - any product that fits basics
+      };
+
+      const tier3Products = await prisma.product.findMany({
+        where: tier3Where,
+        include: { retailer: true },
+        orderBy: { qualityScore: 'desc' },
+        take: 200,
+      });
+
+      console.log(`   Found ${tier3Products.length} general products (no interest match required)`);
+
+      // Exclude products already in tier 1 or 2
+      const existingIds = [...tier1Scored, ...tier2Scored].map(p => p.id);
+      const tier3Valid = tier3Products
+        .filter(p => this.isValidProduct(p))
+        .filter(p => !existingIds.includes(p.id));
+
+      tier3Scored = tier3Valid.map(product => ({
+        ...product,
+        ...this.scoreProduct(product, recipient, derived),
+        tier: 'GENERAL_FALLBACK',
+        score: (product.score || 0) * 0.7, // Slightly penalize general fallback
+      }));
+    }
+
+    // Merge all tiers
+    const allCandidates = [...tier1Scored, ...tier2Scored, ...tier3Scored];
+    
+    // Filter by minimum score threshold (lowered for tier 3)
+    const scoredProducts = allCandidates
+      .filter(p => {
+        if (p.tier === 'GENERAL_FALLBACK') {
+          return p.score >= 5; // Very low threshold for general fallback
+        }
+        return p.score >= this.MIN_SCORE_THRESHOLD;
+      })
+      .sort((a, b) => {
+        // Prioritize by tier first, then by score
+        const tierPriority = { CURATED_INTEREST: 3, SCRAPED_INTEREST: 2, GENERAL_FALLBACK: 1 };
+        const tierDiff = tierPriority[b.tier] - tierPriority[a.tier];
+        if (tierDiff !== 0) return tierDiff;
+        return b.score - a.score;
+      });
+
+    console.log(`\n✅ FINAL CANDIDATE POOL:`);
+    console.log(`   Tier 1 (Curated+Interest): ${tier1Scored.length}`);
+    console.log(`   Tier 2 (Scraped+Interest): ${tier2Scored.length}`);
+    console.log(`   Tier 3 (General Fallback): ${tier3Scored.length}`);
+    console.log(`   Total after scoring: ${scoredProducts.length}`);
 
     if (scoredProducts.length === 0) {
-      console.warn(`   ⚠️  WARNING: No products found matching profile for ${recipient.name}`);
+      console.warn(`\n⚠️  WARNING: No products found for ${recipient.name}`);
+      console.warn(`   This may indicate catalogue coverage gap for:`);
+      console.warn(`   - Gender: ${gender}`);
+      console.warn(`   - Budget: £${budgetMin}-£${budgetMax}`);
+      console.warn(`   - Interests: ${recipientInterests.join(', ')}`);
     }
 
-    return scoredProducts.slice(0, 100); // Top 100 candidates for AI selection
+    // Return top candidates (up to 100 for AI to choose from)
+    return scoredProducts.slice(0, 100);
   }
 
   /**

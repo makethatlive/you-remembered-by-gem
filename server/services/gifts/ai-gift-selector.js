@@ -3,6 +3,13 @@
  * 
  * Uses Claude AI to intelligently select and curate gifts
  * from candidate products for a specific recipient.
+ * 
+ * SPECIFICATION: Per client requirements (August 2026)
+ * - System prompt defines AI role and boundaries
+ * - User prompt is dynamically populated per recipient
+ * - Output includes confidence levels (interest_match vs general)
+ * - Hard filters (gender, budget, age) applied BEFORE AI sees candidates
+ * - AI selects 5 primary + 5 backup recommendations
  */
 
 export default class AIGiftSelector {
@@ -11,22 +18,54 @@ export default class AIGiftSelector {
   }
 
   /**
+   * SYSTEM PROMPT - Defines AI role (does not change per-recipient)
+   * Per client spec: "This defines the AI's role, boundaries, and behaviour"
+   */
+  getSystemPrompt() {
+    return `You are the gift curation engine for You Remembered, by Gem, a premium UK personal gifting subscription service. Your tagline is 'Gifts as thoughtful as you are' and your positioning is 'your personal gifting concierge'.
+
+You will be given a recipient profile and a pre-filtered list of candidate products. The candidates have ALREADY been filtered for gender, age, and budget suitability — you do not need to re-check these. Your job is to select and rank the best gifts from this list based on fit with the recipient's interests, personality, and any free-text detail provided.
+
+YOUR TASK
+From the candidate list provided, select and rank:
+- 5 PRIMARY recommendations (the ideas Gem will review first)
+- 5 BACKUP recommendations (held in reserve, to swap in if Gem rejects a primary choice)
+
+SELECTION PRIORITY (in order)
+1. Products tagged with an interest category that matches one the recipient has selected. Prioritise the closest, most specific match over a loose or generic one.
+2. Within interest-matched products, prioritise items that also align with the recipient's personality tags, gift-type preferences (e.g. 'Designer items', 'Practical but high quality', 'Quirky and unexpected'), and anything mentioned in the free-text fields.
+3. If fewer than 5 strong interest-matched candidates exist, you may include well-suited candidates that fit the recipient's gender, age, and budget but don't strongly match a stated interest. Mark these clearly with confidence: "general" rather than "interest_match" in your output.
+
+READING THE FREE-TEXT FIELDS
+The recipient profile includes free-text fields ('anything else that would help', 'things to avoid'). Treat these as high-signal, not decorative:
+- If a specific brand, colour, hobby, sports team, or item is mentioned favourably, treat it as a strong positive signal — actively prefer candidates that connect to it, and mention it in your written rationale.
+- If something is mentioned as disliked, unwanted, or to avoid (e.g. an allergy, a colour they hate, a category they don't want), you must NEVER select a product that conflicts with this, even if it otherwise matches their interests well. Treat 'avoid' instructions as an absolute exclusion, not a soft preference.
+
+GENDER-APPROPRIATE JUDGEMENT ON UNISEX ITEMS
+Most candidates you receive will already be tagged Male, Female, or Unisex, and this has been filtered before reaching you. For items tagged Unisex specifically, use reasonable judgement about whether the item, as styled or described, genuinely suits this recipient — for example, a 'unisex' fragrance range may still have gendered notes worth considering. Do not override the Male/Female/Unisex tag itself — only use judgement within the Unisex category.
+
+WHAT YOU MUST NEVER DO
+- Never invent a product, price, retailer, or URL. Only select from the candidate list you are given.
+- Never recommend a product tagged for the wrong gender, even if you think it might 'still work' — this filtering has already been done and must not be second-guessed.
+- Never select a product that conflicts with a stated 'avoid'.
+- Never pad the list with a weak or irrelevant candidate merely to reach 5 primary and 5 backup — if there are genuinely fewer than 10 suitable candidates, say so explicitly rather than forcing a full list.
+
+OUTPUT FORMAT
+Respond ONLY in valid JSON, in exactly this structure. No preamble, no markdown, no text outside the JSON object.`;
+  }
+
+  /**
    * Select the best gifts for a recipient from candidate products
-   * @param {array} candidates - Scored candidate products
+   * @param {array} candidates - Scored candidate products (already filtered by gender/age/budget)
    * @param {object} recipient - Recipient data
-   * @param {number} count - Suggested number (Claude can choose 3-10)
    * @returns {Promise<array>} Selected gifts with AI reasoning
    */
-  async selectGifts(candidates, recipient, count = null) {
-    if (candidates.length === 0) {
-      throw new Error('No candidate products available for selection');
-    }
-
+  async selectGifts(candidates, recipient) {
     console.log('\n🎁 ===== AI GIFT SELECTION STARTING =====');
     console.log(`   Recipient: ${recipient.name}`);
-    console.log(`   Candidates: ${candidates.length} products`);
-    console.log(`   Requested: 20 products (system uses first 10: 5 primary + 5 backups)`);
-    console.log(`   Using: Claude AI\n`);
+    console.log(`   Candidates available: ${candidates.length} products`);
+    console.log(`   Target: 5 primary + 5 backup recommendations`);
+    console.log(`   Using: Claude AI with client-specified prompt\n`);
 
     // Set context for AI call logging
     this.claudeClient.setContext({
@@ -36,196 +75,257 @@ export default class AIGiftSelector {
       recipientName: recipient.name,
     });
 
-    // Validate candidates meet quality standards
-    const qualityCandidates = candidates.filter(c => {
-      if (!c.name || !c.description || !c.score) {
-        return false;
-      }
-      // Must have at least score of 15 to be considered
-      return c.score >= 15;
-    });
-
-    console.log(`   ${qualityCandidates.length} candidates meet quality threshold (score >= 15)`);
-
-    if (qualityCandidates.length < 10) {
-      throw new Error(`Insufficient quality candidates: only ${qualityCandidates.length} products scored 20+. Need at least 10 for 5 primary gifts + 5 backups.`);
+    // NO HARD REQUIREMENT - Work with whatever we have
+    // Per client: "if there are genuinely fewer than 10 suitable candidates, say so explicitly"
+    if (candidates.length === 0) {
+      console.warn('   ⚠️  No candidates available - cannot generate gift list');
+      throw new Error('No candidate products available for selection');
     }
 
-    // Take top candidates for AI consideration (max 50 to keep prompt manageable)
-    const topCandidates = qualityCandidates.slice(0, Math.min(50, qualityCandidates.length));
+    console.log(`   ✓ Working with ${candidates.length} candidates (no minimum required)`);
+    
+    // Take top candidates for AI (max 50 to keep prompt manageable)
+    const topCandidates = candidates.slice(0, Math.min(50, candidates.length));
 
-    const prompt = this.buildSelectionPrompt(recipient, topCandidates, 20); // Always request 20
-    const schema = this.getSelectionSchema(20);
+    const userPrompt = this.buildUserPrompt(recipient, topCandidates);
+    const schema = this.getOutputSchema();
 
     try {
-      // Don't pass temperature for Claude Sonnet 5
       const response = await this.claudeClient.generateStructuredContent(
-        prompt,
+        userPrompt,
         schema,
-        { maxOutputTokens: 4096 }
+        { 
+          maxOutputTokens: 4096,
+          systemPrompt: this.getSystemPrompt() // Client's system prompt
+        }
       );
 
-      const validated = this.validateSelections(response, topCandidates, count);
+      const validated = this.validateAndMapSelections(response, topCandidates, recipient);
       
       console.log(`\n✅ AI GIFT SELECTION COMPLETE`);
-      console.log(`   Selected: ${validated.length} gifts`);
-      console.log(`   Strategy: ${response.overall_strategy || 'N/A'}`);
+      console.log(`   Primary: ${validated.filter(g => g.isPrimary).length} gifts`);
+      console.log(`   Backup: ${validated.filter(g => !g.isPrimary).length} gifts`);
+      console.log(`   Confidence: ${validated.filter(g => g.confidence === 'interest_match').length} interest-match, ${validated.filter(g => g.confidence === 'general').length} general`);
+      console.log(`   Personal summary: ${response.personal_summary?.substring(0, 60)}...`);
       console.log('==========================================\n');
 
       return validated;
     } catch (error) {
       console.error('\n❌ AI Gift selection failed:', error.message);
       console.log('   Falling back to score-based selection...\n');
-      // Fallback: return top scoring products
-      return this.fallbackSelection(topCandidates, count);
+      return this.fallbackSelection(topCandidates);
     }
   }
 
   /**
-   * Build the prompt for gift selection
-   * @param {object} recipient - Recipient data
-   * @param {array} candidates - Candidate products
-   * @param {number} count - Number of gifts needed
-   * @returns {string} Complete prompt
+   * Build USER PROMPT - Dynamically populated per recipient
+   * Per client spec: Template with [BRACKETS] populated from recipient profile
    */
-  buildSelectionPrompt(recipient, candidates, count) {
+  buildUserPrompt(recipient, candidates) {
     const derived = recipient.derivedProfile || {};
     
-    const productsFormatted = candidates.map((product, index) => `
-${index + 1}. ${product.name}
-   Price: £${product.price}
+    // Format candidate list per spec
+    const candidateList = candidates.map((product, index) => {
+      const source = product.source || 'Unknown';
+      const interestCategory = product.interestTags?.[0] || 'General';
+      
+      return `${index + 1}. ${product.name}
    Retailer: ${product.retailer?.name || 'Unknown'}
-   Description: ${product.description || 'No description'}
-   Match Score: ${product.score}
-   Match Signals: ${product.matchSignals?.join(', ') || 'None'}
-`).join('\n');
+   Price: £${product.price}
+   Interest Category: ${interestCategory}
+   Source: ${source}
+   Tier: ${product.tier || 'N/A'}
+   Description: ${(product.description || '').substring(0, 150)}...`;
+    }).join('\n\n');
 
-    return `You are a professional gift curator selecting personalized gifts for a special someone.
+    // Build personality tags string
+    const personalityTags = recipient.personality?.join(', ') || 'Not specified';
+    
+    // Build gift type preferences
+    const giftTypePrefs = recipient.giftTypes?.join(', ') || derived.canonical_gift_types?.join(', ') || 'Not specified';
 
-RECIPIENT PROFILE:
-- Name: ${recipient.name}
-- Relationship: ${recipient.relationship}
-- Age Band: ${recipient.ageBand}
-- Gender: ${recipient.gender}
-- Budget: £${recipient.budgetMin || 0} - £${recipient.budgetMax || 500}
-- Occasion: ${recipient.occasion}
-- Interests: ${recipient.interests?.join(', ') || 'Not specified'}
-- Personality Traits: ${recipient.personality?.join(', ') || 'Not specified'}
-- Additional Details: ${recipient.thingsYouKnow || 'Not specified'}
-- Life Stage: ${derived.life_stage_summary || 'Not specified'}
-- Avoid: ${recipient.avoidNotes || 'Nothing specified'}
+    return `RECIPIENT PROFILE
 
-CANDIDATE PRODUCTS:
-${productsFormatted}
+Relationship to subscriber: ${recipient.relationship || 'Not specified'}
+Age band: ${recipient.ageBand || 'Not specified'}
+Gender: ${recipient.gender || 'Not specified'}
+Occasion: ${recipient.occasion || 'Birthday'}
+Budget: £${recipient.budgetMin || 0} minimum / £${recipient.budgetMax || 100} maximum
+  (candidates below have already been filtered to this range +/- 5%)
 
-TASK:
-Choose exactly 20 products, ranked best match first. The system will validate your ranked choices in order and use the first 10: 5 primary gifts and 5 backups.
+Interests: ${recipient.interests?.join(', ') || 'Not specified'}
+Personality: ${personalityTags}
+Gift types they love: ${giftTypePrefs}
+Things to avoid: ${recipient.avoidNotes || recipient.thingsToAvoid || 'Nothing specified'}
+Anything else that would help: ${recipient.thingsYouKnow || recipient.additionalNotes || 'Not specified'}
+Upcoming milestones: ${recipient.milestones || 'None mentioned'}
 
-Your goal is to create a thoughtful, varied gift list that:
-1. Matches the recipient's interests and personality authentically
-2. Includes diverse types of gifts (not all jewelry, not all wine, etc.)
-3. Spans the budget range appropriately
-4. Shows genuine understanding of who they are
-5. Avoids anything they've explicitly said to avoid
+CANDIDATE PRODUCTS (${candidates.length} items, already filtered for gender/age/budget)
 
-For EACH selected gift, provide:
-- product_index: The number from the list above (1-${candidates.length})
-- why_this_gift: Two complete sentences explaining WHY this specific gift fits THIS specific person. Be personal and specific - reference their interests, life stage, or personality. Avoid generic phrases like "a lovely treat."
+${candidateList}
 
-IMPORTANT:
-- Use product_index to reference products (1-${candidates.length})
-- Make sure your reasoning is specific to both the person AND the product
-- Vary your selections across different categories where possible
-- Make the first 5 entries varied gift concepts — never dominated by one shop or one category
-- Use no more than 2 products from any single retailer
-- Return exactly 20 products ranked by match quality`;
+Select and rank 5 primary and 5 backup recommendations from the candidates above, following the rules in your system prompt.`;
   }
 
   /**
-   * Get JSON schema for selection response
-   * @param {number} count - Number of gifts expected
-   * @returns {object} JSON schema
+   * Get OUTPUT SCHEMA per client specification
+   * Must include: personal_summary, primary_recommendations, backup_recommendations, confidence, notes_for_gem
    */
-  getSelectionSchema(count) {
+  getOutputSchema() {
     return {
       type: 'object',
       properties: {
-        selections: {
+        personal_summary: {
+          type: 'string',
+          description: 'One warm sentence describing this person, for Gem\'s reference in the approval queue'
+        },
+        primary_recommendations: {
           type: 'array',
-          description: `Array of exactly 20 selected gifts, ranked best match first`,
+          description: '5 primary gift recommendations',
           items: {
             type: 'object',
             properties: {
-              product_index: {
-                type: 'integer',
-                description: 'Index of the product from the candidate list (1-based)'
-              },
-              why_this_gift: {
+              product_id: {
                 type: 'string',
-                description: 'Personalized explanation for why this gift suits the recipient'
+                description: 'Product ID from the candidate list - never invented'
+              },
+              confidence: {
+                type: 'string',
+                enum: ['interest_match', 'general'],
+                description: 'interest_match if matches stated interests, general if based on gender/age/budget only'
+              },
+              rationale: {
+                type: 'string',
+                description: '2-3 sentences: why this suits THIS person specifically, referencing their stated interests, personality, or free-text detail where relevant'
               }
             },
-            required: ['product_index', 'why_this_gift']
+            required: ['product_id', 'confidence', 'rationale']
           }
         },
-        overall_strategy: {
+        backup_recommendations: {
+          type: 'array',
+          description: '5 backup gift recommendations',
+          items: {
+            type: 'object',
+            properties: {
+              product_id: {
+                type: 'string',
+                description: 'Product ID from the candidate list - never invented'
+              },
+              confidence: {
+                type: 'string',
+                enum: ['interest_match', 'general'],
+                description: 'interest_match if matches stated interests, general if based on gender/age/budget only'
+              },
+              rationale: {
+                type: 'string',
+                description: '2-3 sentences: why this suits THIS person specifically'
+              }
+            },
+            required: ['product_id', 'confidence', 'rationale']
+          }
+        },
+        notes_for_gem: {
           type: 'string',
-          description: 'Brief explanation of your selection strategy for this recipient'
+          description: 'Optional - flag anything worth Gem\'s attention, e.g. "fewer than 5 strong interest matches were available, backups include general suggestions"'
         }
       },
-      required: ['selections', 'overall_strategy']
+      required: ['personal_summary', 'primary_recommendations', 'backup_recommendations']
     };
   }
 
   /**
-   * Validate and map selections to actual products
-   * @param {object} response - AI response
-   * @param {array} candidates - Candidate products
-   * @param {number} count - Expected count
-   * @returns {array} Validated selections with product data
+   * Validate and map AI selections to actual products
    */
-  validateSelections(response, candidates, count) {
-    const selections = response.selections || [];
-    const validSelections = [];
+  validateAndMapSelections(response, candidates, recipient) {
+    const validated = [];
+    
+    // Map products by ID for quick lookup
+    const productMap = new Map();
+    candidates.forEach(p => productMap.set(p.id, p));
 
-    for (const selection of selections) {
-      const index = selection.product_index - 1; // Convert to 0-based
-      
-      if (index >= 0 && index < candidates.length) {
-        const product = candidates[index];
-        validSelections.push({
+    // Process primary recommendations
+    const primaries = response.primary_recommendations || [];
+    primaries.forEach((rec, index) => {
+      const product = productMap.get(rec.product_id);
+      if (product) {
+        validated.push({
           ...product,
-          whyThisGift: selection.why_this_gift,
-          aiStrategy: response.overall_strategy,
+          whyThisGift: rec.rationale,
+          confidence: rec.confidence,
+          isPrimary: true,
+          rank: index + 1,
+          aiStrategy: response.personal_summary,
+          notesForGem: response.notes_for_gem,
         });
+      } else {
+        console.warn(`   ⚠️  Primary recommendation ${index + 1}: product_id ${rec.product_id} not found in candidates`);
       }
+    });
+
+    // Process backup recommendations
+    const backups = response.backup_recommendations || [];
+    backups.forEach((rec, index) => {
+      const product = productMap.get(rec.product_id);
+      if (product) {
+        validated.push({
+          ...product,
+          whyThisGift: rec.rationale,
+          confidence: rec.confidence,
+          isPrimary: false,
+          rank: primaries.length + index + 1,
+          aiStrategy: response.personal_summary,
+          notesForGem: response.notes_for_gem,
+        });
+      } else {
+        console.warn(`   ⚠️  Backup recommendation ${index + 1}: product_id ${rec.product_id} not found in candidates`);
+      }
+    });
+
+    // If fewer than expected, log it (as per client spec)
+    if (validated.length < 10) {
+      console.log(`\n   ℹ️  AI returned ${validated.length} recommendations (expected 10)`);
+      console.log(`   Notes from AI: ${response.notes_for_gem || 'None'}`);
     }
 
-    // Accept 10-20 gifts (use first 10)
-    if (validSelections.length < 10) {
-      console.warn(`Only ${validSelections.length} valid selections, using fallback`);
-      return this.fallbackSelection(candidates, 10);
+    // If we have SOME selections but not enough, that's OK per client spec
+    // "if there are genuinely fewer than 10 suitable candidates, say so explicitly rather than forcing a full list"
+    if (validated.length === 0) {
+      console.warn(`   ⚠️  No valid selections from AI - falling back`);
+      return this.fallbackSelection(candidates);
     }
 
-    // Return first 10 validated gifts (5 primary + 5 backups)
-    return validSelections.slice(0, 10);
+    return validated;
   }
 
   /**
-   * Fallback selection using simple scoring
-   * @param {array} candidates - Candidate products
-   * @param {number} count - Number to select
-   * @returns {array} Top scoring products
+   * Fallback selection when AI fails
+   * Returns top scoring products with basic reasoning
    */
-  fallbackSelection(candidates, count) {
+  fallbackSelection(candidates) {
     console.log('\n⚠️  USING FALLBACK SELECTION (No Claude AI)');
-    console.log(`   Selecting top 10 by score only (5 primary + 5 backups)\n`);
+    console.log(`   Selecting up to 10 products by score only\n`);
     
-    return candidates.slice(0, 10).map(product => ({
-      ...product,
-      whyThisGift: this.generateFallbackReason(product),
-      aiStrategy: 'Fallback: Score-based selection (AI unavailable)',
-    }));
+    // Take top candidates (up to 10)
+    const count = Math.min(10, candidates.length);
+    
+    return candidates.slice(0, count).map((product, index) => {
+      // Determine if primary or backup
+      const isPrimary = index < 5;
+      
+      // Determine confidence based on tier
+      const confidence = (product.tier === 'GENERAL_FALLBACK') ? 'general' : 'interest_match';
+      
+      return {
+        ...product,
+        whyThisGift: this.generateFallbackReason(product),
+        confidence: confidence,
+        isPrimary: isPrimary,
+        rank: index + 1,
+        aiStrategy: 'Fallback: Score-based selection (AI unavailable)',
+        notesForGem: `Fallback selection used. ${candidates.length} candidates were available.`,
+      };
+    });
   }
 
   /**
@@ -235,9 +335,16 @@ IMPORTANT:
    */
   generateFallbackReason(product) {
     const signals = product.matchSignals || [];
-    if (signals.length > 0) {
-      return `This product matches based on: ${signals.join(', ')}. It's a thoughtfully chosen gift that aligns with their interests and preferences.`;
+    const tier = product.tier || '';
+    
+    if (tier === 'CURATED_INTEREST' && signals.length > 0) {
+      return `This curated product matches based on: ${signals.join(', ')}. It's a thoughtfully chosen gift that aligns with their interests and preferences.`;
     }
-    return `A carefully selected gift that fits within budget and matches their profile. This product has been chosen for its quality and relevance.`;
+    
+    if (signals.length > 0) {
+      return `This product matches based on: ${signals.join(', ')}. It's been selected for its quality and relevance to their profile.`;
+    }
+    
+    return `A carefully selected gift that fits within their budget and profile. This product has been chosen for its quality and suitability.`;
   }
 }
