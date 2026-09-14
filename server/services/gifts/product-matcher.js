@@ -7,7 +7,7 @@
 
 export default class ProductMatcher {
   constructor() {
-    this.MIN_SCORE_THRESHOLD = 20; // Increased from 10 to ensure better quality
+    this.MIN_SCORE_THRESHOLD = 15; // Lowered from 20 to 15 for small catalogues
     this.MIN_QUALITY_SCORE = 50; // Reject products with poor quality
   }
 
@@ -57,28 +57,57 @@ export default class ProductMatcher {
     const { budgetMin, budgetMax, ageBand, gender } = recipient;
     const derived = recipient.derivedProfile || {};
 
-    // Build product query filters
+    // Build interest filter conditions for SQL
+    const recipientInterests = recipient.interests || [];
+    const interestConditions = recipientInterests.length > 0 
+      ? {
+          OR: recipientInterests.map(interest => ({
+            interestTags: {
+              has: interest
+            }
+          }))
+        }
+      : {};
+
+    // Build product query filters with QUALITY + INTEREST pre-filtering
     const where = {
-      status: 'ACTIVE', // Use uppercase enum value
+      status: 'ACTIVE',
       price: {
         gte: budgetMin || 0,
         lte: budgetMax || 1000,
       },
       qualityScore: {
-        gte: this.MIN_QUALITY_SCORE, // Only quality products
+        gte: this.MIN_QUALITY_SCORE, // Only quality products (50+)
       },
+      // QUALITY PRE-FILTER: Only products with valid data
+      name: {
+        not: null,
+      },
+      description: {
+        not: null,
+      },
+      productUrl: {
+        not: null,
+      },
+      // INTEREST PRE-FILTER: Only products matching recipient interests
+      ...interestConditions,
     };
 
-    // Fetch products with retailers
+    console.log(`   Filtering by interests: ${recipientInterests.join(', ')}`);
+
+    // Fetch products with retailers, ordered by quality
     const products = await prisma.product.findMany({
       where,
       include: {
         retailer: true,
       },
-      take: 500, // Limit for performance
+      orderBy: {
+        qualityScore: 'desc', // Get highest quality products first
+      },
+      take: 1000, // Increased from 500 to 1000 for better coverage
     });
 
-    console.log(`   Fetched ${products.length} products from catalogue`);
+    console.log(`   Fetched ${products.length} products from catalogue (filtered by interests)`);
     
     // Validate product data quality before scoring
     const validProducts = products.filter(p => this.isValidProduct(p));
@@ -95,8 +124,61 @@ export default class ProductMatcher {
 
     console.log(`   ${scoredProducts.length} products scored above threshold (${this.MIN_SCORE_THRESHOLD})`);
 
+    // FALLBACK: If too few matches, try without interest filter
+    if (scoredProducts.length < 20 && recipientInterests.length > 0) {
+      console.log(`   ⚠️  Only ${scoredProducts.length} interest matches - fetching additional quality products...`);
+      
+      const fallbackWhere = {
+        status: 'ACTIVE',
+        price: {
+          gte: budgetMin || 0,
+          lte: budgetMax || 1000,
+        },
+        qualityScore: {
+          gte: this.MIN_QUALITY_SCORE,
+        },
+        name: {
+          not: null,
+        },
+        description: {
+          not: null,
+        },
+        productUrl: {
+          not: null,
+        },
+      };
+      
+      const fallbackProducts = await prisma.product.findMany({
+        where: fallbackWhere,
+        include: {
+          retailer: true,
+        },
+        orderBy: {
+          qualityScore: 'desc',
+        },
+        take: 500,
+      });
+      
+      console.log(`   Fetched ${fallbackProducts.length} additional products (no interest filter)`);
+      
+      const fallbackValid = fallbackProducts.filter(p => this.isValidProduct(p));
+      const fallbackScored = fallbackValid
+        .map(product => ({
+          ...product,
+          ...this.scoreProduct(product, recipient, derived),
+        }))
+        .filter(p => p.score >= 10) // Lower threshold for fallback
+        .filter(p => !scoredProducts.find(sp => sp.id === p.id)); // Exclude already matched
+      
+      console.log(`   ${fallbackScored.length} fallback products scored above 10`);
+      
+      // Merge and resort
+      scoredProducts.push(...fallbackScored);
+      scoredProducts.sort((a, b) => b.score - a.score);
+    }
+
     if (scoredProducts.length === 0) {
-      console.warn(`   ⚠️  WARNING: No products found matching interests: ${recipient.interests?.join(', ')}`);
+      console.warn(`   ⚠️  WARNING: No products found matching profile for ${recipient.name}`);
     }
 
     return scoredProducts.slice(0, 100); // Top 100 candidates for AI selection
