@@ -92,9 +92,8 @@ export default class ProductMatcher {
       qualityScore: {
         gte: this.MIN_QUALITY_SCORE,
       },
-      name: { not: null },
-      description: { not: null },
-      productUrl: { not: null },
+      // Note: name, description, productUrl null checks handled in isValidProduct()
+      // Prisma doesn't support { not: null } syntax for string fields
     };
 
     // Add gender filter if defined
