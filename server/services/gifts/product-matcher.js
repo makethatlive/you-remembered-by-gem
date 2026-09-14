@@ -110,7 +110,7 @@ export default class ProductMatcher {
     
     const tier1Where = {
       ...baseFilters,
-      source: 'CURATED',
+      sourceType: 'CURATED_PRODUCT',
     };
 
     // Add interest filter if interests exist
@@ -144,7 +144,7 @@ export default class ProductMatcher {
       
       const tier2Where = {
         ...baseFilters,
-        source: 'SCRAPED',
+        sourceType: { in: ['CURATED_RETAILER', 'SHOPIFY_UPLOAD'] },
         OR: recipientInterests.map(interest => ({
           interestTags: { has: interest }
         })),
