@@ -23,12 +23,8 @@ export default class ProfileAnalyzer {
       recipient.interests,
       recipient.personality,
       recipient.giftTypes,
-      recipient.hobbiesAndInterests,
-      recipient.whoTheyAre,
-      recipient.thingsYouKnow,
-      recipient.milestones,
+      recipient.thingsYouKnow, // "Anything else?" field - the ONE free-text box
       recipient.avoidNotes,
-      recipient.notes,
       recipient.ageBand,
       recipient.gender,
       recipient.relationship,
@@ -87,10 +83,7 @@ RECIPIENT PROFILE:
 - Interests: ${JSON.stringify(recipient.interests || [])}
 - Personality: ${JSON.stringify(recipient.personality || [])}
 - Gift Types: ${JSON.stringify(recipient.giftTypes || [])}
-- Hobbies: ${recipient.hobbiesAndInterests || 'Not provided'}
-- Who They Are: ${recipient.whoTheyAre || 'Not provided'}
-- Things You Know: ${recipient.thingsYouKnow || 'Not provided'}
-- Milestones: ${recipient.milestones || 'Not provided'}
+- Additional Details: ${recipient.thingsYouKnow || 'Not provided'}
 - Avoid: ${recipient.avoidNotes || 'Not provided'}
 - Age Band: ${recipient.ageBand}
 - Gender: ${recipient.gender}

@@ -103,8 +103,7 @@ RECIPIENT PROFILE:
 - Occasion: ${recipient.occasion}
 - Interests: ${recipient.interests?.join(', ') || 'Not specified'}
 - Personality Traits: ${recipient.personality?.join(', ') || 'Not specified'}
-- Hobbies: ${recipient.hobbiesAndInterests || 'Not specified'}
-- Things to Know: ${recipient.thingsYouKnow || 'Not specified'}
+- Additional Details: ${recipient.thingsYouKnow || 'Not specified'}
 - Life Stage: ${derived.life_stage_summary || 'Not specified'}
 - Avoid: ${recipient.avoidNotes || 'Nothing specified'}
 
