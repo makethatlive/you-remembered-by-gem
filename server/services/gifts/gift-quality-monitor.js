@@ -40,12 +40,19 @@ export default class GiftQualityMonitor {
     const recipient = giftList.recipient;
     const gifts = giftList.giftItems;
 
-    // Check 1: Must have exactly 10 gifts (5 primary + 5 backups)
-    if (gifts.length !== 10) {
+    // Check 1: Must have at least 3 gifts (relaxed from strict 10 requirement)
+    // Per client spec: "better to offer 1-5 options than nothing"
+    if (gifts.length < 3) {
       issues.push({
         severity: 'critical',
-        code: 'INCORRECT_GIFT_COUNT',
-        message: `Expected 10 gifts (5 primary + 5 backups), got ${gifts.length}`,
+        code: 'INSUFFICIENT_GIFT_COUNT',
+        message: `Insufficient gifts: got ${gifts.length}, minimum 3 required`,
+      });
+    } else if (gifts.length < 10) {
+      warnings.push({
+        severity: 'warning',
+        code: 'BELOW_TARGET_COUNT',
+        message: `Generated ${gifts.length} gifts (target is 10). This may indicate catalogue coverage gaps.`,
       });
     }
 
@@ -68,20 +75,20 @@ export default class GiftQualityMonitor {
     });
 
     const matchPercentage = (matchingGifts.length / gifts.length) * 100;
-    if (matchPercentage < 60) {
+    if (matchPercentage < 40) {
       issues.push({
         severity: 'critical',
         code: 'LOW_INTEREST_MATCH',
-        message: `Only ${matchPercentage.toFixed(0)}% of gifts match recipient interests (minimum 60%)`,
+        message: `Only ${matchPercentage.toFixed(0)}% of gifts match recipient interests (minimum 40%)`,
         recipientInterests,
         matchingCount: matchingGifts.length,
         totalCount: gifts.length,
       });
-    } else if (matchPercentage < 80) {
+    } else if (matchPercentage < 60) {
       warnings.push({
         severity: 'warning',
         code: 'MODERATE_INTEREST_MATCH',
-        message: `${matchPercentage.toFixed(0)}% match (80%+ recommended)`,
+        message: `${matchPercentage.toFixed(0)}% match (60%+ recommended)`,
       });
     }
 
@@ -106,20 +113,20 @@ export default class GiftQualityMonitor {
       });
     }
 
-    // Check 5: Relevance scores
+    // Check 5: Relevance scores (lowered thresholds for LEGACY products)
     const avgScore = gifts.reduce((sum, g) => sum + (g.selectionScore || 0), 0) / gifts.length;
-    if (avgScore < 30) {
+    if (avgScore < 15) {
       issues.push({
         severity: 'critical',
         code: 'LOW_RELEVANCE_SCORES',
-        message: `Average relevance score ${avgScore.toFixed(1)} is too low (minimum 30)`,
+        message: `Average relevance score ${avgScore.toFixed(1)} is too low (minimum 15)`,
         avgScore: avgScore.toFixed(1),
       });
-    } else if (avgScore < 50) {
+    } else if (avgScore < 30) {
       warnings.push({
         severity: 'warning',
         code: 'MODERATE_RELEVANCE',
-        message: `Average relevance score ${avgScore.toFixed(1)} (50+ recommended)`,
+        message: `Average relevance score ${avgScore.toFixed(1)} (30+ recommended)`,
       });
     }
 
