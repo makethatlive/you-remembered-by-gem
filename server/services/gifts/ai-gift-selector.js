@@ -9,7 +9,7 @@
  * - User prompt is dynamically populated per recipient
  * - Output includes confidence levels (interest_match vs general)
  * - Hard filters (gender, budget, age) applied BEFORE AI sees candidates
- * - AI selects 5 primary + 5 backup recommendations
+ * - AI selects up to 5 gift recommendations (graceful fallback accepts 1-5)
  */
 
 export default class AIGiftSelector {
@@ -27,9 +27,7 @@ export default class AIGiftSelector {
 You will be given a recipient profile and a pre-filtered list of candidate products. The candidates have ALREADY been filtered for gender, age, and budget suitability — you do not need to re-check these. Your job is to select and rank the best gifts from this list based on fit with the recipient's interests, personality, and any free-text detail provided.
 
 YOUR TASK
-From the candidate list provided, select and rank:
-- 5 PRIMARY recommendations (the ideas Gem will review first)
-- 5 BACKUP recommendations (held in reserve, to swap in if Gem rejects a primary choice)
+From the candidate list provided, select and rank 5 gift recommendations.
 
 SELECTION PRIORITY (in order)
 1. Products tagged with an interest category that matches one the recipient has selected. Prioritise the closest, most specific match over a loose or generic one.
@@ -48,7 +46,7 @@ WHAT YOU MUST NEVER DO
 - Never invent a product, price, retailer, or URL. Only select from the candidate list you are given.
 - Never recommend a product tagged for the wrong gender, even if you think it might 'still work' — this filtering has already been done and must not be second-guessed.
 - Never select a product that conflicts with a stated 'avoid'.
-- Never pad the list with a weak or irrelevant candidate merely to reach 5 primary and 5 backup — if there are genuinely fewer than 10 suitable candidates, say so explicitly rather than forcing a full list.
+- Never pad the list with a weak or irrelevant candidate merely to reach 5 — if there are genuinely fewer than 5 suitable candidates, return what you can find (even if only 1-4 products).
 
 OUTPUT FORMAT
 Respond ONLY in valid JSON, in exactly this structure. No preamble, no markdown, no text outside the JSON object.`;
@@ -64,7 +62,7 @@ Respond ONLY in valid JSON, in exactly this structure. No preamble, no markdown,
     console.log('\n🎁 ===== AI GIFT SELECTION STARTING =====');
     console.log(`   Recipient: ${recipient.name}`);
     console.log(`   Candidates available: ${candidates.length} products`);
-    console.log(`   Target: 5 primary + 5 backup recommendations`);
+    console.log(`   Target: 5 gift recommendations (graceful fallback accepts any number)`);
     console.log(`   Using: Claude AI with client-specified prompt\n`);
 
     // Set context for AI call logging
@@ -103,8 +101,7 @@ Respond ONLY in valid JSON, in exactly this structure. No preamble, no markdown,
       const validated = this.validateAndMapSelections(response, topCandidates, recipient);
       
       console.log(`\n✅ AI GIFT SELECTION COMPLETE`);
-      console.log(`   Primary: ${validated.filter(g => g.isPrimary).length} gifts`);
-      console.log(`   Backup: ${validated.filter(g => !g.isPrimary).length} gifts`);
+      console.log(`   Selected: ${validated.length} gifts`);
       console.log(`   Confidence: ${validated.filter(g => g.confidence === 'interest_match').length} interest-match, ${validated.filter(g => g.confidence === 'general').length} general`);
       console.log(`   Personal summary: ${response.personal_summary?.substring(0, 60)}...`);
       console.log('==========================================\n');
@@ -164,12 +161,12 @@ CANDIDATE PRODUCTS (${candidates.length} items, already filtered for gender/age/
 
 ${candidateList}
 
-Select and rank 5 primary and 5 backup recommendations from the candidates above, following the rules in your system prompt.`;
+Select and rank up to 5 gift recommendations from the candidates above, following the rules in your system prompt. If fewer than 5 strong matches exist, return what you can (even 1-4 is acceptable).`;
   }
 
   /**
    * Get OUTPUT SCHEMA per client specification
-   * Must include: personal_summary, primary_recommendations, backup_recommendations, confidence, notes_for_gem
+   * Must include: personal_summary, recommendations, confidence, notes_for_gem
    */
   getOutputSchema() {
     return {
@@ -179,9 +176,11 @@ Select and rank 5 primary and 5 backup recommendations from the candidates above
           type: 'string',
           description: 'One warm sentence describing this person, for Gem\'s reference in the approval queue'
         },
-        primary_recommendations: {
+        recommendations: {
           type: 'array',
-          description: '5 primary gift recommendations',
+          description: 'Up to 5 gift recommendations (accepts 1-5, no hard minimum)',
+          minItems: 1,
+          maxItems: 5,
           items: {
             type: 'object',
             properties: {
@@ -202,35 +201,12 @@ Select and rank 5 primary and 5 backup recommendations from the candidates above
             required: ['product_id', 'confidence', 'rationale']
           }
         },
-        backup_recommendations: {
-          type: 'array',
-          description: '5 backup gift recommendations',
-          items: {
-            type: 'object',
-            properties: {
-              product_id: {
-                type: 'string',
-                description: 'Product ID from the candidate list - never invented'
-              },
-              confidence: {
-                type: 'string',
-                enum: ['interest_match', 'general'],
-                description: 'interest_match if matches stated interests, general if based on gender/age/budget only'
-              },
-              rationale: {
-                type: 'string',
-                description: '2-3 sentences: why this suits THIS person specifically'
-              }
-            },
-            required: ['product_id', 'confidence', 'rationale']
-          }
-        },
         notes_for_gem: {
           type: 'string',
-          description: 'Optional - flag anything worth Gem\'s attention, e.g. "fewer than 5 strong interest matches were available, backups include general suggestions"'
+          description: 'Optional - flag anything worth Gem\'s attention, e.g. "fewer than 5 strong matches were available" or "limited catalogue in this interest category"'
         }
       },
-      required: ['personal_summary', 'primary_recommendations', 'backup_recommendations']
+      required: ['personal_summary', 'recommendations']
     };
   }
 
@@ -244,52 +220,31 @@ Select and rank 5 primary and 5 backup recommendations from the candidates above
     const productMap = new Map();
     candidates.forEach(p => productMap.set(p.id, p));
 
-    // Process primary recommendations
-    const primaries = response.primary_recommendations || [];
-    primaries.forEach((rec, index) => {
+    // Process recommendations (single array now, no primary/backup split)
+    const recommendations = response.recommendations || [];
+    recommendations.forEach((rec, index) => {
       const product = productMap.get(rec.product_id);
       if (product) {
         validated.push({
           ...product,
           whyThisGift: rec.rationale,
           confidence: rec.confidence,
-          isPrimary: true,
+          isPrimary: true, // All are "primary" now (no backup concept)
           rank: index + 1,
           aiStrategy: response.personal_summary,
           notesForGem: response.notes_for_gem,
         });
       } else {
-        console.warn(`   ⚠️  Primary recommendation ${index + 1}: product_id ${rec.product_id} not found in candidates`);
+        console.warn(`   ⚠️  Recommendation ${index + 1}: product_id ${rec.product_id} not found in candidates`);
       }
     });
 
-    // Process backup recommendations
-    const backups = response.backup_recommendations || [];
-    backups.forEach((rec, index) => {
-      const product = productMap.get(rec.product_id);
-      if (product) {
-        validated.push({
-          ...product,
-          whyThisGift: rec.rationale,
-          confidence: rec.confidence,
-          isPrimary: false,
-          rank: primaries.length + index + 1,
-          aiStrategy: response.personal_summary,
-          notesForGem: response.notes_for_gem,
-        });
-      } else {
-        console.warn(`   ⚠️  Backup recommendation ${index + 1}: product_id ${rec.product_id} not found in candidates`);
-      }
-    });
-
-    // If fewer than expected, log it (as per client spec)
-    if (validated.length < 10) {
-      console.log(`\n   ℹ️  AI returned ${validated.length} recommendations (expected 10)`);
+    // Graceful fallback: Accept ANY number (1-5)
+    if (validated.length > 0 && validated.length < 5) {
+      console.log(`\n   ℹ️  AI returned ${validated.length} recommendations (target was 5, accepting gracefully)`);
       console.log(`   Notes from AI: ${response.notes_for_gem || 'None'}`);
     }
 
-    // If we have SOME selections but not enough, that's OK per client spec
-    // "if there are genuinely fewer than 10 suitable candidates, say so explicitly rather than forcing a full list"
     if (validated.length === 0) {
       console.warn(`   ⚠️  No valid selections from AI - falling back`);
       return this.fallbackSelection(candidates);
@@ -304,15 +259,12 @@ Select and rank 5 primary and 5 backup recommendations from the candidates above
    */
   fallbackSelection(candidates) {
     console.log('\n⚠️  USING FALLBACK SELECTION (No Claude AI)');
-    console.log(`   Selecting up to 10 products by score only\n`);
+    console.log(`   Selecting up to 5 products by score only\n`);
     
-    // Take top candidates (up to 10)
-    const count = Math.min(10, candidates.length);
+    // Take top candidates (up to 5, graceful if fewer)
+    const count = Math.min(5, candidates.length);
     
     return candidates.slice(0, count).map((product, index) => {
-      // Determine if primary or backup
-      const isPrimary = index < 5;
-      
       // Determine confidence based on tier
       const confidence = (product.tier === 'GENERAL_FALLBACK') ? 'general' : 'interest_match';
       
@@ -320,10 +272,10 @@ Select and rank 5 primary and 5 backup recommendations from the candidates above
         ...product,
         whyThisGift: this.generateFallbackReason(product),
         confidence: confidence,
-        isPrimary: isPrimary,
+        isPrimary: true, // All are primary (no backup concept)
         rank: index + 1,
         aiStrategy: 'Fallback: Score-based selection (AI unavailable)',
-        notesForGem: `Fallback selection used. ${candidates.length} candidates were available.`,
+        notesForGem: `Fallback selection used. ${candidates.length} candidates were available, returned ${count}.`,
       };
     });
   }
