@@ -12,7 +12,7 @@
     "server": "node server/index.js",
     "jobs": "node server/jobs/email-scheduler.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\" \"npm run jobs\"",
-    "build": "vite build",
+    "build": "npx prisma@5.22.0 generate && vite build",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
