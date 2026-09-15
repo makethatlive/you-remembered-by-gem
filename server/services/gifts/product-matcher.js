@@ -195,12 +195,15 @@ export default class ProductMatcher {
         .filter(p => this.isValidProduct(p))
         .filter(p => !existingIds.includes(p.id));
 
-      tier3Scored = tier3Valid.map(product => ({
-        ...product,
-        ...this.scoreProduct(product, recipient, derived),
-        tier: 'GENERAL_FALLBACK',
-        score: (product.score || 0) * 0.7, // Slightly penalize general fallback
-      }));
+      tier3Scored = tier3Valid.map(product => {
+        const scoring = this.scoreProduct(product, recipient, derived);
+        return {
+          ...product,
+          ...scoring,
+          tier: 'GENERAL_FALLBACK',
+          score: scoring.score * 0.7, // Slightly penalize general fallback
+        };
+      });
     }
 
     // Merge all tiers
