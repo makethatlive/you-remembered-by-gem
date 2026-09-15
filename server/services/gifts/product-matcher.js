@@ -143,7 +143,7 @@ export default class ProductMatcher {
       
       const tier2Where = {
         ...baseFilters,
-        sourceType: { in: ['CURATED_RETAILER', 'SHOPIFY_UPLOAD'] },
+        sourceType: { in: ['CURATED_RETAILER', 'SHOPIFY_UPLOAD', 'LEGACY_UNKNOWN'] },
         OR: recipientInterests.map(interest => ({
           interestTags: { has: interest }
         })),
