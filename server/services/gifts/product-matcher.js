@@ -201,7 +201,7 @@ export default class ProductMatcher {
           ...product,
           ...scoring,
           tier: 'GENERAL_FALLBACK',
-          score: scoring.score * 0.7, // Slightly penalize general fallback
+          score: scoring.score * 0.85, // Light penalty (was 0.7, too strict for LEGACY products)
         };
       });
     }
@@ -210,10 +210,11 @@ export default class ProductMatcher {
     const allCandidates = [...tier1Scored, ...tier2Scored, ...tier3Scored];
     
     // Filter by minimum score threshold (lowered for tier 3)
+    // Per client: "better to offer 1-5 options than nothing"
     const scoredProducts = allCandidates
       .filter(p => {
         if (p.tier === 'GENERAL_FALLBACK') {
-          return p.score >= 5; // Very low threshold for general fallback
+          return p.score >= 3; // Very low threshold - accept LEGACY products with basic quality
         }
         return p.score >= this.MIN_SCORE_THRESHOLD;
       })
