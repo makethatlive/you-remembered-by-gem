@@ -70,11 +70,11 @@ export default class ProductMatcher {
     // Gender filter logic (per client spec)
     let genderFilter;
     if (gender === 'MALE' || gender === 'Male') {
-      genderFilter = { in: ['MALE', 'Male', 'UNISEX', 'Unisex'] };
+      genderFilter = { in: ['MALE', 'Male', 'MEN', 'Men', 'UNISEX', 'Unisex', 'UNISEX_ADULT'] };
     } else if (gender === 'FEMALE' || gender === 'Female') {
-      genderFilter = { in: ['FEMALE', 'Female', 'UNISEX', 'Unisex'] };
+      genderFilter = { in: ['FEMALE', 'Female', 'WOMEN', 'Women', 'UNISEX', 'Unisex', 'UNISEX_ADULT'] };
     } else if (gender === 'NON_BINARY' || gender === 'PREFER_NOT_TO_SAY') {
-      genderFilter = { in: ['UNISEX', 'Unisex'] };
+      genderFilter = { in: ['UNISEX', 'Unisex', 'UNISEX_ADULT'] };
     } else {
       // Default: allow all if gender not specified
       genderFilter = undefined;
@@ -84,7 +84,7 @@ export default class ProductMatcher {
 
     // Build base filters (always applied)
     const baseFilters = {
-      status: 'ACTIVE',
+      status: 'ACTIVE',  // Only fetch ACTIVE products
       price: {
         gte: budgetMinWithMargin,
         lte: budgetMaxWithMargin,
@@ -112,24 +112,28 @@ export default class ProductMatcher {
       sourceType: 'CURATED_PRODUCT',
     };
 
-    // Add interest filter if interests exist
-    if (recipientInterests.length > 0) {
-      tier1Where.OR = recipientInterests.map(interest => ({
-        interestTags: { has: interest }
-      }));
-    }
-
+    // Fetch all curated products, filter interests in-memory for case-insensitive matching
     const tier1Products = await prisma.product.findMany({
       where: tier1Where,
       include: { retailer: true },
       orderBy: { qualityScore: 'desc' },
-      take: 100,
+      take: 200,  // Fetch more since we're filtering in-memory
     });
 
-    console.log(`   Found ${tier1Products.length} curated products with interest match`);
+    // Case-insensitive interest matching
+    let tier1ProductsFiltered = tier1Products;
+    if (recipientInterests.length > 0) {
+      const normalizedRecipientInterests = recipientInterests.map(i => i.toLowerCase());
+      tier1ProductsFiltered = tier1Products.filter(product => {
+        const productTags = (product.interestTags || []).map(t => t.toLowerCase());
+        return productTags.some(tag => normalizedRecipientInterests.includes(tag));
+      });
+    }
+
+    console.log(`   Found ${tier1ProductsFiltered.length} curated products with interest match (from ${tier1Products.length} total curated)`);
 
     // Score and validate Tier 1
-    const tier1Valid = tier1Products.filter(p => this.isValidProduct(p));
+    const tier1Valid = tier1ProductsFiltered.filter(p => this.isValidProduct(p));
     const tier1Scored = tier1Valid.map(product => ({
       ...product,
       ...this.scoreProduct(product, recipient, derived),
@@ -144,21 +148,25 @@ export default class ProductMatcher {
       const tier2Where = {
         ...baseFilters,
         sourceType: { in: ['CURATED_RETAILER', 'SHOPIFY_UPLOAD', 'LEGACY_UNKNOWN'] },
-        OR: recipientInterests.map(interest => ({
-          interestTags: { has: interest }
-        })),
       };
 
       const tier2Products = await prisma.product.findMany({
         where: tier2Where,
         include: { retailer: true },
         orderBy: { qualityScore: 'desc' },
-        take: 100,
+        take: 300,  // Fetch more, filter in-memory for case-insensitive match
       });
 
-      console.log(`   Found ${tier2Products.length} scraped products with interest match`);
+      // Case-insensitive interest matching (in-memory filter)
+      const normalizedRecipientInterests = recipientInterests.map(i => i.toLowerCase());
+      const tier2ProductsWithInterest = tier2Products.filter(product => {
+        const productTags = (product.interestTags || []).map(t => t.toLowerCase());
+        return productTags.some(tag => normalizedRecipientInterests.includes(tag));
+      });
 
-      const tier2Valid = tier2Products.filter(p => this.isValidProduct(p));
+      console.log(`   Found ${tier2ProductsWithInterest.length} scraped products with interest match (from ${tier2Products.length} candidates)`);
+
+      const tier2Valid = tier2ProductsWithInterest.filter(p => this.isValidProduct(p));
       tier2Scored = tier2Valid.map(product => ({
         ...product,
         ...this.scoreProduct(product, recipient, derived),
