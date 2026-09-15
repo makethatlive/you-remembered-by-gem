@@ -146,6 +146,11 @@ export default class GiftListGenerator {
   validateGiftListQuality(gifts, recipient) {
     const reasons = [];
     
+    // Initialize variables at function scope (FIX: avgScore is not defined error)
+    let avgScore = 0;
+    let matchPercentage = 0;
+    const retailerCounts = {};
+    
     // Per client spec: "if there are genuinely fewer than 10 suitable candidates, say so explicitly"
     // No longer require exactly 10 - accept whatever we have
     if (gifts.length < 5) {
@@ -160,7 +165,7 @@ export default class GiftListGenerator {
 
     // Calculate average relevance score (lowered threshold for fallback)
     if (gifts.length > 0) {
-      const avgScore = gifts.reduce((sum, g) => sum + (g.score || 0), 0) / gifts.length;
+      avgScore = gifts.reduce((sum, g) => sum + (g.score || 0), 0) / gifts.length;
       if (avgScore < 15) { // Lowered from 30 to allow general fallbacks
         reasons.push(`Average relevance quite low: ${avgScore.toFixed(1)} (may be general fallback products)`);
       }
@@ -178,7 +183,7 @@ export default class GiftListGenerator {
         return recipientInterests.some(ri => giftInterests.includes(ri));
       });
 
-      const matchPercentage = (matchingGifts.length / gifts.length) * 100;
+      matchPercentage = (matchingGifts.length / gifts.length) * 100;
       if (matchPercentage < 40) { // Lowered from 60% to allow more general products
         reasons.push(`Only ${matchPercentage.toFixed(0)}% of gifts are strong interest matches (this may be acceptable if catalogue coverage is thin)`);
       }
@@ -186,7 +191,6 @@ export default class GiftListGenerator {
 
     // Check for diversity (relaxed for small lists)
     if (gifts.length >= 5) {
-      const retailerCounts = {};
       gifts.forEach(g => {
         const retailer = g.retailer?.name || 'Unknown';
         retailerCounts[retailer] = (retailerCounts[retailer] || 0) + 1;
