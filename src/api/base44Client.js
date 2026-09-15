@@ -811,7 +811,9 @@ export const base44 = {
           throw new Error(error.error || 'Failed to generate gift list');
         }
         
-        return await response.json();
+        const result = await response.json();
+        // Extract data from Express response format: { success: true, data: {...} }
+        return { data: toCamelCase(result.data || result) };
       }
       
       // Availability checking function (for "Re-run Scrape" button)

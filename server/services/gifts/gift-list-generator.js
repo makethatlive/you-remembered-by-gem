@@ -112,6 +112,7 @@ export default class GiftListGenerator {
         return {
           status: 'rejected_quality',
           message: 'Gift list rejected due to quality issues',
+          giftListId: giftList.id,  // For backward compatibility
           giftList: {
             id: giftList.id,
             status: 'REJECTED',
@@ -123,6 +124,7 @@ export default class GiftListGenerator {
       return {
         status: 'pending_approval',
         message: 'Gift list generated successfully',
+        giftListId: giftList.id,  // For backward compatibility
         giftList: {
           id: giftList.id,
           status: giftList.status,
