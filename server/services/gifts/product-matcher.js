@@ -110,7 +110,31 @@ export default class ProductMatcher {
       genderFilter = undefined;
     }
 
-    console.log(`   Gender filter: ${genderFilter ? genderFilter.in.join(', ') : 'None (all products)'}`);
+    // ✅ TEXT-BASED AGE FILTER (for kids/teens)
+    // For recipients under 18, search product text for kid-friendly keywords
+    let ageKeywordFilter;
+    const isKid = ['ZERO_TO_10', 'ELEVEN_TO_17'].includes(ageBand);
+    
+    if (isKid) {
+      // Keywords to search in product name, description, category
+      const kidKeywords = ageBand === 'ZERO_TO_10' 
+        ? ['kid', 'child', 'baby', 'toddler', 'toy', 'game', 'play']
+        : ['teen', 'youth', 'young', 'kid', 'child', 'toy', 'game'];
+      
+      console.log(`   🎯 Kid detected (${ageBand}) - searching text for: ${kidKeywords.join(', ')}`);
+      
+      // Build OR conditions for text search across name/description/category
+      ageKeywordFilter = {
+        OR: kidKeywords.flatMap(keyword => [
+          { name: { contains: keyword, mode: 'insensitive' } },
+          { description: { contains: keyword, mode: 'insensitive' } },
+          { category: { contains: keyword, mode: 'insensitive' } }
+        ])
+      };
+    }
+    // Adults: No age filtering
+
+    console.log(`   Age filter: ${ageKeywordFilter ? 'Applied (text search)' : 'None (Adult)'}`);
 
     // Build base filters (always applied)
     const baseFilters = {
@@ -130,6 +154,11 @@ export default class ProductMatcher {
     // Add gender filter if defined
     if (genderFilter) {
       baseFilters.genderAppliesTo = genderFilter;
+    }
+
+    // ✅ Merge age keyword filter into base filters (for kids only)
+    if (ageKeywordFilter) {
+      Object.assign(baseFilters, ageKeywordFilter);
     }
 
     const recipientInterests = recipient.interests || [];
