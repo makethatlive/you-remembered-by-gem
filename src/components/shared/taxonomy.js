@@ -7,8 +7,8 @@
 // in this header so the line-anchored sed/grep checks only ever see the real
 // marker lines.
 
-// TAXONOMY-SYNC-START v3.0.0
-export const TAXONOMY_VERSION = "3.0.0";
+// TAXONOMY-SYNC-START v3.1.0
+export const TAXONOMY_VERSION = "3.1.0";
 
 // Interest categories. `ui: true` entries appear (in this order) as subscriber-facing
 // checkboxes; `ui: false` entries are Kate's curated-sheet categories — fully

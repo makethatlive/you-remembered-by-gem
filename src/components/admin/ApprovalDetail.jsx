@@ -106,7 +106,7 @@ function GiftCard({ item, action }) {
 // KEEP IN SYNC with R6 — if R6 ever changes the hash field set, the salt or the
 // algorithm, this copy AND RecipientForm's GEN_RELEVANT_FIELDS (W7.3) must change in
 // the same commit (comments point all three ways). budget_min/budget_max are
-// deliberately NOT hashed — same as the server.
+// Hash for checking if USER-EDITABLE fields changed (excludes TAXONOMY_VERSION)
 function computeProfileHash(recipient) {
   const source = JSON.stringify([
     recipient.interests,
@@ -121,7 +121,7 @@ function computeProfileHash(recipient) {
     recipient.ageBand,
     recipient.gender,
     recipient.relationship,
-    TAXONOMY_VERSION,
+    // TAXONOMY_VERSION removed - only check user-editable fields
   ]);
   let hash = 0x811c9dc5;
   for (let i = 0; i < source.length; i++) {

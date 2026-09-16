@@ -3,7 +3,7 @@
  * This is the SINGLE SOURCE OF TRUTH for product classification
  */
 
-export const TAXONOMY_VERSION = "3.0.0";
+export const TAXONOMY_VERSION = "3.1.0";
 
 // Interest categories - matched against product text for tagging
 export const CANONICAL_INTERESTS = [
