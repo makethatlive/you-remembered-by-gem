@@ -287,7 +287,15 @@ export default class ProductMatcher {
     console.log(`   Tier 3 (Fallback - No Interest): ${tier3Scored.length}`);
     console.log(`   Total after scoring: ${scoredProducts.length}`);
 
-    if (scoredProducts.length === 0) {
+    // ✅ LIMIT TO TOP 20 for AI efficiency (reduces tokens & cost)
+    const MAX_PRODUCTS_FOR_AI = 20;
+    const limitedProducts = scoredProducts.slice(0, MAX_PRODUCTS_FOR_AI);
+    
+    if (scoredProducts.length > MAX_PRODUCTS_FOR_AI) {
+      console.log(`   ⚡ Limited to top ${MAX_PRODUCTS_FOR_AI} products for AI efficiency (from ${scoredProducts.length} candidates)`);
+    }
+
+    if (limitedProducts.length === 0) {
       console.warn(`\n⚠️  WARNING: No products found for ${recipient.name}`);
       console.warn(`   This may indicate catalogue coverage gap for:`);
       console.warn(`   - Gender: ${gender}`);
@@ -295,8 +303,8 @@ export default class ProductMatcher {
       console.warn(`   - Interests: ${recipientInterests.join(', ')}`);
     }
 
-    // Return top candidates (up to 100 for AI to choose from)
-    return scoredProducts.slice(0, 100);
+    // Return top 20 candidates for AI (reduces tokens & improves quality)
+    return limitedProducts;
   }
 
   /**
