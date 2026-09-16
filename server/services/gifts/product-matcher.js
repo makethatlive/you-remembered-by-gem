@@ -163,7 +163,10 @@ export default class ProductMatcher {
     console.log(`   Found ${tier1ProductsFiltered.length} premium curated with interest match (from ${tier1Products.length} total)`);
 
     // Score and validate Tier 1
+    console.log(`\n🔍 Validating ${tier1ProductsFiltered.length} Tier 1 products...`);
     const tier1Valid = tier1ProductsFiltered.filter(p => this.isValidProduct(p));
+    console.log(`   ✅ Valid: ${tier1Valid.length} | ❌ Invalid: ${tier1ProductsFiltered.length - tier1Valid.length}`);
+    
     const tier1Scored = tier1Valid.map(product => ({
       ...product,
       ...this.scoreProduct(product, recipient, derived),
@@ -270,6 +273,21 @@ export default class ProductMatcher {
         if (p.tier === 'GENERAL_FALLBACK') {
           return p.score >= 3; // Very low threshold for fallback
         }
+        
+        // ✅ SPECIAL CASE: Recipients under 18 (kids/teens)
+        // They don't have interests/giftTypes in UI, only hobbiesAndInterests
+        // Accept ANY product that passes validation - rely on age band and gender filtering
+        const isYoungRecipient = ['ZERO_TO_10', 'ELEVEN_TO_17'].includes(ageBand);
+        if (isYoungRecipient) {
+          return true; // Accept all valid products for kids - let AI choose best ones
+        }
+        
+        // ✅ SPECIAL CASE: If adult recipient has NO interests at all
+        // Use lower threshold for graceful degradation
+        if (recipientInterests.length === 0) {
+          return p.score >= 8; // Lower threshold when no interests provided
+        }
+        
         return p.score >= this.MIN_SCORE_THRESHOLD;
       })
       .sort((a, b) => {
@@ -286,6 +304,31 @@ export default class ProductMatcher {
     console.log(`   Tier 2 (All Curated + Interest): ${tier2Scored.length}`);
     console.log(`   Tier 3 (Fallback - No Interest): ${tier3Scored.length}`);
     console.log(`   Total after scoring: ${scoredProducts.length}`);
+    
+    // Debug: Show score distribution for young recipients
+    if (['ZERO_TO_10', 'ELEVEN_TO_17'].includes(ageBand) && scoredProducts.length < 10) {
+      console.log(`\n📊 Score distribution (showing why products filtered):`);
+      const allScored = [...tier1Scored, ...tier2Scored, ...tier3Scored];
+      const scoreDist = {
+        '0-3': 0,
+        '3-5': 0,
+        '5-10': 0,
+        '10-15': 0,
+        '15+': 0
+      };
+      allScored.forEach(p => {
+        if (p.score < 3) scoreDist['0-3']++;
+        else if (p.score < 5) scoreDist['3-5']++;
+        else if (p.score < 10) scoreDist['5-10']++;
+        else if (p.score < 15) scoreDist['10-15']++;
+        else scoreDist['15+']++;
+      });
+      console.log(`   0-3 points (passed): ${scoreDist['0-3']}`);
+      console.log(`   3-5 points (passed): ${scoreDist['3-5']}`);
+      console.log(`   5-10 points (passed): ${scoreDist['5-10']}`);
+      console.log(`   10-15 points: ${scoreDist['10-15']}`);
+      console.log(`   15+ points: ${scoreDist['15+']}`);
+    }
 
     // ✅ LIMIT TO TOP 20 for AI efficiency (reduces tokens & cost)
     const MAX_PRODUCTS_FOR_AI = 20;
@@ -377,6 +420,28 @@ export default class ProductMatcher {
       if (matches.length > 0) {
         score += Math.min(20, matches.length * 5);
         signals.push(`Keywords: ${matches.slice(0, 3).join(', ')}`);
+      }
+    }
+
+    // ✅ HOBBIES & INTERESTS MATCHING (for kids/teens and text descriptions)
+    // This field is used for recipients under 18 who don't have structured interests
+    if (recipient.hobbiesAndInterests) {
+      const hobbiesText = recipient.hobbiesAndInterests.toLowerCase();
+      const productText = this.getProductText(product).toLowerCase();
+      
+      // Extract keywords from hobbies text (split by common separators)
+      const hobbyKeywords = hobbiesText
+        .split(/[,;\.]+/)
+        .map(h => h.trim())
+        .filter(h => h.length > 3); // Only meaningful words
+      
+      const matches = hobbyKeywords.filter(hobby => 
+        productText.includes(hobby)
+      );
+      
+      if (matches.length > 0) {
+        score += Math.min(15, matches.length * 5);
+        signals.push(`Hobbies: ${matches.slice(0, 2).join(', ')}`);
       }
     }
 
