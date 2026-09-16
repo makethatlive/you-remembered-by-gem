@@ -100,11 +100,11 @@ export default class ProductMatcher {
     // Gender filter logic (per client spec)
     let genderFilter;
     if (gender === 'MALE' || gender === 'Male') {
-      genderFilter = { in: ['MALE', 'Male', 'MEN', 'Men', 'UNISEX', 'Unisex', 'UNISEX_ADULT'] };
+      genderFilter = { in: ['MALE', 'Male', 'MEN', 'Men', 'UNISEX', 'Unisex', 'UNISEX_ADULT', 'KIDS'] };
     } else if (gender === 'FEMALE' || gender === 'Female') {
-      genderFilter = { in: ['FEMALE', 'Female', 'WOMEN', 'Women', 'UNISEX', 'Unisex', 'UNISEX_ADULT'] };
+      genderFilter = { in: ['FEMALE', 'Female', 'WOMEN', 'Women', 'UNISEX', 'Unisex', 'UNISEX_ADULT', 'KIDS'] };
     } else if (gender === 'NON_BINARY' || gender === 'PREFER_NOT_TO_SAY') {
-      genderFilter = { in: ['UNISEX', 'Unisex', 'UNISEX_ADULT'] };
+      genderFilter = { in: ['UNISEX', 'Unisex', 'UNISEX_ADULT', 'KIDS'] };
     } else {
       // Default: allow all if gender not specified
       genderFilter = undefined;
