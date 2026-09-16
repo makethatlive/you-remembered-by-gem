@@ -188,8 +188,8 @@ export default function RetailersTab() {
               <tr key={r.id} className="border-b border-brand-gold/10 last:border-0">
                 <td className="px-5 py-4 font-display text-base text-brand-dark">{r.name}</td>
                 <td className="px-5 py-4 font-body text-sm text-brand-dark/60 break-all max-w-xs">{r.websiteUrl || r.website_url}</td>
-                <td className="px-5 py-4 font-body text-sm text-brand-dark">{r.category}</td>
-                <td className="px-5 py-4 font-body text-sm text-brand-dark/70">{r.contains_age_restricted_items ? "Yes" : "No"}</td>
+                <td className="px-5 py-4 font-body text-sm text-brand-dark">{getCategoryDisplay(r)}</td>
+                <td className="px-5 py-4 font-body text-sm text-brand-dark/70">{(r.containsAgeRestrictedItems ?? r.contains_age_restricted_items) ? "Yes" : "No"}</td>
                 <td className="px-5 py-4 font-body text-xs text-brand-dark/70 whitespace-nowrap">
                   {countsFor(r.id).total} total · {countsFor(r.id).active} active · {countsFor(r.id).needs_review} review · {countsFor(r.id).inactive} inactive
                 </td>

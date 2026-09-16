@@ -281,7 +281,7 @@ export default class GiftListGenerator {
       },
     });
 
-    // Create gift items
+    // Create gift items (first 5 are 'approved', rest are 'standby' backup)
     const itemPromises = selectedGifts.map((gift, index) =>
       this.prisma.giftItem.create({
         data: {
@@ -296,9 +296,9 @@ export default class GiftListGenerator {
           affiliateUrl: gift.affiliateUrl || gift.affiliate_url,
           retailerName: gift.retailer?.name || 'Unknown',
           whyThisGift: gift.whyThisGift,
-          sourceType: 'CURATED_PRODUCT',
+          sourceType: gift.sourceType || 'CURATED_PRODUCT', // ✅ Use actual sourceType from product
           deliverySpeed: 'STANDARD',
-          status: 'ACTIVE',
+          status: gift.isPrimary ? 'ACTIVE' : 'STANDBY', // First 5 active, rest standby
           selectionScore: gift.score,
           matchedSignals: gift.matchSignals || [],
         },

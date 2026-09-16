@@ -105,11 +105,23 @@ export default class GiftQualityMonitor {
       const product = g.product;
       if (!product) return true;
       
-      return !product.name || 
-             !product.description || 
-             product.description.length < 20 ||
-             !product.productUrl ||
-             (product.qualityScore && product.qualityScore < 50);
+      // Basic checks
+      if (!product.name || !product.productUrl) return true;
+      
+      // ✅ RELAXED: Description not required for CURATED_PRODUCT
+      // CURATED products are manually selected, quality pre-verified
+      if (product.sourceType !== 'CURATED_PRODUCT') {
+        if (!product.description || product.description.length < 20) {
+          return true;
+        }
+      }
+      
+      // Quality score check
+      if (product.qualityScore && product.qualityScore < 50) {
+        return true;
+      }
+      
+      return false;
     });
 
     if (lowQualityProducts.length > 0) {

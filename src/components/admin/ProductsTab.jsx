@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Package, Pencil, AlertTriangle, Plus, Table2, Store, FileSpreadsheet, ArrowUpDown } from "lucide-react";
+import { Package, Pencil, AlertTriangle, Plus, Table2, Store, FileSpreadsheet, ArrowUpDown, Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -42,6 +42,7 @@ export default function ProductsTab() {
   const [sourceFilter, setSourceFilter] = useState("all"); // "all" | "gem_pick" | "catalogue" | "legacy"
   const [gemFirst, setGemFirst] = useState(false); // Source-column sort toggle
   const [selected, setSelected] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // ✅ Search state
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,16 +69,31 @@ export default function ProductsTab() {
   );
 
   const filtered = useMemo(() => {
-    const rows = sourceFiltered.filter(
+    let rows = sourceFiltered.filter(
       (p) =>
         (statusFilter === "all" || p.status === statusFilter) &&
         (retailerFilter === "all" || (p.retailerId || p.retailer_id) === retailerFilter)
     );
+    
+    // ✅ Search filter (name, description, retailer)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      rows = rows.filter((p) => {
+        const name = (p.name || '').toLowerCase();
+        const description = (p.description || '').toLowerCase();
+        const retailer = retailerName(p.retailerId || p.retailer_id).toLowerCase();
+        
+        return name.includes(query) || 
+               description.includes(query) || 
+               retailer.includes(query);
+      });
+    }
+    
     if (!gemFirst) return rows;
     // Stable sort: groups in GROUP_ORDER, newest-first preserved within each group.
     const rank = { gem_pick: 0, catalogue: 1, legacy: 2 };
     return [...rows].sort((a, b) => rank[provenanceGroup(a)] - rank[provenanceGroup(b)]);
-  }, [sourceFiltered, statusFilter, retailerFilter, gemFirst]);
+  }, [sourceFiltered, statusFilter, retailerFilter, searchQuery, gemFirst, retailerName]);
 
   // Pagination calculations
   const totalItems = filtered.length;
@@ -89,7 +105,7 @@ export default function ProductsTab() {
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, retailerFilter, sourceFilter, gemFirst, itemsPerPage]);
+  }, [statusFilter, retailerFilter, sourceFilter, gemFirst, itemsPerPage, searchQuery]);
 
   // Live provenance distribution — doubles as the runtime source_type audit.
   const sourceCounts = useMemo(() => {
@@ -203,8 +219,28 @@ export default function ProductsTab() {
         </>
       ) : (
       <>
-      {/* Filters */}
+      {/* Search and Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[300px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-dark/40" />
+          <input
+            type="text"
+            placeholder="Search products by name, description, or retailer..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 bg-brand-cream-card rounded-full border border-brand-dark/10 font-body text-sm text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-dark/40 hover:text-brand-dark"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="h-10 w-48 bg-brand-cream-card"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -252,6 +288,7 @@ export default function ProductsTab() {
       <div className="flex items-center justify-between mb-3">
         <p className="font-body text-sm text-brand-dark/60">
           Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of {totalItems} products
+          {searchQuery && <span className="text-brand-teal font-medium"> (filtered by search)</span>}
         </p>
       </div>
 

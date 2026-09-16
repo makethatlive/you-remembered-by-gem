@@ -5,10 +5,31 @@
  * based on profile, budget, and preferences.
  */
 
+import { IntelligentMatcher } from './intelligent-matcher.js';
+
 export default class ProductMatcher {
   constructor() {
     this.MIN_SCORE_THRESHOLD = 15; // Lowered from 20 to 15 for small catalogues
     this.MIN_QUALITY_SCORE = 50; // Reject products with poor quality
+    this.matcher = new IntelligentMatcher(); // ✅ Initialize intelligent matcher
+  }
+
+  /**
+   * Deduplicate products by ID, keeping the one with higher tier priority
+   */
+  deduplicateByProductId(products) {
+    const seen = new Map();
+    
+    products.forEach(p => {
+      const existing = seen.get(p.id);
+      
+      // Keep the one with higher priority (lower tierPriority number)
+      if (!existing || p.tierPriority < existing.tierPriority) {
+        seen.set(p.id, p);
+      }
+    });
+    
+    return Array.from(seen.values());
   }
 
   /**
@@ -22,9 +43,12 @@ export default class ProductMatcher {
       return false;
     }
 
-    // Must have description (not just "sss" or similar)
-    if (!product.description || product.description.length < 10 || /^s+$/.test(product.description)) {
-      return false;
+    // ✅ RELAXED: Description not required for CURATED_PRODUCT
+    // CURATED products are manually selected so quality is pre-verified
+    if (product.sourceType !== 'CURATED_PRODUCT') {
+      if (!product.description || product.description.length < 10 || /^s+$/.test(product.description)) {
+        return false;
+      }
     }
 
     // Must have interest tags or gift type tags
@@ -36,6 +60,12 @@ export default class ProductMatcher {
 
     // Must have product URL
     if (!product.productUrl || product.productUrl === 'N/A') {
+      return false;
+    }
+
+    // ✅ Quality score check (must be >= 50 if present)
+    // This matches the quality monitor check to avoid rejection after AI selection
+    if (product.qualityScore !== null && product.qualityScore !== undefined && product.qualityScore < 50) {
       return false;
     }
 
@@ -89,9 +119,10 @@ export default class ProductMatcher {
         gte: budgetMinWithMargin,
         lte: budgetMaxWithMargin,
       },
-      qualityScore: {
-        gte: this.MIN_QUALITY_SCORE,
-      },
+      OR: [
+        { qualityScore: { gte: this.MIN_QUALITY_SCORE } },
+        { qualityScore: null }  // Allow products without quality score (newly imported)
+      ],
       // Note: name, description, productUrl null checks handled in isValidProduct()
       // Prisma doesn't support { not: null } syntax for string fields
     };
@@ -103,8 +134,10 @@ export default class ProductMatcher {
 
     const recipientInterests = recipient.interests || [];
     
-    // TIER 1: Curated + Interest Match (Priority)
-    console.log(`\n📦 TIER 1: Curated products with interest match`);
+    // ═══════════════════════════════════════════════════════════════════════
+    // TIER 1: Premium CURATED_PRODUCT + Interest Match
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log(`\n📦 TIER 1: Premium curated products (CURATED_PRODUCT) + Interest Match`);
     console.log(`   Interests: ${recipientInterests.join(', ') || 'None'}`);
     
     const tier1Where = {
@@ -112,132 +145,146 @@ export default class ProductMatcher {
       sourceType: 'CURATED_PRODUCT',
     };
 
-    // Fetch all curated products, filter interests in-memory for case-insensitive matching
     const tier1Products = await prisma.product.findMany({
       where: tier1Where,
       include: { retailer: true },
       orderBy: { qualityScore: 'desc' },
-      take: 200,  // Fetch more since we're filtering in-memory
+      take: 200,
     });
 
-    // Case-insensitive interest matching
+    // ✅ INTELLIGENT INTEREST MATCHING
     let tier1ProductsFiltered = tier1Products;
     if (recipientInterests.length > 0) {
-      const normalizedRecipientInterests = recipientInterests.map(i => i.toLowerCase());
-      tier1ProductsFiltered = tier1Products.filter(product => {
-        const productTags = (product.interestTags || []).map(t => t.toLowerCase());
-        return productTags.some(tag => normalizedRecipientInterests.includes(tag));
-      });
+      tier1ProductsFiltered = tier1Products.filter(product => 
+        this.matcher.hasInterestMatch(product, recipient)
+      );
     }
 
-    console.log(`   Found ${tier1ProductsFiltered.length} curated products with interest match (from ${tier1Products.length} total curated)`);
+    console.log(`   Found ${tier1ProductsFiltered.length} premium curated with interest match (from ${tier1Products.length} total)`);
 
     // Score and validate Tier 1
     const tier1Valid = tier1ProductsFiltered.filter(p => this.isValidProduct(p));
     const tier1Scored = tier1Valid.map(product => ({
       ...product,
       ...this.scoreProduct(product, recipient, derived),
-      tier: 'CURATED_INTEREST',
+      tier: 'PREMIUM_CURATED',
+      tierPriority: 1  // ✅ Highest priority
     }));
 
-    // TIER 2: Scraped + Interest Match (if Tier 1 insufficient)
+    // ✅ SMART TIER PROGRESSION
+    const TARGET_CANDIDATES = 20; // Sufficient for AI to choose 10 gifts from
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // TIER 2: All Curated Products (CURATED_PRODUCT + CURATED_RETAILER + SHOPIFY_UPLOAD) + Interest Match
+    // ═══════════════════════════════════════════════════════════════════════
     let tier2Scored = [];
-    if (tier1Scored.length < 15 && recipientInterests.length > 0) {
-      console.log(`\n📦 TIER 2: Scraped products with interest match (need ${15 - tier1Scored.length} more)`);
+    if (tier1Scored.length < TARGET_CANDIDATES && recipientInterests.length > 0) {
+      console.log(`\n📦 TIER 2: All curated products (CURATED_RETAILER + SHOPIFY_UPLOAD) + Interest Match`);
+      console.log(`   Need ${TARGET_CANDIDATES - tier1Scored.length} more products`);
       
       const tier2Where = {
         ...baseFilters,
-        sourceType: { in: ['CURATED_RETAILER', 'SHOPIFY_UPLOAD', 'LEGACY_UNKNOWN'] },
+        sourceType: { in: ['CURATED_RETAILER', 'SHOPIFY_UPLOAD'] },
       };
 
       const tier2Products = await prisma.product.findMany({
         where: tier2Where,
         include: { retailer: true },
         orderBy: { qualityScore: 'desc' },
-        take: 300,  // Fetch more, filter in-memory for case-insensitive match
+        take: 300,
       });
 
-      // Case-insensitive interest matching (in-memory filter)
-      const normalizedRecipientInterests = recipientInterests.map(i => i.toLowerCase());
-      const tier2ProductsWithInterest = tier2Products.filter(product => {
-        const productTags = (product.interestTags || []).map(t => t.toLowerCase());
-        return productTags.some(tag => normalizedRecipientInterests.includes(tag));
-      });
+      // ✅ INTELLIGENT INTEREST MATCHING (in-memory filter)
+      const tier2ProductsWithInterest = tier2Products.filter(product =>
+        this.matcher.hasInterestMatch(product, recipient)
+      );
 
-      console.log(`   Found ${tier2ProductsWithInterest.length} scraped products with interest match (from ${tier2Products.length} candidates)`);
+      console.log(`   Found ${tier2ProductsWithInterest.length} curated products with interest match (from ${tier2Products.length} candidates)`);
 
       const tier2Valid = tier2ProductsWithInterest.filter(p => this.isValidProduct(p));
       tier2Scored = tier2Valid.map(product => ({
         ...product,
         ...this.scoreProduct(product, recipient, derived),
-        tier: 'SCRAPED_INTEREST',
+        tier: 'CURATED_BROAD',
+        tierPriority: 2
       }));
+    } else if (tier1Scored.length >= TARGET_CANDIDATES) {
+      console.log(`\n✅ TIER 2: Skipped (Tier 1 has ${tier1Scored.length} products - sufficient)`);
     }
 
-    // TIER 3: ANY product (gender + age + budget only, no interest required)
+    // ═══════════════════════════════════════════════════════════════════════
+    // TIER 3: FALLBACK - All Products (Any sourceType) WITHOUT Interest Match
+    // ═══════════════════════════════════════════════════════════════════════
     let tier3Scored = [];
     const totalSoFar = tier1Scored.length + tier2Scored.length;
     
-    if (totalSoFar < 15) {
-      console.log(`\n📦 TIER 3: Any products matching gender/age/budget (need ${15 - totalSoFar} more)`);
+    if (totalSoFar < TARGET_CANDIDATES) {
+      console.log(`\n📦 TIER 3: Fallback - All products (any source) without interest requirement`);
+      console.log(`   Need ${TARGET_CANDIDATES - totalSoFar} more products`);
       console.log(`   ⚠️  Relaxing interest requirements - graceful degradation`);
-      
-      const tier3Where = {
-        ...baseFilters,
-        // No source filter - both curated and scraped
-        // No interest filter - any product that fits basics
+    
+    const tier3Where = {
+      ...baseFilters,
+      // ✅ NO sourceType filter - includes ALL: CURATED_PRODUCT, CURATED_RETAILER, SHOPIFY_UPLOAD, LEGACY_UNKNOWN
+      // ✅ NO interest filter - any product matching gender/age/budget
+    };
+
+    const tier3Products = await prisma.product.findMany({
+      where: tier3Where,
+      include: { retailer: true },
+      orderBy: { qualityScore: 'desc' },
+      take: 200,
+    });
+
+    console.log(`   Found ${tier3Products.length} fallback products (all sources, no interest match)`);
+
+    // Exclude products already in tier 1 or 2
+    const existingIds = [...tier1Scored, ...tier2Scored].map(p => p.id);
+    const tier3Valid = tier3Products
+      .filter(p => this.isValidProduct(p))
+      .filter(p => !existingIds.includes(p.id));
+
+    tier3Scored = tier3Valid.map(product => {
+      const scoring = this.scoreProduct(product, recipient, derived);
+      return {
+        ...product,
+        ...scoring,
+        tier: 'GENERAL_FALLBACK',
+        tierPriority: 3,  // ✅ Lowest priority
+        score: scoring.score * 0.85, // Light penalty for no interest match
       };
-
-      const tier3Products = await prisma.product.findMany({
-        where: tier3Where,
-        include: { retailer: true },
-        orderBy: { qualityScore: 'desc' },
-        take: 200,
-      });
-
-      console.log(`   Found ${tier3Products.length} general products (no interest match required)`);
-
-      // Exclude products already in tier 1 or 2
-      const existingIds = [...tier1Scored, ...tier2Scored].map(p => p.id);
-      const tier3Valid = tier3Products
-        .filter(p => this.isValidProduct(p))
-        .filter(p => !existingIds.includes(p.id));
-
-      tier3Scored = tier3Valid.map(product => {
-        const scoring = this.scoreProduct(product, recipient, derived);
-        return {
-          ...product,
-          ...scoring,
-          tier: 'GENERAL_FALLBACK',
-          score: scoring.score * 0.85, // Light penalty (was 0.7, too strict for LEGACY products)
-        };
-      });
+    });
+    } else {
+      console.log(`\n✅ TIER 3: Skipped (Tier 1+2 have ${totalSoFar} products - sufficient)`);
     }
 
-    // Merge all tiers
+    // ✅ IMPROVED: Merge all tiers, deduplicate, sort by SCORE FIRST
     const allCandidates = [...tier1Scored, ...tier2Scored, ...tier3Scored];
     
-    // Filter by minimum score threshold (lowered for tier 3)
-    // Per client: "better to offer 1-5 options than nothing"
-    const scoredProducts = allCandidates
+    // Deduplicate by product ID (keep higher tier if duplicate)
+    const uniqueProducts = this.deduplicateByProductId(allCandidates);
+    
+    // Filter by minimum score threshold
+    const scoredProducts = uniqueProducts
       .filter(p => {
         if (p.tier === 'GENERAL_FALLBACK') {
-          return p.score >= 3; // Very low threshold - accept LEGACY products with basic quality
+          return p.score >= 3; // Very low threshold for fallback
         }
         return p.score >= this.MIN_SCORE_THRESHOLD;
       })
       .sort((a, b) => {
-        // Prioritize by tier first, then by score
-        const tierPriority = { CURATED_INTEREST: 3, SCRAPED_INTEREST: 2, GENERAL_FALLBACK: 1 };
-        const tierDiff = tierPriority[b.tier] - tierPriority[a.tier];
-        if (tierDiff !== 0) return tierDiff;
-        return b.score - a.score;
+        // ✅ PRIORITY: Sort by SCORE first, then by tier priority
+        if (b.score !== a.score) {
+          return b.score - a.score;  // Higher score = better
+        }
+        // If scores are equal, prefer higher tier
+        return a.tierPriority - b.tierPriority;  // Lower number = higher priority
       });
 
     console.log(`\n✅ FINAL CANDIDATE POOL:`);
-    console.log(`   Tier 1 (Curated+Interest): ${tier1Scored.length}`);
-    console.log(`   Tier 2 (Scraped+Interest): ${tier2Scored.length}`);
-    console.log(`   Tier 3 (General Fallback): ${tier3Scored.length}`);
+    console.log(`   Tier 1 (Premium Curated + Interest): ${tier1Scored.length}`);
+    console.log(`   Tier 2 (All Curated + Interest): ${tier2Scored.length}`);
+    console.log(`   Tier 3 (Fallback - No Interest): ${tier3Scored.length}`);
     console.log(`   Total after scoring: ${scoredProducts.length}`);
 
     if (scoredProducts.length === 0) {
@@ -269,35 +316,31 @@ export default class ProductMatcher {
       signals.push(`Quality: ${product.qualityScore}/100`);
     }
 
-    // Interest matching - STRICT: Use interestTags array directly
-    const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase());
-    const productInterestTags = (product.interestTags || []).map(t => t.toLowerCase());
+    // ✅ INTELLIGENT INTEREST MATCHING
+    // Use intelligent matcher for fuzzy, semantic, and keyword matching
+    const matches = this.matcher.getMatchingTagsWithScores(product, recipient);
     
-    // Direct tag matching (highest value)
-    const directMatches = recipientInterests.filter(interest => 
-      productInterestTags.includes(interest)
-    );
-    
-    if (directMatches.length > 0) {
-      const matchScore = directMatches.length * 30; // 30 points per exact match
-      score += matchScore;
-      directMatches.forEach(match => {
-        signals.push(`✓ Interest: ${match}`);
+    if (matches.length > 0) {
+      // Add scores for each match
+      matches.forEach(match => {
+        score += match.score;
+        
+        // Add signal with match type indicator
+        const indicator = {
+          'EXACT': '✓',
+          'KEYWORD': '✓',
+          'ALIAS': '≈',
+          'FUZZY': '~',
+          'SEMANTIC': '≈'
+        }[match.matchQuality] || '?';
+        
+        signals.push(`${indicator} Interest: ${match.recipientInterest}`);
       });
-    }
-    
-    // Partial text matching (lower value, fallback)
-    const additionalMatches = recipientInterests.filter(interest => {
-      const interestLower = interest.toLowerCase();
-      return !directMatches.includes(interest) && 
-             productInterestTags.some(tag => tag.includes(interestLower) || interestLower.includes(tag));
-    });
-    
-    if (additionalMatches.length > 0) {
-      score += additionalMatches.length * 15; // 15 points per partial match
-      additionalMatches.forEach(match => {
-        signals.push(`~ Interest: ${match}`);
-      });
+      
+      // Bonus for multiple interest matches
+      if (matches.length > 1) {
+        score += 5;
+      }
     }
 
     // Gift type matching
