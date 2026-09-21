@@ -59,11 +59,12 @@ export class IntelligentMatcher {
       }
     }
     
-    // METHOD 2: ✅ FALLBACK - Check product name/description for keywords
+    // METHOD 2: ✅ FALLBACK - Check product name/description/category for keywords
     // This helps when interest tags are missing or incorrect
     const productText = [
       product.name,
-      product.description
+      product.description,
+      product.category  // ✅ ADDED: Include category for better fallback matching
     ].filter(Boolean).join(' ').toLowerCase();
     
     if (productText.length > 0) {

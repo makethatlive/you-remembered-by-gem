@@ -333,8 +333,16 @@ export default function ProductsTab() {
                 <td className="px-4 py-4 font-display text-base text-brand-dark">{p.name}</td>
                 <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{retailerName(p.retailerId || p.retailer_id)}</td>
                 <td className="px-4 py-4 font-body text-sm text-brand-dark">{p.price != null ? gbp(p.price) : "—"}</td>
-                <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{p.category || "—"}</td>
-                <td className="px-4 py-4 font-body text-sm text-brand-dark/70">{p.genderAppliesTo || p.gender_applies_to || "—"}</td>
+                <td className="px-4 py-4">
+                  {p.category ? (
+                    <CategoryBreadcrumb category={p.category} />
+                  ) : (
+                    <span className="font-body text-sm text-brand-dark/40">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-4">
+                  <GenderDisplay gender={p.genderAppliesTo || p.gender_applies_to} />
+                </td>
                 <td className="px-4 py-4">
                   <span className={`text-xs font-body font-medium px-2.5 py-1 rounded-full ${STATUS_STYLE[p.status] || ""}`}>
                     {STATUS_LABEL[p.status] || p.status}
@@ -461,5 +469,95 @@ function SourceFilterSelect({ value, onChange, counts, total }) {
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+// Category breadcrumb display for hierarchical categories
+function CategoryBreadcrumb({ category }) {
+  if (!category) return <span className="font-body text-sm text-brand-dark/40">—</span>;
+  
+  // Filter out database enum values that aren't real categories
+  const invalidCategories = ['UNISEX_ADULT', 'UNISEX_KIDS', 'MALE', 'FEMALE', 'UNISEX'];
+  if (invalidCategories.includes(category.toUpperCase())) {
+    return <span className="font-body text-sm text-brand-dark/40">—</span>;
+  }
+  
+  // Split by " > " separator
+  const parts = category.split(' > ').map(p => p.trim()).filter(Boolean);
+  
+  if (parts.length === 0) {
+    return <span className="font-body text-sm text-brand-dark/40">—</span>;
+  }
+  
+  // Single level - just show as text
+  if (parts.length === 1) {
+    return (
+      <span className="font-body text-sm text-brand-dark/70">{parts[0]}</span>
+    );
+  }
+  
+  // Multi-level - show as breadcrumb with chevrons
+  return (
+    <div className="flex flex-col gap-0.5">
+      {parts.map((part, index) => (
+        <div key={index} className="flex items-center gap-1.5">
+          {/* Indentation for nested levels */}
+          {index > 0 && (
+            <span className="text-brand-dark/20" style={{ paddingLeft: `${index * 8}px` }}>
+              └
+            </span>
+          )}
+          <span 
+            className={`font-body text-xs ${
+              index === 0 
+                ? 'text-brand-dark/90 font-medium' // Level 1: darker, bold
+                : index === 1
+                ? 'text-brand-dark/70' // Level 2: medium
+                : 'text-brand-dark/50' // Level 3: lighter
+            }`}
+            title={category} // Show full path on hover
+          >
+            {part}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Gender display with proper capitalization
+function GenderDisplay({ gender }) {
+  if (!gender) return <span className="font-body text-sm text-brand-dark/40">—</span>;
+  
+  // Map database enum to display format
+  const genderMap = {
+    'MALE': 'Male',
+    'FEMALE': 'Female',
+    'UNISEX': 'Unisex',
+    'UNISEX_ADULT': 'Unisex',
+    'UNISEX_KIDS': 'Unisex (Kids)',
+    'KIDS': 'Kids',
+    'NON_BINARY': 'Non-binary',
+    // Legacy lowercase support
+    'male': 'Male',
+    'female': 'Female',
+    'unisex': 'Unisex',
+    'kids': 'Kids',
+    'men': 'Male',
+    'women': 'Female',
+    'man': 'Male',
+    'woman': 'Female',
+    'boy': 'Male',
+    'boys': 'Male',
+    'girl': 'Female',
+    'girls': 'Female',
+  };
+  
+  const displayGender = genderMap[gender] || gender;
+  
+  return (
+    <span className="font-body text-sm text-brand-dark/70">
+      {displayGender}
+    </span>
   );
 }

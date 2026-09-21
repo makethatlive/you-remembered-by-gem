@@ -51,11 +51,14 @@ export default class ProductMatcher {
       }
     }
 
-    // Must have interest tags or gift type tags
-    const hasTags = (product.interestTags && product.interestTags.length > 0) ||
-                    (product.giftTypeTags && product.giftTypeTags.length > 0);
-    if (!hasTags) {
-      return false;
+    // ✅ RELAXED: CURATED_PRODUCT can skip tag requirement (manually curated, use category fallback)
+    // Other products must have interest tags or gift type tags for matching
+    if (product.sourceType !== 'CURATED_PRODUCT') {
+      const hasTags = (product.interestTags && product.interestTags.length > 0) ||
+                      (product.giftTypeTags && product.giftTypeTags.length > 0);
+      if (!hasTags) {
+        return false;
+      }
     }
 
     // Must have product URL
@@ -359,12 +362,22 @@ export default class ProductMatcher {
       console.log(`   15+ points: ${scoreDist['15+']}`);
     }
 
-    // ✅ LIMIT TO TOP 20 for AI efficiency (reduces tokens & cost)
+    // ✅ DIVERSITY-BASED SAMPLING: Ensure variety in categories and retailers
     const MAX_PRODUCTS_FOR_AI = 20;
-    const limitedProducts = scoredProducts.slice(0, MAX_PRODUCTS_FOR_AI);
+    let limitedProducts;
     
-    if (scoredProducts.length > MAX_PRODUCTS_FOR_AI) {
-      console.log(`   ⚡ Limited to top ${MAX_PRODUCTS_FOR_AI} products for AI efficiency (from ${scoredProducts.length} candidates)`);
+    if (scoredProducts.length <= MAX_PRODUCTS_FOR_AI) {
+      // If we have 20 or fewer products, use all of them
+      limitedProducts = scoredProducts;
+    } else {
+      // ✅ INTELLIGENT DIVERSITY SAMPLING
+      // Problem: If user selects "Gardening", we don't want all 20 products to be gardening items
+      // Solution: Sample products ensuring category and retailer diversity
+      console.log(`\n🎨 Applying diversity sampling to ${scoredProducts.length} products...`);
+      
+      limitedProducts = this.applyDiversitySampling(scoredProducts, MAX_PRODUCTS_FOR_AI, recipient);
+      
+      console.log(`   ⚡ Selected ${limitedProducts.length} diverse products for AI (from ${scoredProducts.length} candidates)`);
     }
 
     if (limitedProducts.length === 0) {
@@ -377,6 +390,111 @@ export default class ProductMatcher {
 
     // Return top 20 candidates for AI (reduces tokens & improves quality)
     return limitedProducts;
+  }
+
+  /**
+   * Apply diversity sampling to ensure variety in categories and retailers
+   * Prevents sending AI all products from same category (e.g., all gardening items)
+   * 
+   * Strategy:
+   * 1. Group products by top-level category (e.g., "Gardening & outdoor" from "Gardening & outdoor > Plants")
+   * 2. Distribute slots proportionally, but cap per category to force diversity
+   * 3. Within each category, ensure retailer diversity
+   * 4. Fill remaining slots with highest-scoring products
+   * 
+   * @param {Array} products - Scored products sorted by score (descending)
+   * @param {number} targetCount - Target number of products (usually 20)
+   * @param {object} recipient - Recipient data for interest-based weighting
+   * @returns {Array} Diverse subset of products
+   */
+  applyDiversitySampling(products, targetCount, recipient) {
+    if (products.length <= targetCount) return products;
+
+    const selected = [];
+    const categoryGroups = new Map(); // Top-level category -> products
+    const retailerUsage = new Map(); // Retailer ID -> count used
+    
+    // Helper: Extract top-level category from "Cat1 > Cat2 > Cat3"
+    const getTopCategory = (product) => {
+      if (!product.category) return 'Uncategorized';
+      const parts = product.category.split('>').map(p => p.trim());
+      return parts[0] || 'Uncategorized';
+    };
+    
+    // Step 1: Group products by top-level category
+    products.forEach(product => {
+      const topCat = getTopCategory(product);
+      if (!categoryGroups.has(topCat)) {
+        categoryGroups.set(topCat, []);
+      }
+      categoryGroups.get(topCat).push(product);
+    });
+    
+    console.log(`   📊 Found ${categoryGroups.size} top-level categories`);
+    
+    // Step 2: Calculate diversity constraints
+    const MAX_PER_CATEGORY = Math.max(3, Math.floor(targetCount / Math.max(categoryGroups.size, 3)));
+    const MAX_PER_RETAILER = Math.max(3, Math.floor(targetCount / 5)); // Max 5 retailers ideally
+    
+    console.log(`   🎯 Diversity limits: ${MAX_PER_CATEGORY} per category, ${MAX_PER_RETAILER} per retailer`);
+    
+    // Step 3: Sample from each category with retailer diversity
+    const categoryEntries = Array.from(categoryGroups.entries())
+      .sort((a, b) => {
+        // Prioritize categories with higher-scoring products
+        const maxScoreA = Math.max(...a[1].map(p => p.score));
+        const maxScoreB = Math.max(...b[1].map(p => p.score));
+        return maxScoreB - maxScoreA;
+      });
+    
+    // Round 1: Take top products from each category (respecting constraints)
+    for (const [category, categoryProducts] of categoryEntries) {
+      let taken = 0;
+      
+      for (const product of categoryProducts) {
+        if (selected.length >= targetCount) break;
+        if (taken >= MAX_PER_CATEGORY) break;
+        
+        const retailerId = product.retailerId;
+        const retailerCount = retailerUsage.get(retailerId) || 0;
+        
+        // Check retailer limit
+        if (retailerCount >= MAX_PER_RETAILER) continue;
+        
+        // Add product
+        selected.push(product);
+        taken++;
+        retailerUsage.set(retailerId, retailerCount + 1);
+      }
+      
+      if (taken > 0) {
+        console.log(`   ✓ ${category}: ${taken} products`);
+      }
+    }
+    
+    // Round 2: Fill remaining slots with highest-scoring products (ignoring constraints)
+    if (selected.length < targetCount) {
+      console.log(`   📦 Filling remaining ${targetCount - selected.length} slots with top-scored products...`);
+      
+      const selectedIds = new Set(selected.map(p => p.id));
+      
+      for (const product of products) {
+        if (selected.length >= targetCount) break;
+        if (selectedIds.has(product.id)) continue;
+        
+        selected.push(product);
+      }
+    }
+    
+    // Sort final selection by score (AI will see them in score order)
+    selected.sort((a, b) => b.score - a.score);
+    
+    // Log final diversity stats
+    const finalCategories = new Set(selected.map(p => getTopCategory(p)));
+    const finalRetailers = new Set(selected.map(p => p.retailerId));
+    console.log(`   ✅ Final diversity: ${finalCategories.size} categories, ${finalRetailers.size} retailers`);
+    
+    return selected;
   }
 
   /**

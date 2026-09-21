@@ -17,15 +17,22 @@ const HEADER_SYNONYMS = {
   name: ["name", "product name", "product", "item name", "item"],
   product_url: ["product_url", "url", "link", "product link", "product url"],
   image_url: ["image_url", "image", "image link", "image url"],
-  price: ["price", "price (gbp)", "price gbp", "price (£)"],
+  price: ["price", "price (gbp)", "price gbp", "price (£)", "price gbp"],
   retailer_name: ["retailer_name", "retailer", "shop", "site"],
   description: ["description", "blurb"],
+  other_notes: ["other_notes", "other notes", "notes"],
   category: ["category", "interest category"],
+  category_1: ["category_1", "category 1", "cat 1", "cat1"],
+  category_2: ["category_2", "category 2", "cat 2", "cat2"],
+  category_3: ["category_3", "category 3", "cat 3", "cat3"],
   gender_applies_to: ["gender_applies_to", "gender", "for"],
-  age_bands: ["age_bands", "suitable_age_bands", "ages", "age"],
+  age_bands: ["age_bands", "suitable_age_bands", "ages", "age", "age if not general adult"],
+  occasion: ["occasion", "occasion if obviously suited", "occasions"],
+  personality_tags: ["personality_tags", "personality tags", "personality tags optional"],
+  source: ["source"],
   interest_tags: ["interest_tags", "interests", "interest tags"],
   gift_type_tags: ["gift_type_tags", "gift types", "gift type tags"],
-  search_keywords: ["search_keywords", "keywords", "personality tags"],
+  search_keywords: ["search_keywords", "keywords"],
 };
 
 const REQUIRED_HEADERS = ["name", "product_url", "price", "retailer_name"];
@@ -239,14 +246,24 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
   }
   
   const retailers = await prisma.retailer.findMany({
-    select: { id: true, name: true, category: true, curatedOnly: true },
+    select: { id: true, name: true, websiteUrl: true, category: true, curatedOnly: true },
     take: 5000,
   });
   
   const retailerByName = new Map();
+  const retailerByDomain = new Map();
   for (const r of retailers) {
     const key = String(r.name || "").toLowerCase().trim();
     if (key) retailerByName.set(key, r);
+    
+    // Also index by domain
+    if (r.websiteUrl) {
+      try {
+        const url = new URL(r.websiteUrl);
+        const domain = url.hostname.replace(/^www\./, '').toLowerCase();
+        if (domain) retailerByDomain.set(domain, r);
+      } catch { /* ignore invalid URLs */ }
+    }
   }
   
   // Process rows
@@ -294,12 +311,35 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
       continue;
     }
     
-    // Get or create retailer
-    const retailerKey = retailerName.toLowerCase().trim();
-    let retailer = retailerByName.get(retailerKey);
+    // Get or create retailer (DOMAIN-BASED MATCHING)
+    let retailer = null;
     
+    // Step 1: Extract domain from product URL
+    let productDomain = "";
+    try {
+      const url = new URL(canonical);
+      productDomain = url.hostname.replace(/^www\./, '').toLowerCase();
+    } catch { /* ignore */ }
+    
+    // Step 2: Try matching by DOMAIN first (most reliable)
+    if (productDomain) {
+      retailer = retailerByDomain.get(productDomain);
+      if (retailer) {
+        console.log(`   🔗 Matched retailer by domain: ${retailer.name} (${productDomain})`);
+      }
+    }
+    
+    // Step 3: Fallback to NAME matching if domain didn't work
     if (!retailer) {
-      // Auto-create retailer
+      const retailerKey = retailerName.toLowerCase().trim();
+      retailer = retailerByName.get(retailerKey);
+      if (retailer) {
+        console.log(`   🔗 Matched retailer by name: ${retailer.name}`);
+      }
+    }
+    
+    // Step 4: Create new retailer if still not found
+    if (!retailer) {
       let origin = "";
       try { origin = new URL(canonical).origin; } catch { origin = ""; }
       
@@ -313,20 +353,26 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
           data: {
             name: retailerName.trim(),
             websiteUrl: origin,
-            category: "UNISEX_ADULT", // Use the correct Prisma enum value
+            category: "UNISEX_ADULT",
             active: true,
             curatedOnly: true,
           }
         });
         
+        // Index new retailer by both name and domain
+        const retailerKey = retailerName.toLowerCase().trim();
         retailerByName.set(retailerKey, retailer);
+        if (productDomain) {
+          retailerByDomain.set(productDomain, retailer);
+        }
+        
         createdRetailers.push({ 
           name: retailer.name, 
           category: retailer.category, 
           website_url: origin 
         });
         
-        console.log(`   ✨ Created retailer: ${retailer.name}`);
+        console.log(`   ✨ Created retailer: ${retailer.name} (${productDomain || origin})`);
       } catch (e) {
         skipped.push({ row: absoluteRow, name, reason: `retailer auto-create failed: ${e.message}` });
         continue;
@@ -334,8 +380,33 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
     }
     
     // Parse other fields
-    const description = cell(row, "description").slice(0, 1000);
-    const category = cell(row, "category");
+    let description = cell(row, "description").slice(0, 1000);
+    
+    // If no description but "Other notes" column exists, use that
+    if (!description) {
+      description = cell(row, "other_notes") || "";
+    }
+    
+    // Build category from 3-level structure (Category 1 > Category 2 > Category 3)
+    const category1 = cell(row, "category_1");
+    const category2 = cell(row, "category_2");
+    const category3 = cell(row, "category_3");
+    
+    let category = null;
+    if (category1 && category2 && category3) {
+      // Full 3-level: "Food & Drink > Wine & Drinks > Whisky"
+      category = `${category1} > ${category2} > ${category3}`;
+    } else if (category1 && category2) {
+      // 2-level: "Food & Drink > Wine & Drinks"
+      category = `${category1} > ${category2}`;
+    } else if (category1) {
+      // 1-level: "Food & Drink"
+      category = category1;
+    } else {
+      // Fallback to single "category" column if exists
+      category = cell(row, "category") || null;
+    }
+    
     const imageUrl = cell(row, "image_url");
     const genderRaw = cell(row, "gender_applies_to");
     
@@ -358,7 +429,30 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
     
     const interestTags = splitList(cell(row, "interest_tags")).slice(0, 15);
     const giftTypeTags = splitList(cell(row, "gift_type_tags")).slice(0, 15);
-    const searchKeywords = splitList(cell(row, "search_keywords")).slice(0, 15);
+    
+    // Parse personality tags from dedicated column
+    const personalityTags = splitList(cell(row, "personality_tags")).slice(0, 15);
+    
+    // Combine personality tags with search keywords for backward compatibility
+    const searchKeywords = [
+      ...splitList(cell(row, "search_keywords")),
+      ...personalityTags
+    ].slice(0, 15);
+    
+    // Parse occasion (optional)
+    const occasion = cell(row, "occasion");
+    
+    // Parse source (optional)
+    const source = cell(row, "source");
+    
+    // Build notes field combining description + occasion + source
+    let notes = description;
+    if (occasion) {
+      notes = notes ? `${notes}\nOccasion: ${occasion}` : `Occasion: ${occasion}`;
+    }
+    if (source) {
+      notes = notes ? `${notes}\nSource: ${source}` : `Source: ${source}`;
+    }
     
     // Check if product exists
     const existing = existingByUrl.get(canonical);
@@ -374,7 +468,7 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
         where: { id: existing.id }
       });
       
-      if (!existingProduct.description && description) { patch.description = description; filled++; }
+      if (!existingProduct.description && notes) { patch.description = notes; filled++; }
       if (!existingProduct.imageUrl && imageUrl) { patch.imageUrl = imageUrl; filled++; }
       if (!existingProduct.category && category) { patch.category = category; filled++; }
       if (interestTags.length > 0 && (!existingProduct.interestTags || existingProduct.interestTags.length === 0)) {
@@ -401,7 +495,7 @@ export async function importCuratedBatch(prisma, { fileUrl, startRow, batchSize,
         const newProduct = await prisma.product.create({
           data: {
             name,
-            description,
+            description: notes || null,
             productUrl: canonical,
             imageUrl: imageUrl || null,
             price,
