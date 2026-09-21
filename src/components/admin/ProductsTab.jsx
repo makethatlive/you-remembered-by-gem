@@ -335,7 +335,10 @@ export default function ProductsTab() {
                 <td className="px-4 py-4 font-body text-sm text-brand-dark">{p.price != null ? gbp(p.price) : "—"}</td>
                 <td className="px-4 py-4">
                   {p.category ? (
-                    <CategoryBreadcrumb category={p.category} />
+                    <CategoryBreadcrumb 
+                      category={p.category} 
+                      ageBands={p.suitableAgeBands || p.suitable_age_bands} 
+                    />
                   ) : (
                     <span className="font-body text-sm text-brand-dark/40">—</span>
                   )}
@@ -473,7 +476,8 @@ function SourceFilterSelect({ value, onChange, counts, total }) {
 }
 
 // Category breadcrumb display for hierarchical categories
-function CategoryBreadcrumb({ category }) {
+// For Children category, also displays age bands as subcategories
+function CategoryBreadcrumb({ category, ageBands }) {
   if (!category) return <span className="font-body text-sm text-brand-dark/40">—</span>;
   
   // Filter out database enum values that aren't real categories
@@ -489,14 +493,57 @@ function CategoryBreadcrumb({ category }) {
     return <span className="font-body text-sm text-brand-dark/40">—</span>;
   }
   
+  // Check if this is Children category (first level)
+  const isChildrenCategory = parts[0].toLowerCase() === 'children';
+  const hasAgeBands = isChildrenCategory && Array.isArray(ageBands) && ageBands.length > 0;
+  
   // Single level - just show as text
-  if (parts.length === 1) {
+  if (parts.length === 1 && !hasAgeBands) {
     return (
       <span className="font-body text-sm text-brand-dark/70">{parts[0]}</span>
     );
   }
   
-  // Multi-level - show as breadcrumb with chevrons
+  // For Children category with age bands, show as: Children > 1-2, 3-4, 5-6
+  if (isChildrenCategory && hasAgeBands) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        {/* Level 1: Category */}
+        <div className="flex items-center gap-1.5">
+          <span className="font-body text-xs text-brand-dark/90 font-medium">
+            {parts[0]}
+          </span>
+        </div>
+        
+        {/* Level 2: Age bands as subcategories */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-brand-dark/20" style={{ paddingLeft: '8px' }}>
+            └
+          </span>
+          <span 
+            className="font-body text-xs text-brand-dark/70"
+            title={`Age bands: ${ageBands.join(', ')}`}
+          >
+            {ageBands.join(', ')}
+          </span>
+        </div>
+        
+        {/* Level 3+: Any additional subcategories */}
+        {parts.slice(1).map((part, index) => (
+          <div key={index + 1} className="flex items-center gap-1.5">
+            <span className="text-brand-dark/20" style={{ paddingLeft: `${(index + 2) * 8}px` }}>
+              └
+            </span>
+            <span className="font-body text-xs text-brand-dark/50">
+              {part}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  // Multi-level - show as breadcrumb with chevrons (non-Children categories)
   return (
     <div className="flex flex-col gap-0.5">
       {parts.map((part, index) => (

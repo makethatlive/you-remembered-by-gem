@@ -331,29 +331,9 @@ app.post('/api/recipients', async (req, res) => {
       gender = gender.toUpperCase().replace(/\s+/g, '_');
     }
     
-    // Transform ageBand to uppercase enum if provided
-    let ageBand = data.ageBand || data.age_band;
-    if (ageBand && typeof ageBand === 'string') {
-      ageBand = ageBand.toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
-      const ageBandMap = {
-        'UNDER_5': 'UNDER_5',
-        'UNDER5': 'UNDER_5',
-        '5_10': 'FIVE_TO_10',
-        '5_TO_10': 'FIVE_TO_10',
-        '11_17': 'ELEVEN_TO_17',
-        '11_TO_17': 'ELEVEN_TO_17',
-        '18_30': 'EIGHTEEN_TO_30',
-        '18_TO_30': 'EIGHTEEN_TO_30',
-        '31_50': 'THIRTY_ONE_TO_50',
-        '31_TO_50': 'THIRTY_ONE_TO_50',
-        '51_70': 'FIFTY_ONE_TO_70',
-        '51_TO_70': 'FIFTY_ONE_TO_70',
-        '71+': 'SEVENTY_PLUS',
-        '71_PLUS': 'SEVENTY_PLUS',
-        'SEVENTY_PLUS': 'SEVENTY_PLUS',
-      };
-      ageBand = ageBandMap[ageBand] || ageBand;
-    }
+    // Age band - now uses flexible ranges directly from onboarding form
+    // No transformation needed - values like "1-2", "18-25", "75+" are stored as-is
+    const ageBand = data.ageBand || data.age_band;
     
     // Get createdById from subscriber if not provided
     let createdById = data.createdById || data.created_by_id;
@@ -475,31 +455,9 @@ app.patch('/api/recipients/:id', async (req, res) => {
       gender = gender.toUpperCase().replace(/\s+/g, '_');
     }
     
-    // Transform ageBand to uppercase enum if provided
-    let ageBand = data.ageBand || data.age_band;
-    if (ageBand && typeof ageBand === 'string') {
-      // Handle the special case formatting
-      ageBand = ageBand.toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
-      // Map common variations
-      const ageBandMap = {
-        'UNDER_5': 'UNDER_5',
-        'UNDER5': 'UNDER_5',
-        '5_10': 'FIVE_TO_10',
-        '5_TO_10': 'FIVE_TO_10',
-        '11_17': 'ELEVEN_TO_17',
-        '11_TO_17': 'ELEVEN_TO_17',
-        '18_30': 'EIGHTEEN_TO_30',
-        '18_TO_30': 'EIGHTEEN_TO_30',
-        '31_50': 'THIRTY_ONE_TO_50',
-        '31_TO_50': 'THIRTY_ONE_TO_50',
-        '51_70': 'FIFTY_ONE_TO_70',
-        '51_TO_70': 'FIFTY_ONE_TO_70',
-        '71+': 'SEVENTY_PLUS',
-        '71_PLUS': 'SEVENTY_PLUS',
-        'SEVENTY_PLUS': 'SEVENTY_PLUS',
-      };
-      ageBand = ageBandMap[ageBand] || ageBand;
-    }
+    // Age band - now uses flexible ranges directly from onboarding form
+    // No transformation needed - values like "1-2", "18-25", "75+" are stored as-is
+    const ageBand = data.ageBand || data.age_band;
     
     const recipient = await prisma.recipient.update({
       where: { id: req.params.id },

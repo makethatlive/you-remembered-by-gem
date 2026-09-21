@@ -223,7 +223,7 @@ model Recipient {
   gender                Gender
   ageRange              String?   @map("age_range")
   childAgeBracket       String?   @map("child_age_bracket")
-  ageBand               AgeBand   @map("age_band")
+  ageBand               String    @map("age_band") // Flexible format: "1-2", "18-25", "75+", etc.
   budgetMin             Decimal?  @map("budget_min") @db.Decimal(10, 2)
   budgetMax             Decimal?  @map("budget_max") @db.Decimal(10, 2)
   interests             String[]
@@ -265,18 +265,6 @@ enum Gender {
   PREFER_NOT_TO_SAY
 
   @@map("gender")
-}
-
-enum AgeBand {
-  UNDER_5
-  FIVE_TO_10
-  ELEVEN_TO_17
-  EIGHTEEN_TO_30
-  THIRTY_ONE_TO_50
-  FIFTY_ONE_TO_70
-  SEVENTY_PLUS
-
-  @@map("age_band")
 }
 
 // GiftList - collection of gift suggestions

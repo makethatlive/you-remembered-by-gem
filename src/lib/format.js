@@ -51,8 +51,17 @@ export const STATUS_LABEL = {
   trialling: "Trialling",
 };
 
+// Age bands are now human-readable strings matching onboarding form
+// No mapping needed - just pass through the value
+// Examples: "1-2", "18-25", "75+"
+export function formatAgeBand(ageBand) {
+  return ageBand || "";
+}
+
+// Legacy AGE_BAND_LABEL kept for backward compatibility
+// but new age bands ("1-2", "18-25", etc.) don't need mapping
 export const AGE_BAND_LABEL = {
-  // Uppercase (from database)
+  // Old enum format (legacy support - should not be in use after migration)
   UNDER_5: "Under 5",
   FIVE_TO_10: "5-10",
   ELEVEN_TO_17: "11-17",
@@ -60,7 +69,7 @@ export const AGE_BAND_LABEL = {
   THIRTY_ONE_TO_50: "31-50",
   FIFTY_ONE_TO_70: "51-70",
   SEVENTY_PLUS: "70+",
-  // Legacy lowercase support (if needed)
+  // Legacy lowercase
   under_5: "Under 5",
   five_to_10: "5-10",
   eleven_to_17: "11-17",

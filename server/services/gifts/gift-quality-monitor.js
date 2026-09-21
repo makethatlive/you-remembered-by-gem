@@ -68,10 +68,27 @@ export default class GiftQualityMonitor {
     }
 
     // Check 3: Interest matching
-    const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase());
+    // ✅ CATEGORY-BASED MATCHING (aligned with onboarding)
+    // Recipient interests from onboarding match product categories exactly
+    // e.g., recipient interest "Cooking & food" matches product category "Cooking & food"
+    const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase().trim());
     const matchingGifts = gifts.filter(gift => {
-      const productTags = (gift.product?.interestTags || []).map(t => t.toLowerCase());
-      return recipientInterests.some(ri => productTags.includes(ri));
+      const product = gift.product;
+      if (!product) return false;
+      
+      // Primary match: Product category matches recipient interest
+      const category = (product.category || '').toLowerCase();
+      const categoryMatch = recipientInterests.some(interest => {
+        // Check if category starts with the interest (handles "Cooking & food > Baking")
+        return category.startsWith(interest) || category.includes(interest);
+      });
+      
+      // Secondary match: Interest tags (for legacy products)
+      const productTags = (product.interestTags || []).map(t => t.toLowerCase());
+      const tagMatch = recipientInterests.some(ri => productTags.includes(ri));
+      
+      // Match if either category or tags match
+      return categoryMatch || tagMatch;
     });
 
     const matchPercentage = (matchingGifts.length / gifts.length) * 100;

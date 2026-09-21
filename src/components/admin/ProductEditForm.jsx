@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { SOURCE_LABELS_EDIT } from "@/lib/provenance";
+import { getAllowedAgeBands } from "@/lib/ageRangeUtils";
 
 const STATUSES = ["NEEDS_REVIEW", "ACTIVE", "INACTIVE", "REPORTED_BROKEN"];
 
@@ -42,6 +44,7 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
     image_url: product.imageUrl || product.image_url || "",
     category: product.category || "",
     gender_applies_to: product.genderAppliesTo || product.gender_applies_to || "",
+    suitable_age_bands: product.suitableAgeBands || product.suitable_age_bands || [],
     age_restricted: product.ageRestricted ?? product.age_restricted ?? false,
     status: normalizeStatus(product.status),
     source_type: normalizeSourceType(product.sourceType || product.source_type),
@@ -50,6 +53,14 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
   const [previewBroken, setPreviewBroken] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const toggleBand = (band) =>
+    setForm((f) => ({
+      ...f,
+      suitable_age_bands: f.suitable_age_bands.includes(band)
+        ? f.suitable_age_bands.filter((b) => b !== band)
+        : [...f.suitable_age_bands, band],
+    }));
 
   const mutation = useMutation({
     mutationFn: (payload) => base44.entities.Product.update(product.id, payload),
@@ -129,6 +140,49 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
         <Field label="Gender Applies To">
           <Input value={form.gender_applies_to} onChange={(e) => set("gender_applies_to", e.target.value)} className="h-12" />
         </Field>
+        
+        {/* Suitable Age Bands */}
+        <div className="space-y-1.5">
+          <Label className="font-body text-sm text-brand-dark/80">Suitable Age Bands</Label>
+          <p className="font-body text-xs text-brand-dark/50 mb-2">
+            Select all age ranges this product is suitable for.
+          </p>
+          
+          {/* Children age bands */}
+          <div className="mb-3">
+            <p className="font-body text-xs font-medium text-brand-dark/60 mb-2">Children (Ages 1-17)</p>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-2.5">
+              {["1-2", "3-4", "5-6", "7-8", "9-11", "12-17"].map((band) => (
+                <label key={band} className="flex items-center gap-2.5 font-body text-sm text-brand-dark/80 cursor-pointer">
+                  <Checkbox
+                    checked={form.suitable_age_bands.includes(band)}
+                    onCheckedChange={() => toggleBand(band)}
+                    className="border-brand-teal data-[state=checked]:bg-brand-teal data-[state=checked]:border-brand-teal"
+                  />
+                  <span>{band}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          
+          {/* Adult age bands */}
+          <div>
+            <p className="font-body text-xs font-medium text-brand-dark/60 mb-2">Adults (Ages 18+)</p>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-2.5">
+              {["18-25", "26-35", "36-45", "46-55", "56-65", "66-75", "75+"].map((band) => (
+                <label key={band} className="flex items-center gap-2.5 font-body text-sm text-brand-dark/80 cursor-pointer">
+                  <Checkbox
+                    checked={form.suitable_age_bands.includes(band)}
+                    onCheckedChange={() => toggleBand(band)}
+                    className="border-brand-teal data-[state=checked]:bg-brand-teal data-[state=checked]:border-brand-teal"
+                  />
+                  <span>{band}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        
         <Field label="Status">
           <Select value={form.status} onValueChange={(v) => set("status", v)}>
             <SelectTrigger className="h-12">

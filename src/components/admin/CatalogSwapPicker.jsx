@@ -4,17 +4,7 @@ import { Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { gbp } from "@/lib/format";
 import { SOURCE_LABELS } from "@/lib/provenance";
-
-const UNDER_18_BANDS = new Set([
-  // Uppercase enum values from database
-  "UNDER_5",
-  "FIVE_TO_10", 
-  "ELEVEN_TO_17",
-  // Legacy lowercase support
-  "Under 5",
-  "5-10",
-  "11-17"
-]);
+import { doAgeRangesOverlap, isChildrenAgeBand } from "@/lib/ageRangeUtils";
 
 function normaliseGender(value) {
   const gender = (value || "").toLowerCase();
@@ -50,7 +40,7 @@ export default function CatalogSwapPicker({ recipient, onAdd, busy }) {
   const retailerById = new Map(retailers.map((r) => [r.id, r]));
   const min = Number(recipient?.budgetMin);
   const max = Number(recipient?.budgetMax);
-  const isUnder18 = UNDER_18_BANDS.has(recipient?.ageBand);
+  const isUnder18 = isChildrenAgeBand(recipient?.ageBand);
 
   const filtered = products.filter((p) => {
     // Budget filtering
@@ -59,13 +49,11 @@ export default function CatalogSwapPicker({ recipient, onAdd, busy }) {
     
     const retailer = retailerById.get(p.retailerId);
     
-    // Age band filtering - only exclude if explicitly incompatible
-    // If suitableAgeBands is not set or empty, allow the product through
-    const expectedBand = isUnder18 ? recipient?.ageBand : "18+";
+    // ✅ Age band filtering using flexible range overlap
+    // Check if recipient's age band overlaps with product's suitable age bands
     const ageBands = p.suitableAgeBands || p.suitable_age_bands;
-    if (Array.isArray(ageBands) && ageBands.length > 0) {
-      // Only filter out if age bands are specified AND recipient's band is not included
-      if (!ageBands.includes(expectedBand)) return false;
+    if (!doAgeRangesOverlap(recipient?.ageBand, ageBands)) {
+      return false; // No age overlap - exclude product
     }
     
     // Don't show obviously children's products to adults

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, ArrowUpCircle, ArrowDownCircle, X, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { gbp, LIST_LABEL, formatShortDate, AGE_BAND_LABEL, GENDER_LABEL } from "@/lib/format";
+import { gbp, LIST_LABEL, formatShortDate, formatAgeBand, AGE_BAND_LABEL, GENDER_LABEL } from "@/lib/format";
 import { toast } from "@/components/ui/use-toast";
 import ManualGiftForm from "@/components/admin/ManualGiftForm";
 import CatalogSwapPicker from "@/components/admin/CatalogSwapPicker";
@@ -522,7 +522,7 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <ProfileRow label="Relationship" value={recipient?.relationship} />
           <ProfileRow label="Gender" value={GENDER_LABEL[recipient?.gender] || recipient?.gender} />
-          <ProfileRow label="Age band" value={AGE_BAND_LABEL[recipient?.ageBand] || recipient?.ageBand} />
+          <ProfileRow label="Age band" value={formatAgeBand(recipient?.ageBand) || AGE_BAND_LABEL[recipient?.ageBand] || recipient?.ageBand} />
           <ProfileRow
             label="Budget"
             value={

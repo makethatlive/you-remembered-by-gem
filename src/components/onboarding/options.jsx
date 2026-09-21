@@ -102,30 +102,35 @@ export const PERSONAL_OCCASIONS = ["Birthday", "Anniversary", "Other"];
 export const CHILD_INTERESTS_HELPER =
   "Tell me anything about what they love — e.g. dinosaurs, princesses, a particular cartoon, building things, animals. Anything at all helps.\n\nDon't worry if you don't know, or if they're too young to have clear interests yet — I have plenty of age-appropriate ideas I can share regardless.";
 
-// Map the onboarding age range onto the age_band enum the gift logic relies on.
+// Map the onboarding age range to the age_band used for gift matching.
+// These now return the exact onboarding form values (no transformation needed).
 export function ageBandFromRange(range) {
+  // Return the exact range from the form - no enum mapping
   switch (range) {
-    case "12-17": return "11-17";
-    case "18-25":
-    case "26-35": return "18-30";
-    case "36-45":
-    case "46-55": return "31-50";
-    case "56-65":
-    case "66-75": return "51-70";
-    case "75+": return "71+";
-    default: return "31-50";
+    case "18-25": return "18-25";
+    case "26-35": return "26-35";
+    case "36-45": return "36-45";
+    case "46-55": return "46-55";
+    case "56-65": return "56-65";
+    case "66-75": return "66-75";
+    case "75+": return "75+";
+    case "12-17": return "12-17"; // Teens can be selected as "All adults" too
+    default: return "26-35"; // Default to young professional
   }
 }
 
-// Map the detailed child age bracket onto the age_band enum.
+// Map the detailed child age bracket to the age_band used for gift matching.
+// These return the exact child age ranges from onboarding form.
 export function ageBandFromChildBracket(bracket) {
+  // Return the exact bracket - these are already in the correct format
   switch (bracket) {
-    case "1-2":
-    case "3-4": return "Under 5";
-    case "5-6":
-    case "7-8": return "5-10";
-    case "9-11": return "11-17";
-    default: return "5-10";
+    case "1-2": return "1-2";
+    case "3-4": return "3-4";
+    case "5-6": return "5-6";
+    case "7-8": return "7-8";
+    case "9-11": return "9-11";
+    case "12-17": return "12-17";
+    default: return "5-6"; // Default to early school age
   }
 }
 

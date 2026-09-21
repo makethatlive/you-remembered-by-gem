@@ -6,6 +6,7 @@
  */
 
 import { IntelligentMatcher } from './intelligent-matcher.js';
+import { doAgeRangesOverlap, isChildrenAgeBand } from '../../lib/ageRangeUtils.js';
 
 export default class ProductMatcher {
   constructor() {
@@ -43,22 +44,27 @@ export default class ProductMatcher {
       return false;
     }
 
-    // ✅ RELAXED: Description not required for CURATED_PRODUCT
-    // CURATED products are manually selected so quality is pre-verified
-    if (product.sourceType !== 'CURATED_PRODUCT') {
-      if (!product.description || product.description.length < 10 || /^s+$/.test(product.description)) {
+    // ✅ GEM'S PICKS (CURATED_PRODUCT): Minimal validation
+    // These are manually curated by Gem - trust the quality
+    if (product.sourceType === 'CURATED_PRODUCT') {
+      // Only check essentials: name and product URL
+      if (!product.productUrl || product.productUrl === 'N/A') {
         return false;
       }
+      return true; // Accept all Gem's Picks - Gem has vetted them
     }
 
-    // ✅ RELAXED: CURATED_PRODUCT can skip tag requirement (manually curated, use category fallback)
-    // Other products must have interest tags or gift type tags for matching
-    if (product.sourceType !== 'CURATED_PRODUCT') {
-      const hasTags = (product.interestTags && product.interestTags.length > 0) ||
-                      (product.giftTypeTags && product.giftTypeTags.length > 0);
-      if (!hasTags) {
-        return false;
-      }
+    // ✅ OTHER SOURCES: Stricter validation
+    // CURATED_RETAILER and SHOPIFY_UPLOAD need description
+    if (!product.description || product.description.length < 10 || /^\s+$/.test(product.description)) {
+      return false;
+    }
+
+    // Must have interest tags or gift type tags for matching
+    const hasTags = (product.interestTags && product.interestTags.length > 0) ||
+                    (product.giftTypeTags && product.giftTypeTags.length > 0);
+    if (!hasTags) {
+      return false;
     }
 
     // Must have product URL
@@ -66,18 +72,39 @@ export default class ProductMatcher {
       return false;
     }
 
-    // ✅ Quality score check (must be >= 50 if present)
-    // This matches the quality monitor check to avoid rejection after AI selection
+    // ✅ Quality score check for non-Gem products only
     if (product.qualityScore !== null && product.qualityScore !== undefined && product.qualityScore < 50) {
       return false;
     }
 
-    // Must not have critical data quality flags
-    if (product.dataQualityFlags && product.dataQualityFlags.includes('missing_description')) {
-      return false;
-    }
-
     return true;
+  }
+
+  /**
+   * Convert old age band enums to new flexible format
+   * @param {string} ageBand - Age band (old enum or new format)
+   * @returns {string[]} Array of possible age bands in new format
+   */
+  normalizeAgeBand(ageBand) {
+    if (!ageBand) return [];
+    
+    // If already in new format (contains "-" or ends with "+"), return as-is
+    if (ageBand.includes('-') || ageBand.endsWith('+')) {
+      return [ageBand];
+    }
+    
+    // Convert old enums to new format (try all possible ranges)
+    const enumMapping = {
+      'UNDER_5': ['1-2', '3-4'],
+      'FIVE_TO_TEN': ['5-6', '7-8', '9-11'],
+      'ELEVEN_TO_17': ['12-17'],
+      'EIGHTEEN_TO_30': ['18-25', '26-35'],
+      'THIRTY_ONE_TO_50': ['36-45', '46-55'],
+      'FIFTY_TO_SIXTY_FIVE': ['56-65'],
+      'SIXTY_FIVE_PLUS': ['66-75', '75+'],
+    };
+    
+    return enumMapping[ageBand] || [ageBand]; // Fallback to original if unknown
   }
 
   /**
@@ -87,18 +114,29 @@ export default class ProductMatcher {
    * @returns {Promise<array>} Array of scored products
    */
   async findMatchingProducts(recipient, prisma) {
-    const { budgetMin, budgetMax, ageBand, gender } = recipient;
+    const { budgetMin, budgetMax, ageBand: rawAgeBand, gender } = recipient;
     const derived = recipient.derivedProfile || {};
 
+    // ✅ Normalize age band (convert old enums to new format)
+    const possibleAgeBands = this.normalizeAgeBand(rawAgeBand);
+    const ageBand = possibleAgeBands[0]; // Use first option for child detection
+    
     console.log(`\n🔍 Finding products for ${recipient.name}`);
     console.log(`   Budget: £${budgetMin}-£${budgetMax} (with ±5% margin)`);
     console.log(`   Gender: ${gender}`);
-    console.log(`   Age Band: ${ageBand}`);
+    console.log(`   Age Band: ${rawAgeBand}${possibleAgeBands.length > 1 ? ` → ${possibleAgeBands.join(' or ')}` : ''}`);
 
     // HARD FILTERS - Applied before AI sees anything
     // Budget with ±5% margin
     const budgetMinWithMargin = (budgetMin || 0) * 0.95;
     const budgetMaxWithMargin = (budgetMax || 1000) * 1.05;
+
+    // ✅ CHILDREN DETECTION (1-11 years)
+    // Children age bands: "1-2", "3-4", "5-6", "7-8", "9-11"
+    const childrenAgeBands = ["1-2", "3-4", "5-6", "7-8", "9-11"];
+    const isChild = childrenAgeBands.includes(ageBand);
+    
+    console.log(`   🎯 Recipient Type: ${isChild ? 'CHILD (1-11) - Gem\'s Picks + Children category ONLY' : 'TEEN/ADULT (12+) - All sources'}`);
 
     // Gender filter logic (per client spec)
     let genderFilter;
@@ -113,32 +151,6 @@ export default class ProductMatcher {
       genderFilter = undefined;
     }
 
-    // ✅ TEXT-BASED AGE FILTER (for kids/teens)
-    // For recipients under 18, search product text for kid-friendly keywords
-    let ageKeywordFilter;
-    const isKid = ['ZERO_TO_10', 'ELEVEN_TO_17'].includes(ageBand);
-    
-    if (isKid) {
-      // Keywords to search in product name, description, category
-      const kidKeywords = ageBand === 'ZERO_TO_10' 
-        ? ['kid', 'child', 'baby', 'toddler', 'toy', 'game', 'play']
-        : ['teen', 'youth', 'young', 'kid', 'child', 'toy', 'game'];
-      
-      console.log(`   🎯 Kid detected (${ageBand}) - searching text for: ${kidKeywords.join(', ')}`);
-      
-      // Build OR conditions for text search across name/description/category
-      ageKeywordFilter = {
-        OR: kidKeywords.flatMap(keyword => [
-          { name: { contains: keyword, mode: 'insensitive' } },
-          { description: { contains: keyword, mode: 'insensitive' } },
-          { category: { contains: keyword, mode: 'insensitive' } }
-        ])
-      };
-    }
-    // Adults: No age filtering
-
-    console.log(`   Age filter: ${ageKeywordFilter ? 'Applied (text search)' : 'None (Adult)'}`);
-
     // Build base filters (always applied)
     const baseFilters = {
       status: 'ACTIVE',  // Only fetch ACTIVE products
@@ -150,8 +162,6 @@ export default class ProductMatcher {
         { qualityScore: { gte: this.MIN_QUALITY_SCORE } },
         { qualityScore: null }  // Allow products without quality score (newly imported)
       ],
-      // Note: name, description, productUrl null checks handled in isValidProduct()
-      // Prisma doesn't support { not: null } syntax for string fields
     };
 
     // Add gender filter if defined
@@ -159,22 +169,31 @@ export default class ProductMatcher {
       baseFilters.genderAppliesTo = genderFilter;
     }
 
-    // ✅ Merge age keyword filter into base filters (for kids only)
-    if (ageKeywordFilter) {
-      Object.assign(baseFilters, ageKeywordFilter);
+    // ✅ CHILDREN-SPECIFIC FILTERS (1-11 years)
+    // For children (1-11), ONLY Gem's Picks from Children category
+    if (isChild) {
+      baseFilters.sourceType = 'CURATED_PRODUCT'; // ONLY Gem's Picks
+      baseFilters.category = {
+        startsWith: 'Children' // Category must start with "Children"
+      };
+      console.log(`   🎯 Child filters applied: CURATED_PRODUCT + Children category only`);
     }
+    // For teens/adults (12+): No source or category restrictions
 
     const recipientInterests = recipient.interests || [];
     
     // ═══════════════════════════════════════════════════════════════════════
     // TIER 1: Premium CURATED_PRODUCT + Interest Match
+    // For children (1-11): baseFilters already restricts to CURATED_PRODUCT + Children category
+    // For teens/adults (12+): This tier adds CURATED_PRODUCT restriction
     // ═══════════════════════════════════════════════════════════════════════
     console.log(`\n📦 TIER 1: Premium curated products (CURATED_PRODUCT) + Interest Match`);
     console.log(`   Interests: ${recipientInterests.join(', ') || 'None'}`);
     
     const tier1Where = {
       ...baseFilters,
-      sourceType: 'CURATED_PRODUCT',
+      sourceType: 'CURATED_PRODUCT', // For teens/adults, this adds the restriction
+                                      // For children, this matches baseFilters
     };
 
     const tier1Products = await prisma.product.findMany({
@@ -199,7 +218,22 @@ export default class ProductMatcher {
     const tier1Valid = tier1ProductsFiltered.filter(p => this.isValidProduct(p));
     console.log(`   ✅ Valid: ${tier1Valid.length} | ❌ Invalid: ${tier1ProductsFiltered.length - tier1Valid.length}`);
     
-    const tier1Scored = tier1Valid.map(product => ({
+    // ✅ AGE BAND OVERLAP FILTER
+    // Filter products by age band overlap (recipient's age must overlap with product's suitable age bands)
+    // For old enums, try all possible age ranges
+    const tier1AgeFiltered = tier1Valid.filter(product => {
+      const productAgeBands = product.suitableAgeBands || [];
+      // Check if ANY of the possible recipient age bands overlap with product
+      return possibleAgeBands.some(recipientBand => 
+        doAgeRangesOverlap(recipientBand, productAgeBands)
+      );
+    });
+    
+    if (tier1Valid.length !== tier1AgeFiltered.length) {
+      console.log(`   🎯 Age band filter: ${tier1AgeFiltered.length} match (${tier1Valid.length - tier1AgeFiltered.length} removed by age mismatch)`);
+    }
+    
+    const tier1Scored = tier1AgeFiltered.map(product => ({
       ...product,
       ...this.scoreProduct(product, recipient, derived),
       tier: 'PREMIUM_CURATED',
@@ -210,10 +244,11 @@ export default class ProductMatcher {
     const TARGET_CANDIDATES = 20; // Sufficient for AI to choose 10 gifts from
     
     // ═══════════════════════════════════════════════════════════════════════
-    // TIER 2: All Curated Products (CURATED_PRODUCT + CURATED_RETAILER + SHOPIFY_UPLOAD) + Interest Match
+    // TIER 2: All Curated Products (CURATED_RETAILER + SHOPIFY_UPLOAD) + Interest Match
+    // ⚠️ SKIP FOR CHILDREN - Children (1-11) ONLY get Gem's Picks (Tier 1)
     // ═══════════════════════════════════════════════════════════════════════
     let tier2Scored = [];
-    if (tier1Scored.length < TARGET_CANDIDATES && recipientInterests.length > 0) {
+    if (!isChild && tier1Scored.length < TARGET_CANDIDATES && recipientInterests.length > 0) {
       console.log(`\n📦 TIER 2: All curated products (CURATED_RETAILER + SHOPIFY_UPLOAD) + Interest Match`);
       console.log(`   Need ${TARGET_CANDIDATES - tier1Scored.length} more products`);
       
@@ -237,23 +272,40 @@ export default class ProductMatcher {
       console.log(`   Found ${tier2ProductsWithInterest.length} curated products with interest match (from ${tier2Products.length} candidates)`);
 
       const tier2Valid = tier2ProductsWithInterest.filter(p => this.isValidProduct(p));
-      tier2Scored = tier2Valid.map(product => ({
+      
+      // ✅ AGE BAND OVERLAP FILTER
+      const tier2AgeFiltered = tier2Valid.filter(product => {
+        const productAgeBands = product.suitableAgeBands || [];
+        // Check if ANY of the possible recipient age bands overlap with product
+        return possibleAgeBands.some(recipientBand => 
+          doAgeRangesOverlap(recipientBand, productAgeBands)
+        );
+      });
+      
+      if (tier2Valid.length !== tier2AgeFiltered.length) {
+        console.log(`   🎯 Age band filter: ${tier2AgeFiltered.length} match (${tier2Valid.length - tier2AgeFiltered.length} removed by age mismatch)`);
+      }
+      
+      tier2Scored = tier2AgeFiltered.map(product => ({
         ...product,
         ...this.scoreProduct(product, recipient, derived),
         tier: 'CURATED_BROAD',
         tierPriority: 2
       }));
+    } else if (isChild) {
+      console.log(`\n⏭️  TIER 2: Skipped (Children 1-11 ONLY get Gem's Picks from Tier 1)`);
     } else if (tier1Scored.length >= TARGET_CANDIDATES) {
       console.log(`\n✅ TIER 2: Skipped (Tier 1 has ${tier1Scored.length} products - sufficient)`);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     // TIER 3: FALLBACK - All Products (Any sourceType) WITHOUT Interest Match
+    // ⚠️ SKIP FOR CHILDREN - Children (1-11) ONLY get Gem's Picks (Tier 1)
     // ═══════════════════════════════════════════════════════════════════════
     let tier3Scored = [];
     const totalSoFar = tier1Scored.length + tier2Scored.length;
     
-    if (totalSoFar < TARGET_CANDIDATES) {
+    if (!isChild && totalSoFar < TARGET_CANDIDATES) {
       console.log(`\n📦 TIER 3: Fallback - All products (any source) without interest requirement`);
       console.log(`   Need ${TARGET_CANDIDATES - totalSoFar} more products`);
       console.log(`   ⚠️  Relaxing interest requirements - graceful degradation`);
@@ -279,7 +331,20 @@ export default class ProductMatcher {
       .filter(p => this.isValidProduct(p))
       .filter(p => !existingIds.includes(p.id));
 
-    tier3Scored = tier3Valid.map(product => {
+    // ✅ AGE BAND OVERLAP FILTER
+    const tier3AgeFiltered = tier3Valid.filter(product => {
+      const productAgeBands = product.suitableAgeBands || [];
+      // Check if ANY of the possible recipient age bands overlap with product
+      return possibleAgeBands.some(recipientBand => 
+        doAgeRangesOverlap(recipientBand, productAgeBands)
+      );
+    });
+    
+    if (tier3Valid.length !== tier3AgeFiltered.length) {
+      console.log(`   🎯 Age band filter: ${tier3AgeFiltered.length} match (${tier3Valid.length - tier3AgeFiltered.length} removed by age mismatch)`);
+    }
+
+    tier3Scored = tier3AgeFiltered.map(product => {
       const scoring = this.scoreProduct(product, recipient, derived);
       return {
         ...product,
@@ -289,6 +354,8 @@ export default class ProductMatcher {
         score: scoring.score * 0.85, // Light penalty for no interest match
       };
     });
+    } else if (isChild) {
+      console.log(`\n⏭️  TIER 3: Skipped (Children 1-11 ONLY get Gem's Picks from Tier 1)`);
     } else {
       console.log(`\n✅ TIER 3: Skipped (Tier 1+2 have ${totalSoFar} products - sufficient)`);
     }
@@ -306,12 +373,11 @@ export default class ProductMatcher {
           return p.score >= 3; // Very low threshold for fallback
         }
         
-        // ✅ SPECIAL CASE: Recipients under 18 (kids/teens)
-        // They don't have interests/giftTypes in UI, only hobbiesAndInterests
-        // Accept ANY product that passes validation - rely on age band and gender filtering
-        const isYoungRecipient = ['ZERO_TO_10', 'ELEVEN_TO_17'].includes(ageBand);
-        if (isYoungRecipient) {
-          return true; // Accept all valid products for kids - let AI choose best ones
+        // ✅ SPECIAL CASE: Children recipients (1-11)
+        // They don't have structured interests in UI, only hobbiesAndInterests
+        // Accept ANY product that passes validation - rely on Gem's Pick + Children category filtering
+        if (isChild) {
+          return true; // Accept all valid Gem's Picks from Children category - let AI choose best ones
         }
         
         // ✅ SPECIAL CASE: If adult recipient has NO interests at all
@@ -337,9 +403,9 @@ export default class ProductMatcher {
     console.log(`   Tier 3 (Fallback - No Interest): ${tier3Scored.length}`);
     console.log(`   Total after scoring: ${scoredProducts.length}`);
     
-    // Debug: Show score distribution for young recipients
-    if (['ZERO_TO_10', 'ELEVEN_TO_17'].includes(ageBand) && scoredProducts.length < 10) {
-      console.log(`\n📊 Score distribution (showing why products filtered):`);
+    // Debug: Show score distribution for children recipients
+    if (isChild && scoredProducts.length < 10) {
+      console.log(`\n📊 Score distribution for children (showing why products filtered):`);
       const allScored = [...tier1Scored, ...tier2Scored, ...tier3Scored];
       const scoreDist = {
         '0-3': 0,
@@ -508,7 +574,57 @@ export default class ProductMatcher {
     const signals = [];
     let score = 0;
 
-    // Base quality score
+    // ✅ GEM'S PICKS: Runtime calculated scoring (no database quality score)
+    // Gem's curated products don't have quality scores - calculate based on category match
+    if (product.sourceType === 'CURATED_PRODUCT') {
+      // Start with base score for being Gem's Pick
+      score = 50; // Base score for curated quality
+      
+      // Category match is PRIMARY signal for Gem's Picks
+      const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase().trim());
+      const productCategory = (product.category || '').toLowerCase();
+      
+      const categoryMatches = recipientInterests.filter(interest => {
+        return productCategory.startsWith(interest) || productCategory.includes(interest);
+      });
+      
+      if (categoryMatches.length > 0) {
+        score += 30; // Strong bonus for category match
+        categoryMatches.forEach(match => {
+          signals.push(`✓ Category: ${match}`);
+        });
+      }
+      
+      // Price preference (favor middle of budget range)
+      if (recipient.budgetMin && recipient.budgetMax) {
+        const midpoint = (recipient.budgetMin + recipient.budgetMax) / 2;
+        const range = recipient.budgetMax - recipient.budgetMin;
+        const distance = Math.abs(product.price - midpoint) / range;
+        const budgetScore = Math.max(0, 10 - distance * 10);
+        score += budgetScore;
+        
+        if (budgetScore > 5) {
+          signals.push(`Price: £${product.price}`);
+        }
+      }
+      
+      // Name/description keyword matching with interests
+      const productText = `${product.name} ${product.description || ''}`.toLowerCase();
+      recipientInterests.forEach(interest => {
+        if (productText.includes(interest)) {
+          score += 5;
+          signals.push(`~${interest}`);
+        }
+      });
+      
+      return {
+        score: Math.round(score * 10) / 10,
+        matchSignals: signals.slice(0, 4),
+      };
+    }
+
+    // ✅ OTHER PRODUCTS: Use database quality score + matching
+    // Base quality score (for non-Gem products)
     if (product.qualityScore) {
       score += product.qualityScore / 10;
       signals.push(`Quality: ${product.qualityScore}/100`);

@@ -64,6 +64,34 @@ export default class GiftListGenerator {
 
       console.log(`   ✓ ${candidates.length} candidates available (no minimum requirement)`);
 
+      // ✅ PRE-AI QUALITY GATE
+      // Check candidate quality BEFORE expensive AI call
+      // This saves money by rejecting poor candidates early
+      const preAICheck = this.validateCandidatesQuality(candidates, recipient);
+      
+      if (!preAICheck.passesThreshold) {
+        console.warn('\n⚠️  PRE-AI QUALITY GATE: Candidates below quality threshold');
+        console.warn(`   - Category match rate: ${preAICheck.categoryMatchRate}% (need 30%+)`);
+        console.warn(`   - Avg quality score: ${preAICheck.avgQualityScore} (need 60+)`);
+        console.warn(`   - Retailer diversity: ${preAICheck.retailerCount} retailers (need 2+)`);
+        console.warn(`   💡 Skipping AI call to save costs ($0.04+)`);
+        
+        // Return error without calling AI
+        return {
+          status: 'insufficient_quality',
+          message: 'Candidate products do not meet quality threshold for AI selection',
+          recipient: { id: recipient.id, name: recipient.name },
+          candidatesFound: candidates.length,
+          qualityIssues: preAICheck.issues,
+          recommendation: 'Improve catalogue coverage for this recipient profile (age, gender, interests)',
+        };
+      }
+      
+      console.log(`\n✅ PRE-AI QUALITY GATE PASSED`);
+      console.log(`   - Category match: ${preAICheck.categoryMatchRate}% ✓`);
+      console.log(`   - Quality score: ${preAICheck.avgQualityScore} ✓`);
+      console.log(`   - Retailers: ${preAICheck.retailerCount} ✓`);
+
       // Step 4: AI selects best gifts from available candidates
       console.log(`Selecting best gifts from ${candidates.length} candidates...`);
       const selectedGifts = await this.giftSelector.selectGifts(candidates, recipient);
@@ -363,6 +391,97 @@ export default class GiftListGenerator {
 
     // Fallback to today if all parsing fails
     return new Date();
+  }
+
+  /**
+   * Validate candidate products quality BEFORE AI call
+   * This saves money by rejecting poor candidates early
+   * 
+   * @param {array} candidates - Candidate products from product matcher
+   * @param {object} recipient - Recipient data
+   * @returns {object} Validation result with pass/fail and metrics
+   */
+  validateCandidatesQuality(candidates, recipient) {
+    const recipientInterests = recipient.interests || [];
+    
+    // Check 1: Category match rate (interests align with product categories)
+    const categoryMatchingCandidates = candidates.filter(candidate => {
+      const category = (candidate.category || '').toLowerCase();
+      return recipientInterests.some(interest => {
+        const interestLower = interest.toLowerCase();
+        return category.startsWith(interestLower) || category.includes(interestLower);
+      });
+    });
+    const categoryMatchRate = candidates.length > 0 
+      ? Math.round((categoryMatchingCandidates.length / candidates.length) * 100)
+      : 0;
+    
+    // Check 2: Average quality score (ONLY for non-Gem products)
+    // Gem's Picks (CURATED_PRODUCT) don't have quality scores - they're manually curated
+    const nonGemProducts = candidates.filter(c => c.sourceType !== 'CURATED_PRODUCT');
+    const validScores = nonGemProducts.filter(c => c.qualityScore != null);
+    const avgQualityScore = validScores.length > 0
+      ? Math.round(validScores.reduce((sum, c) => sum + c.qualityScore, 0) / validScores.length)
+      : 0;
+    
+    // Count Gem's Picks separately
+    const gemPicksCount = candidates.filter(c => c.sourceType === 'CURATED_PRODUCT').length;
+    
+    // Check 3: Retailer diversity
+    const retailers = new Set(candidates.map(c => c.retailerId).filter(Boolean));
+    const retailerCount = retailers.size;
+    
+    // ✅ THRESHOLDS (relaxed for Gem's Picks)
+    // - Category match: 15%+ (at least some products match interests)
+    // - Quality score: Ignored if mostly Gem's Picks
+    // - Retailers: 2+ (some diversity)
+    // 
+    // ⚠️  SPECIAL CASE: Children (1-11)
+    // They only get Gem's Picks (CURATED_PRODUCT), so:
+    // - No quality score requirement (all are Gem's Picks)
+    // - Accept if ANY category match exists
+    const childrenAgeBands = ["1-2", "3-4", "5-6", "7-8", "9-11"];
+    const isChild = childrenAgeBands.includes(recipient.ageBand);
+    
+    let passesThreshold;
+    let issues = [];
+    
+    if (isChild) {
+      // Children: Accept all (rely on Gem's curation)
+      passesThreshold = true; // Always pass for children
+    } else {
+      // Adults/Teens: Relaxed thresholds
+      // If mostly Gem's Picks, ignore quality score requirement
+      const isGemHeavy = gemPicksCount >= (candidates.length * 0.5); // 50%+ are Gem's Picks
+      
+      const categoryPass = recipientInterests.length === 0 || categoryMatchRate >= 15;
+      const qualityPass = isGemHeavy || validScores.length === 0 || avgQualityScore >= 40;
+      const retailerPass = retailerCount >= 2 || candidates.length < 5;
+      
+      // Pass if at least 2 out of 3 metrics pass
+      const passCount = [categoryPass, qualityPass, retailerPass].filter(Boolean).length;
+      passesThreshold = passCount >= 2;
+      
+      if (!categoryPass && recipientInterests.length > 0) {
+        issues.push(`Low category match (${categoryMatchRate}% < 15%)`);
+      }
+      if (!qualityPass && !isGemHeavy && validScores.length > 0) {
+        issues.push(`Low quality scores (${avgQualityScore} < 40)`);
+      }
+      if (!retailerPass && candidates.length >= 5) {
+        issues.push(`Low retailer diversity (${retailerCount} < 2)`);
+      }
+    }
+    
+    return {
+      passesThreshold,
+      categoryMatchRate,
+      avgQualityScore: isChild ? 'N/A (Gem\'s Picks)' : avgQualityScore,
+      retailerCount,
+      gemPicksCount,
+      issues,
+      isChild,
+    };
   }
 
   /**

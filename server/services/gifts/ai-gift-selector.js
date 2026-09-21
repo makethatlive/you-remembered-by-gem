@@ -33,13 +33,30 @@ From the candidate list provided, select and rank UP TO 10 gift recommendations.
 - You may return fewer than 10 if there aren't enough suitable products
 
 SELECTION PRIORITY (in order)
-1. Products tagged with an interest category that matches one the recipient has selected. Prioritise the closest, most specific match over a loose or generic one.
-2. Within interest-matched products, prioritise items that also align with the recipient's personality tags, gift-type preferences (e.g. 'Designer items', 'Practical but high quality', 'Quirky and unexpected'), and anything mentioned in the free-text fields.
-3. If fewer than 10 strong interest-matched candidates exist, you may include well-suited candidates that fit the recipient's gender, age, and budget but don't strongly match a stated interest. Mark these clearly with confidence: "general" rather than "interest_match" in your output.
+1. CATEGORY MATCHING (PRIMARY SIGNAL): The recipient's selected interests from onboarding now map EXACTLY to product categories. For example:
+   - Recipient interest "Cooking & food" matches products with category "Cooking & food" or "Cooking & food > Baking"
+   - Recipient interest "Tech & gadgets" matches products with category "Tech & gadgets" or "Tech & gadgets > Smart home"
+   - Recipient interest "Gardening" matches products with category "Gardening" or "Gardening > Plants"
+   
+   THIS IS YOUR STRONGEST SIGNAL. If a product's category starts with or contains the recipient's stated interest, it is a DIRECT MATCH and should be prioritized over interest tags or keywords.
 
-DIVERSITY AND VARIETY (CRITICAL)
+2. Within category-matched products, prioritise items that also align with the recipient's personality tags, gift-type preferences (e.g. 'Designer items', 'Practical but high quality', 'Quirky and unexpected'), and anything mentioned in the free-text fields.
+
+3. Interest tags are a SECONDARY signal (fallback for products not yet fully categorized). Product categories are more reliable and accurate.
+
+4. If fewer than 10 strong category-matched candidates exist, you may include well-suited candidates that fit the recipient's gender, age, and budget but don't strongly match a stated interest. Mark these clearly with confidence: "general" rather than "interest_match" in your output.
+
+SPREAD ACROSS INTERESTS — DO NOT CLUSTER ON ONE CATEGORY (CRITICAL)
+If the recipient has multiple stated interests, your combined primary + backup list (10 items total) must draw from more than one of them where candidates exist. Do not return 4+ ideas from a single interest category while ignoring the recipient's other stated interests, even if that category happens to have the strongest candidate matches available.
+
+Work through each stated interest and include at least one strong candidate from it if one exists in the pool, before adding a second or third idea from any single interest.
+
+The only exception is a broad category that naturally contains genuinely distinct sub-types of gift — for example Home & interiors could reasonably contribute a candle AND a throw (two different kinds of object), and Fashion & accessories could reasonably contribute a scarf AND a bag. This is different from picking two near-identical items from the same narrow sub-type (e.g. two candles, two throws, two scarves) — that still counts as clustering and should be avoided.
+
+If you are unsure whether two items from the same category are meaningfully distinct types of object, treat them as NOT distinct and diversify instead.
+
+DIVERSITY AND VARIETY
 - NEVER select duplicate or nearly-identical products. If you see multiple versions of the same item (e.g., "Moka Express Coffee Maker" and "Moka Espresso Coffee Maker"), select ONLY ONE.
-- Ensure VARIETY across the recipient's interests. If they have multiple interests (e.g., Gardening, Cooking, DIY), include gifts representing EACH interest area, not just one.
 - Avoid selecting multiple products from the same narrow category unless the recipient has explicitly focused on it. For example, don't select 3 protein powders or 2 coffee makers unless that's their main stated passion.
 - Aim for a balanced, interesting mix that covers different aspects of their personality and interests.
 
@@ -136,12 +153,14 @@ Respond ONLY in valid JSON, in exactly this structure. No preamble, no markdown,
     const candidateList = candidates.map((product, index) => {
       const source = product.source || 'Unknown';
       const interestCategory = product.interestTags?.[0] || 'General';
+      const productCategory = product.category || 'Not categorized';
       
       return `Product ID: ${product.id}
    Name: ${product.name}
    Retailer: ${product.retailer?.name || 'Unknown'}
    Price: £${product.price}
-   Interest Category: ${interestCategory}
+   Category: ${productCategory}
+   Interest Tags: ${interestCategory}
    Source: ${source}
    Tier: ${product.tier || 'N/A'}
    Description: ${(product.description || '').substring(0, 150)}...`;
@@ -200,6 +219,10 @@ Select and rank up to 10 gift recommendations from the candidates above, followi
                 type: 'string',
                 description: 'Product ID from the candidate list - never invented'
               },
+              interest_category: {
+                type: 'string',
+                description: 'Which of the recipient\'s stated interests this matches (e.g., "Cooking & food", "Gardening"), or null if general fit only. Makes interest spread checkable at a glance.'
+              },
               confidence: {
                 type: 'string',
                 enum: ['interest_match', 'general'],
@@ -210,7 +233,7 @@ Select and rank up to 10 gift recommendations from the candidates above, followi
                 description: '2-3 sentences: why this suits THIS person specifically, referencing their stated interests, personality, or free-text detail where relevant'
               }
             },
-            required: ['product_id', 'confidence', 'rationale']
+            required: ['product_id', 'interest_category', 'confidence', 'rationale']
           }
         },
         notes_for_gem: {
@@ -234,12 +257,22 @@ Select and rank up to 10 gift recommendations from the candidates above, followi
 
     // Process recommendations (first 5 are primary, rest are backup)
     const recommendations = response.recommendations || [];
+    
+    // Track interest distribution for validation
+    const interestCount = {};
+    const recipientInterests = recipient.interests || [];
+    
     recommendations.forEach((rec, index) => {
       const product = productMap.get(rec.product_id);
       if (product) {
+        // Track interest category usage
+        const category = rec.interest_category || 'general';
+        interestCount[category] = (interestCount[category] || 0) + 1;
+        
         validated.push({
           ...product,
           whyThisGift: rec.rationale,
+          interestCategory: rec.interest_category, // ← Store interest category
           confidence: rec.confidence,
           isPrimary: index < 5, // First 5 are primary, rest are backup
           rank: index + 1,
@@ -250,6 +283,29 @@ Select and rank up to 10 gift recommendations from the candidates above, followi
         console.warn(`   ⚠️  Recommendation ${index + 1}: product_id ${rec.product_id} not found in candidates`);
       }
     });
+    
+    // Validate interest spread (if multiple interests)
+    if (recipientInterests.length > 1 && validated.length >= 3) {
+      const dominantInterest = Object.keys(interestCount).reduce((a, b) => 
+        interestCount[a] > interestCount[b] ? a : b
+      );
+      
+      const dominantCount = interestCount[dominantInterest];
+      const totalCount = validated.length;
+      
+      // Warning if one interest has >40% of selections and other interests ignored
+      if (dominantCount > Math.ceil(totalCount * 0.4)) {
+        const coveredInterests = Object.keys(interestCount).filter(k => k !== 'general');
+        const uncoveredInterests = recipientInterests.filter(i => !coveredInterests.includes(i));
+        
+        if (uncoveredInterests.length > 0) {
+          console.warn(`   ⚠️  INTEREST CLUSTERING DETECTED:`);
+          console.warn(`      ${dominantInterest}: ${dominantCount}/${totalCount} products (${Math.round(dominantCount/totalCount*100)}%)`);
+          console.warn(`      Uncovered interests: ${uncoveredInterests.join(', ')}`);
+          console.warn(`      This may need manual review.`);
+        }
+      }
+    }
 
     // Report on primary vs backup split
     const primaryCount = validated.filter(g => g.isPrimary).length;

@@ -9,8 +9,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { STATUS_LABEL } from "./ProductEditForm";
+import { getAllowedAgeBands } from "@/lib/ageRangeUtils";
 
-const AGE_BANDS = ["Under 5", "5-10", "11-17", "18+"];
+// Get the 13 allowed age bands from onboarding form
+const { all: AGE_BANDS } = getAllowedAgeBands();
 
 // Manually add a product straight to the database so it becomes eligible for gift
 // recommendations. Defaults to active, BUT (per the no-image-in-gift-lists rule) a
@@ -163,17 +165,42 @@ export default function ProductAddForm({ retailers, onDone }) {
 
         <div className="space-y-1.5">
           <Label className="font-body text-sm text-brand-dark/80">Suitable Age Bands</Label>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-            {AGE_BANDS.map((band) => (
-              <label key={band} className="flex items-center gap-2.5 font-body text-sm text-brand-dark/80 cursor-pointer">
-                <Checkbox
-                  checked={form.suitable_age_bands.includes(band)}
-                  onCheckedChange={() => toggleBand(band)}
-                  className="border-brand-teal data-[state=checked]:bg-brand-teal data-[state=checked]:border-brand-teal"
-                />
-                <span>{band}</span>
-              </label>
-            ))}
+          <p className="font-body text-xs text-brand-dark/50 mb-2">
+            Select all age ranges this product is suitable for. These match the onboarding form options.
+          </p>
+          
+          {/* Children age bands */}
+          <div className="mb-3">
+            <p className="font-body text-xs font-medium text-brand-dark/60 mb-2">Children (Ages 1-17)</p>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-2.5">
+              {["1-2", "3-4", "5-6", "7-8", "9-11", "12-17"].map((band) => (
+                <label key={band} className="flex items-center gap-2.5 font-body text-sm text-brand-dark/80 cursor-pointer">
+                  <Checkbox
+                    checked={form.suitable_age_bands.includes(band)}
+                    onCheckedChange={() => toggleBand(band)}
+                    className="border-brand-teal data-[state=checked]:bg-brand-teal data-[state=checked]:border-brand-teal"
+                  />
+                  <span>{band}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          
+          {/* Adult age bands */}
+          <div>
+            <p className="font-body text-xs font-medium text-brand-dark/60 mb-2">Adults (Ages 18+)</p>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-2.5">
+              {["18-25", "26-35", "36-45", "46-55", "56-65", "66-75", "75+"].map((band) => (
+                <label key={band} className="flex items-center gap-2.5 font-body text-sm text-brand-dark/80 cursor-pointer">
+                  <Checkbox
+                    checked={form.suitable_age_bands.includes(band)}
+                    onCheckedChange={() => toggleBand(band)}
+                    className="border-brand-teal data-[state=checked]:bg-brand-teal data-[state=checked]:border-brand-teal"
+                  />
+                  <span>{band}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
