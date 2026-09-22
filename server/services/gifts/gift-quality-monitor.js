@@ -71,50 +71,64 @@ export default class GiftQualityMonitor {
     // ✅ CATEGORY-BASED MATCHING (aligned with onboarding)
     // Recipient interests from onboarding match product categories exactly
     // e.g., recipient interest "Cooking & food" matches product category "Cooking & food"
-    const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase().trim());
-    const matchingGifts = gifts.filter(gift => {
-      const product = gift.product;
-      if (!product) return false;
-      
-      // Primary match: Product category matches recipient interest
-      const category = (product.category || '').toLowerCase();
-      const categoryMatch = recipientInterests.some(interest => {
-        // Check if category starts with the interest (handles "Cooking & food > Baking")
-        return category.startsWith(interest) || category.includes(interest);
+    //
+    // ⚠️  CHILDREN EXCEPTION (ages 1-11):
+    // Children recipients don't have structured interests from onboarding.
+    // They only have free-text "hobbiesAndInterests" field.
+    // Skip interest matching check for children - rely on age-appropriate curation.
+    const childrenAgeBands = ["1-2", "3-4", "5-6", "7-8", "9-11"];
+    const isChild = childrenAgeBands.includes(recipient.ageBand);
+    
+    if (!isChild) {
+      // ONLY check interest matching for teens/adults (12+)
+      const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase().trim());
+      const matchingGifts = gifts.filter(gift => {
+        const product = gift.product;
+        if (!product) return false;
+        
+        // Primary match: Product category matches recipient interest
+        const category = (product.category || '').toLowerCase();
+        const categoryMatch = recipientInterests.some(interest => {
+          // Check if category starts with the interest (handles "Cooking & food > Baking")
+          return category.startsWith(interest) || category.includes(interest);
+        });
+        
+        // Secondary match: Interest tags (for legacy products)
+        const productTags = (product.interestTags || []).map(t => t.toLowerCase());
+        const tagMatch = recipientInterests.some(ri => productTags.includes(ri));
+        
+        // Match if either category or tags match
+        return categoryMatch || tagMatch;
       });
-      
-      // Secondary match: Interest tags (for legacy products)
-      const productTags = (product.interestTags || []).map(t => t.toLowerCase());
-      const tagMatch = recipientInterests.some(ri => productTags.includes(ri));
-      
-      // Match if either category or tags match
-      return categoryMatch || tagMatch;
-    });
 
-    const matchPercentage = (matchingGifts.length / gifts.length) * 100;
-    // Relaxed threshold for LEGACY products: 25% minimum (was 40%)
-    // Reasoning: LEGACY products have incomplete tags, but offering something is better than nothing
-    if (matchPercentage < 25) {
-      issues.push({
-        severity: 'critical',
-        code: 'LOW_INTEREST_MATCH',
-        message: `Only ${matchPercentage.toFixed(0)}% of gifts match recipient interests (minimum 25%)`,
-        recipientInterests,
-        matchingCount: matchingGifts.length,
-        totalCount: gifts.length,
-      });
-    } else if (matchPercentage < 40) {
-      warnings.push({
-        severity: 'warning',
-        code: 'MODERATE_INTEREST_MATCH',
-        message: `${matchPercentage.toFixed(0)}% match recipient interests (40%+ recommended)`,
-      });
-    } else if (matchPercentage < 60) {
-      warnings.push({
-        severity: 'warning',
-        code: 'GOOD_INTEREST_MATCH',
-        message: `${matchPercentage.toFixed(0)}% match (60%+ is excellent)`,
-      });
+      const matchPercentage = (matchingGifts.length / gifts.length) * 100;
+      // Relaxed threshold for LEGACY products: 25% minimum (was 40%)
+      // Reasoning: LEGACY products have incomplete tags, but offering something is better than nothing
+      if (matchPercentage < 25) {
+        issues.push({
+          severity: 'critical',
+          code: 'LOW_INTEREST_MATCH',
+          message: `Only ${matchPercentage.toFixed(0)}% of gifts match recipient interests (minimum 25%)`,
+          recipientInterests,
+          matchingCount: matchingGifts.length,
+          totalCount: gifts.length,
+        });
+      } else if (matchPercentage < 40) {
+        warnings.push({
+          severity: 'warning',
+          code: 'MODERATE_INTEREST_MATCH',
+          message: `${matchPercentage.toFixed(0)}% match recipient interests (40%+ recommended)`,
+        });
+      } else if (matchPercentage < 60) {
+        warnings.push({
+          severity: 'warning',
+          code: 'GOOD_INTEREST_MATCH',
+          message: `${matchPercentage.toFixed(0)}% match (60%+ is excellent)`,
+        });
+      }
+    } else {
+      // Children: Skip interest matching check
+      console.log(`   ℹ️  Interest matching skipped for child recipient (age ${recipient.ageBand})`);
     }
 
     // Check 4: Product data quality
