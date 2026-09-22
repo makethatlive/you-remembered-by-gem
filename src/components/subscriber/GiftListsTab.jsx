@@ -35,7 +35,10 @@ export default function GiftListsTab({ subscriber, onOpen }) {
     staleTime: 0,
   });
 
-  const visible = lists.filter((l) => l.visibleToSubscriber === true);
+  const visible = lists.filter((l) => 
+    l.visibleToSubscriber === true && 
+    (l.status?.toUpperCase() === "APPROVED" || l.status?.toUpperCase() === "SENT")
+  );
 
   const activeCount = (listId) =>
     items.filter((i) => i.giftListId === listId && i.status?.toUpperCase() === "ACTIVE").length;

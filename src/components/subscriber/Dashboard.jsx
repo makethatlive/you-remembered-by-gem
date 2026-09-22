@@ -38,7 +38,11 @@ export default function Dashboard({ subscriber, onOpenList, onGoTab }) {
 
   const recipName = (id) => recipients.find((r) => r.id === id)?.name || "";
   const listCover = (id) => items.find((i) => i.giftListId === id)?.imageUrl;
-  const listForRecip = (id) => lists.find((l) => l.recipientId === id);
+  const listForRecip = (id) => lists.find((l) => 
+    l.recipientId === id && 
+    (l.status?.toUpperCase() === "APPROVED" || l.status?.toUpperCase() === "SENT") &&
+    l.visibleToSubscriber !== false
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 pt-6">
