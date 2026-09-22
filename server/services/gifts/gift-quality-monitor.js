@@ -79,6 +79,8 @@ export default class GiftQualityMonitor {
     const childrenAgeBands = ["1-2", "3-4", "5-6", "7-8", "9-11"];
     const isChild = childrenAgeBands.includes(recipient.ageBand);
     
+    let matchPercentage = 0; // Default for children or when no interests
+    
     if (!isChild) {
       // ONLY check interest matching for teens/adults (12+)
       const recipientInterests = (recipient.interests || []).map(i => i.toLowerCase().trim());
@@ -101,7 +103,7 @@ export default class GiftQualityMonitor {
         return categoryMatch || tagMatch;
       });
 
-      const matchPercentage = (matchingGifts.length / gifts.length) * 100;
+      matchPercentage = (matchingGifts.length / gifts.length) * 100;
       // Relaxed threshold for LEGACY products: 25% minimum (was 40%)
       // Reasoning: LEGACY products have incomplete tags, but offering something is better than nothing
       if (matchPercentage < 25) {
@@ -127,7 +129,8 @@ export default class GiftQualityMonitor {
         });
       }
     } else {
-      // Children: Skip interest matching check
+      // Children: Skip interest matching check, set to N/A
+      matchPercentage = 0; // Will be displayed as "N/A" in stats for children
       console.log(`   ℹ️  Interest matching skipped for child recipient (age ${recipient.ageBand})`);
     }
 
