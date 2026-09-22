@@ -104,28 +104,32 @@ export default class GiftQualityMonitor {
       });
 
       matchPercentage = (matchingGifts.length / gifts.length) * 100;
-      // Relaxed threshold for LEGACY products: 25% minimum (was 40%)
-      // Reasoning: LEGACY products have incomplete tags, but offering something is better than nothing
-      if (matchPercentage < 25) {
-        issues.push({
-          severity: 'critical',
+      // ✅ RELAXED THRESHOLDS for Tier 2/3 products:
+      // - Category matching is already enforced in product-matcher.js
+      // - Tier 2 filters by curated sources + category/interest
+      // - Tier 3 fallback uses broad category matching
+      // - Better to offer something than reject for low interest match
+      // - Only WARN, never REJECT based on interest matching
+      if (matchPercentage < 10) {
+        warnings.push({
+          severity: 'warning',
           code: 'LOW_INTEREST_MATCH',
-          message: `Only ${matchPercentage.toFixed(0)}% of gifts match recipient interests (minimum 25%)`,
+          message: `Only ${matchPercentage.toFixed(0)}% of gifts match recipient interests (10%+ expected)`,
           recipientInterests,
           matchingCount: matchingGifts.length,
           totalCount: gifts.length,
         });
-      } else if (matchPercentage < 40) {
+      } else if (matchPercentage < 25) {
         warnings.push({
           severity: 'warning',
           code: 'MODERATE_INTEREST_MATCH',
-          message: `${matchPercentage.toFixed(0)}% match recipient interests (40%+ recommended)`,
+          message: `${matchPercentage.toFixed(0)}% match recipient interests (25%+ recommended)`,
         });
-      } else if (matchPercentage < 60) {
+      } else if (matchPercentage < 40) {
         warnings.push({
-          severity: 'warning',
+          severity: 'info',
           code: 'GOOD_INTEREST_MATCH',
-          message: `${matchPercentage.toFixed(0)}% match (60%+ is excellent)`,
+          message: `${matchPercentage.toFixed(0)}% match (40%+ is excellent)`,
         });
       }
     } else {
