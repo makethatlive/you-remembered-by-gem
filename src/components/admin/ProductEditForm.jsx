@@ -22,6 +22,11 @@ const SOURCE_TYPES = ["CURATED_PRODUCT", "CURATED_RETAILER", "SHOPIFY_UPLOAD", "
 export default function ProductEditForm({ product, retailerName, onDone }) {
   const queryClient = useQueryClient();
   
+  // Debug: Log the product age bands
+  console.log('ProductEditForm - product.suitableAgeBands:', product.suitableAgeBands);
+  console.log('ProductEditForm - product.suitable_age_bands:', product.suitable_age_bands);
+  console.log('ProductEditForm - Type:', typeof product.suitableAgeBands, Array.isArray(product.suitableAgeBands));
+  
   // Normalize status to UPPERCASE for consistency
   const normalizeStatus = (status) => {
     if (!status) return "NEEDS_REVIEW";
@@ -36,6 +41,13 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
     return SOURCE_TYPES.includes(upper) ? upper : "LEGACY_UNKNOWN";
   };
   
+  // Normalize age bands array - ensure it's always an array
+  const normalizeAgeBands = (bands) => {
+    if (Array.isArray(bands)) return bands;
+    if (typeof bands === 'string') return [bands];
+    return [];
+  };
+  
   const [form, setForm] = useState({
     name: product.name || "",
     description: product.description || "",
@@ -44,7 +56,7 @@ export default function ProductEditForm({ product, retailerName, onDone }) {
     image_url: product.imageUrl || product.image_url || "",
     category: product.category || "",
     gender_applies_to: product.genderAppliesTo || product.gender_applies_to || "",
-    suitable_age_bands: product.suitableAgeBands || product.suitable_age_bands || [],
+    suitable_age_bands: normalizeAgeBands(product.suitableAgeBands || product.suitable_age_bands),
     age_restricted: product.ageRestricted ?? product.age_restricted ?? false,
     status: normalizeStatus(product.status),
     source_type: normalizeSourceType(product.sourceType || product.source_type),
