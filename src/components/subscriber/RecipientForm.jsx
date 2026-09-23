@@ -297,6 +297,9 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
       personality_other: form.personality_other?.trim() || undefined,
       gift_types: form.gift_types,
       gift_types_other: form.gift_types_other?.trim() || undefined,
+      avoid_notes: form.avoid_notes?.trim() || undefined,
+      things_you_know: form.things_you_know?.trim() || undefined,
+      hobbies_and_interests: form.hobbies_and_interests?.trim() || undefined,
       subscriber_id: subscriber.id,
     };
     
@@ -416,6 +419,19 @@ export default function RecipientForm({ subscriber, recipient, onDone }) {
                 onChange={(v) => set("gift_types", v)}
                 otherText={form.gift_types_other}
                 onOtherTextChange={(v) => set("gift_types_other", v)}
+              />
+            </Field>
+
+            <Field 
+              label="Are there any gifts or categories to avoid?" 
+              optional 
+              helper="e.g. they're vegan, they don't drink, they hate clutter, they have a specific allergy"
+            >
+              <Textarea 
+                value={form.avoid_notes || ''} 
+                onChange={(e) => set("avoid_notes", e.target.value)} 
+                rows={2} 
+                placeholder="Anything they wouldn't want or can't have?" 
               />
             </Field>
 

@@ -128,6 +128,8 @@ export const CANONICAL_GIFT_TYPES = [
     keywords: ["spa day", "spa set", "pamper", "bath", "bathrobe", "skincare", "massage", "aromatherapy", "face mask", "robe", "self care"] },
   { key: "Practical but high quality", ui: true,
     keywords: ["practical", "everyday", "premium", "quality", "leather", "crafted", "durable"] },
+  { key: "Designer items — they only want recognisable, premium brands", ui: true,
+    keywords: ["designer", "luxury", "premium brand", "high end", "branded", "recognisable brand", "designer label"] },
   { key: "Quirky and unexpected", ui: true,
     keywords: ["quirky", "unusual", "unexpected", "novelty", "curious", "unique"] },
   { key: "Toys, games, or activities", ui: true,

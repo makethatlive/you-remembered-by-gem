@@ -202,6 +202,19 @@ export default function PersonForm({ index, total, saving, onSubmit }) {
               />
             </Field>
 
+            <Field 
+              label="Are there any gifts or categories to avoid?" 
+              optional 
+              helper="e.g. they're vegan, they don't drink, they hate clutter, they have a specific allergy"
+            >
+              <Textarea 
+                value={form.avoid_notes || ''} 
+                onChange={(e) => set("avoid_notes", e.target.value)} 
+                rows={2} 
+                placeholder="Anything they wouldn't want or can't have?" 
+              />
+            </Field>
+
             <Field label="Anything else?" optional helper="This is your chance to give me real colour — a recent life change, something they've mentioned wanting, a hobby they've just taken up, their personality and taste level, what's worked brilliantly in the past or fallen completely flat. Small details go a long way — a favourite colour, a football team they support, the style of jewellery they wear. Also let me know if there's a significant milestone coming up — a big birthday, retirement, having a baby, buying a house — anything that might call for something extra special. The more you share, the more personal my suggestions will be.">
               <Textarea value={form.things_you_know} onChange={(e) => set("things_you_know", e.target.value)} rows={6} placeholder="Favourite brands, colours, things they've mentioned wanting, upcoming milestones..." />
             </Field>
