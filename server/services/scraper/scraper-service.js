@@ -177,6 +177,8 @@ async function processRetailer({
       if (shopifyResult.origin) {
         cursor.discoveryMode = "shopify";
         cursor.shopifyOrigin = shopifyResult.origin;
+        cursor.storeCurrency = shopifyResult.storeCurrency; // Cache currency for next batch
+        cursor.exchangeRate = shopifyResult.exchangeRate; // Cache exchange rate for next batch
         
         // Process Shopify products
         for (const prod of shopifyResult.products) {
