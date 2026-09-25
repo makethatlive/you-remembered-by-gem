@@ -223,7 +223,7 @@ model Recipient {
   gender                Gender
   ageRange              String?   @map("age_range")
   childAgeBracket       String?   @map("child_age_bracket")
-  ageBand               String    @map("age_band") // Flexible format: "1-2", "18-25", "75+", etc.
+  ageBand               AgeBand   @map("age_band")
   budgetMin             Decimal?  @map("budget_min") @db.Decimal(10, 2)
   budgetMax             Decimal?  @map("budget_max") @db.Decimal(10, 2)
   interests             String[]
@@ -265,6 +265,18 @@ enum Gender {
   PREFER_NOT_TO_SAY
 
   @@map("gender")
+}
+
+enum AgeBand {
+  UNDER_5
+  FIVE_TO_10
+  ELEVEN_TO_17
+  EIGHTEEN_TO_30
+  THIRTY_ONE_TO_50
+  FIFTY_ONE_TO_70
+  SEVENTY_PLUS
+
+  @@map("age_band")
 }
 
 // GiftList - collection of gift suggestions
@@ -570,21 +582,4 @@ enum AICallStatus {
   RATE_LIMITED
 
   @@map("ai_call_status")
-}
-
-// GlobalOccasionDates - admin-managed calendar for variable occasions like Eid, Lunar New Year
-model GlobalOccasionDate {
-  id           String   @id @default(cuid())
-  occasionType String   @map("occasion_type") // e.g. "Eid", "Diwali", "Lunar New Year"
-  year         Int
-  month        Int      // 1-12
-  day          Int      // 1-31
-  notes        String?  @db.Text // e.g. "Eid al-Fitr 2027"
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  @@unique([occasionType, year])
-  @@index([occasionType])
-  @@index([year])
-  @@map("global_occasion_dates")
 }

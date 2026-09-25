@@ -13,6 +13,7 @@ import UsersTab from "./UsersTab";
 import ForensicsAuditPanel from "./ForensicsAuditPanel";
 import HelpTab from "@/components/admin/HelpTab";
 import AICallLogs from "./AICallLogs";
+import OccasionCalendar from "./OccasionCalendar";
 
 export default function AdminView() {
   // Deep-link support: admin alert emails link to /?tab=approvals&list=<id>.
@@ -30,6 +31,7 @@ export default function AdminView() {
       {tab === "retailers" && <RetailersTab />}
       {tab === "products" && <ProductsTab />}
       {tab === "calendar" && <BirthdayCalendar />}
+      {tab === "occasions" && <OccasionCalendar />}
       {tab === "sent" && <SentHistory />}
       {tab === "insights" && <FeedbackInsights />}
       {tab === "audit" && <ForensicsAuditPanel />}

@@ -1,0 +1,44 @@
+{
+  "name": "GlobalOccasionDate",
+  "description": "Admin-managed calendar for variable occasions like Eid, Diwali, Lunar New Year",
+  "tableName": "global_occasion_dates",
+  "fields": {
+    "id": {
+      "type": "string",
+      "primaryKey": true,
+      "description": "Unique identifier"
+    },
+    "occasion_type": {
+      "type": "string",
+      "required": true,
+      "description": "Occasion name (Eid, Diwali, Lunar New Year, etc.)"
+    },
+    "year": {
+      "type": "integer",
+      "required": true,
+      "description": "Year for this occurrence"
+    },
+    "month": {
+      "type": "integer",
+      "required": true,
+      "description": "Month (1-12)"
+    },
+    "day": {
+      "type": "integer",
+      "required": true,
+      "description": "Day of month (1-31)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes (e.g., 'Eid al-Fitr 2027 - estimated')"
+    },
+    "created_at": {
+      "type": "datetime",
+      "default": "now"
+    },
+    "updated_at": {
+      "type": "datetime",
+      "autoUpdate": true
+    }
+  }
+}

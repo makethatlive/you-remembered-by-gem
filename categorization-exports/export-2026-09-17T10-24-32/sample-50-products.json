@@ -1,0 +1,770 @@
+[
+  {
+    "row_number": 1,
+    "product_id": "cmu3q7yrk02wdtcod7l2xfhov",
+    "name": "Fortnum's Hamper Tote with Waterproof Picnic Blanket",
+    "product_url": "https://www.fortnumandmason.com/fortnums-hamper-tote-with-waterproof-picnic-blanket",
+    "description": "",
+    "current_category": "Home & interiors",
+    "retailer": "fortnumandmason.com",
+    "price": "188.72",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 2,
+    "product_id": "cmu3q3v0v0253tcody96crp6g",
+    "name": "Birthday Book",
+    "product_url": "https://www.bokibooks.co.uk/all-books/holidays/birthday",
+    "description": "",
+    "current_category": "Reading & books",
+    "retailer": "bokibooks.co.uk",
+    "price": "5.99",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "Under 5",
+      "5-10"
+    ]
+  },
+  {
+    "row_number": 3,
+    "product_id": "cmu3q5huf02dntcodf405kksk",
+    "name": "Biscuits",
+    "product_url": "https://www.fortnumandmason.com/biscuits/all-biscuits",
+    "description": "sss",
+    "current_category": "Food & Drink",
+    "retailer": "fortnumandmason.com",
+    "price": "150",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 4,
+    "product_id": "cmu3q3v0n023ttcodg5fx6hs1",
+    "name": "Dom Perignon 2013",
+    "product_url": "https://hedonism.co.uk/product/dom-perignon-2013",
+    "description": "",
+    "current_category": "Fashion & accessories",
+    "retailer": "hedonism.co.uk",
+    "price": "170",
+    "gender": "men",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 5,
+    "product_id": "cmu3q3v0j0235tcodn6sxiesy",
+    "name": "Bestsellers",
+    "product_url": "https://www.papier.com/stationery/bestsellers/",
+    "description": "Our most sought-after stationery. A curated selection of the most-loved Papier pieces for you and your desk. From notecards to planners and journals! Fast delivery, shop now!",
+    "current_category": "Reading & books",
+    "retailer": "papier.com",
+    "price": "15",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 6,
+    "product_id": "cmu3q3v0k0237tcodpwb0tqvi",
+    "name": "Billy x Cheaney Boots",
+    "product_url": "https://www.billytannery.co.uk/products/billy-x-cheaney-boots",
+    "description": "Billy deer leather, the iconic Cheaney Brixton silhouette and a Vibram sole. Tough, soft and durable leather boots. Don't miss this limited edition collaboration.",
+    "current_category": "Fashion & accessories",
+    "retailer": "Billy Tannery",
+    "price": "495",
+    "gender": "men",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 7,
+    "product_id": "cmu3q3v0l023htcoduump1j9l",
+    "name": "ENDYMION",
+    "product_url": "https://www.penhaligons.com/uk/en/p/endymion-eau-de-cologne-30ml--000000000065223848",
+    "description": "",
+    "current_category": "Home & interiors",
+    "retailer": "penhaligons.com",
+    "price": "75",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 8,
+    "product_id": "cmu3q3v0u024vtcodwrie8nf6",
+    "name": "Fortnum's Bardolino Chiaretto Rosé, Casaretti, 75cl",
+    "product_url": "https://www.fortnumandmason.com/fortnums-bardolino-chiaretto-rose-75cl",
+    "description": "",
+    "current_category": "Home & interiors",
+    "retailer": "fortnumandmason.com",
+    "price": "18.2",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 9,
+    "product_id": "cmu3q3v0n023ptcody4v8eiuo",
+    "name": "THE BLAZING MR SAM 75ML EDP VA",
+    "product_url": "https://www.penhaligons.com/uk/en/p/the-blazing-mister-sam-eau-de-parfum-75-ml--000000000065173422",
+    "description": "",
+    "current_category": "UNISEX_ADULT",
+    "retailer": "penhaligons.com",
+    "price": "245",
+    "gender": "unisex",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 10,
+    "product_id": "cmu3q3v0u0251tcod2ddd0jbr",
+    "name": "The Cardholder",
+    "product_url": "https://www.billytannery.co.uk/products/leather-cardholder-wallet",
+    "description": "Our luxury slim card holder is handmade in the UK from sustainable, full grain goat leather. 3 slots fit 6 cards and a few folded notes. Free shipping.",
+    "current_category": "Fashion & accessories",
+    "retailer": "Billy Tannery",
+    "price": "80",
+    "gender": "men",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 11,
+    "product_id": "cmu3q3v0v0255tcodj0vx1p39",
+    "name": "The Rolltop Backpack",
+    "product_url": "https://www.billytannery.co.uk/products/mens-rolltop-backpack",
+    "description": "A luxury roll top backpack made from premium, sustainable goat and deer leather. Padded back, laptop slot and heavy cotton lining. Made in the Britain. Free shipping.",
+    "current_category": "Fashion & accessories",
+    "retailer": "Billy Tannery",
+    "price": "725",
+    "gender": "men",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 12,
+    "product_id": "cmu3quqgm07h5tcodz6xlhrkb",
+    "name": "Cellular Blanket - Dark Blue",
+    "product_url": "https://babymori.com/products/mori-cellular-blanket-dark-blue",
+    "description": "Crafted from bamboo and cotton, our cellular blanket is perfect for newborns and babies. The holes allow airflow, making it safe for little ones to use in a cot or pushchair. The fabric blend is highly breathable and helps to regulate a baby's temperature. The blanket is cleverly designed to trap air meaning it stays warm in the winter and cool in the summer. Once your little one has grown out of the blanket, it can also be used as a wearable blanket or cover when it's cold. • Made from 50% cott",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 13,
+    "product_id": "cmu3quqgn07h7tcodsltww0gi",
+    "name": "Cellular Blanket - White",
+    "product_url": "https://babymori.com/products/mori-cellular-blanket-white",
+    "description": "Crafted from bamboo and cotton, our cellular blanket is perfect for newborns and babies. The holes allow airflow, making it safe for little ones to use in a cot or pushchair. The fabric blend is highly breathable and helps to regulate a baby's temperature. The blanket is cleverly designed to trap air meaning it stays warm in the winter and cool in the summer. Once your little one has grown out of the blanket, it can also be used as a wearable blanket or cover when it's cold. • Made from 50% cott",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 14,
+    "product_id": "cmu3quqgn07h9tcodb8yhichc",
+    "name": "Cellular Blanket - Grey",
+    "product_url": "https://babymori.com/products/mori-cellular-blanket-grey",
+    "description": "Crafted from bamboo and cotton, our cellular blanket is perfect for newborns and babies. The holes allow airflow, making it safe for little ones to use in a cot or pushchair. The fabric blend is highly breathable and helps to regulate a baby's temperature. The blanket is cleverly designed to trap air meaning it stays warm in the winter and cool in the summer. Once your little one has grown out of the blanket, it can also be used as a wearable blanket or cover when it's cold. • Made from 50% cott",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 15,
+    "product_id": "cmu3quqgn07hbtcod4rny4be2",
+    "name": "Cellular Blanket - Taupe",
+    "product_url": "https://babymori.com/products/mori-cellular-blanket-taupe",
+    "description": "Crafted from bamboo and cotton, our cellular blanket is perfect for newborns and babies. The holes allow airflow, making it safe for little ones to use in a cot or pushchair. The fabric blend is highly breathable and helps to regulate a baby's temperature. The blanket is cleverly designed to trap air meaning it stays warm in the winter and cool in the summer. Once your little one has grown out of the blanket, it can also be used as a wearable blanket or cover when it's cold. • Made from 50% cott",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 16,
+    "product_id": "cmu3quqgo07hftcodd2zfhlke",
+    "name": "Cellular Blanket - Mint",
+    "product_url": "https://babymori.com/products/mori-cellular-blanket-mint",
+    "description": "Crafted from bamboo and cotton, our cellular blanket is perfect for newborns and babies. The holes allow airflow, making it safe for little ones to use in a cot or pushchair. The fabric blend is highly breathable and helps to regulate a baby's temperature. The blanket is cleverly designed to trap air meaning it stays warm in the winter and cool in the summer. Once your little one has grown out of the blanket, it can also be used as a wearable blanket or cover when it's cold. • Made from 50% cott",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 17,
+    "product_id": "cmu3quqgp07hhtcodtst653vc",
+    "name": "Cellular Blanket - Blush",
+    "product_url": "https://babymori.com/products/mori-cellular-blanket",
+    "description": "Crafted from bamboo and cotton, our cellular blanket is perfect for newborns and babies. The holes allow airflow, making it safe for little ones to use in a cot or pushchair. The fabric blend is highly breathable and helps to regulate a baby's temperature. The blanket is cleverly designed to trap air meaning it stays warm in the winter and cool in the summer. Once your little one has grown out of the blanket, it can also be used as a wearable blanket or cover when it's cold. • Made from 50% cott",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 18,
+    "product_id": "cmu3quqgp07hjtcodjznx9n41",
+    "name": "Ribbed Front Opening Sleeping Bag 0.5 TOG - Mint",
+    "product_url": "https://babymori.com/products/ribbed-front-opening-sleeping-bag-0-5-tog",
+    "description": "Our 0.5 TOG sleeping bag is designed for summer slumbers. It's crafted in our unique organic cotton & bamboo fabric with a little stretch for comfort. The sleeping bag features a concealed zip-up front which unzips from the bottom for quicker changes. Sizes 6-24m & 2-4y are adjustable to grow with your baby or toddler. • Made from our ribbed fabric: 67% bamboo, 28% organic cotton and 5% elastane • Fill: 100% polyester • Unzips from the bottom • Adjustable length 6-24m & 2-4y • Contrast binding o",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "33.25",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 19,
+    "product_id": "cmu3r043808l9tcodm4e28at8",
+    "name": "Little Dutch Safari Friends Cuddle Monkey",
+    "product_url": "https://babymori.com/products/little-dutch-safari-friends-cuddle-monkey",
+    "description": "The Little Dutch Safari Friends Cuddle Monkey is a wonderfully soft companion for everyday cuddles and adventures. Sweet embroidery and playful leaves give little hands extra details to discover. • Suitable from birth • Features embroidery and play labels • Soft cuddly monkey toy • Material: 100% polyester • Dimensions: 15 x 34 x 9cm",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "11.96",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 20,
+    "product_id": "cmu3qvhg107m7tcod6gd5mbpo",
+    "name": "Clever Zip Sleepsuit - Blush Stripe",
+    "product_url": "https://babymori.com/products/clever-zip-sleepsuit-blush-stripe",
+    "description": "Meet the baby sleepsuit every parent dreams of. Designed with a concealed two-way zip front, nighttime changes have never been simpler. Plus, it's crafted in the softest signature fabric which is breathable , temperature-regulating and gentle on sensitive skin. • Made from our signature fabric: 70% bamboo and 30% organic cotton • Two-way zip, concealed for safety • Safety tab on zipper • Includes feet on sizes up to 9m • Fold-over scratch mitts up to 9m PERSONALISATION: case sensitive, up to 10 ",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "33.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 21,
+    "product_id": "cmu3quqgj07gptcodfi0rf6ba",
+    "name": "Pre-Washed Regular Muslin - White",
+    "product_url": "https://babymori.com/products/pre-washed-muslin-regular",
+    "description": "A versatile essential, our regular-sized muslin can be used for a myriad of things. It's perfect for mopping up spillages, discreet breastfeeding or as a wearable blanket and crafted in soft and breathable cotton for comfort. Made from 100% organic cotton Pre-washed material All over MORI print Measures: 75cm x 75cm",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "12",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 22,
+    "product_id": "cmu3quqgl07gvtcodbskqa4qo",
+    "name": "Pre-Washed Large Muslin Swaddle - Blue",
+    "product_url": "https://babymori.com/products/pre-washed-muslin-large-swaddle-blue",
+    "description": "Our large muslin is essential for every parent. Crafted in breathable cotton, it has a myriad of uses such as swaddling your little one, burp cloth or a comforting wearable blanket. Made from 100% organic cotton Pre-washed material All over MORI print Measures: 110cm x 110cm ***MORE INFO*** PERSONALISATION: case sensitive, up to 10 characters. Please note: Personalised items will be fulfilled in 5 working days. Personalised items are non-refundable.",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "16",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 23,
+    "product_id": "cmu3quqgl07gxtcodgvecp8ma",
+    "name": "Pre-Washed Large Muslin Swaddle - Grey",
+    "product_url": "https://babymori.com/products/pre-washed-muslin-large-swaddle-grey",
+    "description": "Our large muslin is essential for every parent. Crafted in breathable cotton, it has a myriad of uses such as swaddling your little one, burp cloth or a comforting wearable blanket. Made from 100% organic cotton Pre-washed material All over MORI print Measures: 110cm x 110cm ***MORE INFO*** PERSONALISATION: case sensitive, up to 10 characters. Please note: Personalised items will be fulfilled in 5 working days. Personalised items are non-refundable.",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "16",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 24,
+    "product_id": "cmu3qw8k007tbtcodaph9m1r4",
+    "name": "Annual Sleep Club Membership",
+    "product_url": "https://babymori.com/products/annual-sleep-club-membership-sign-up",
+    "description": "Join the MORI Sleep Club and get an award-winning sleepsuit every month at 50% lower price, in addition to 20% site-wide discount, free unlimited UK delivery and tips and content tailored just for you.",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "178.8",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 25,
+    "product_id": "cmu3qw8k407tttcodut7ooo56",
+    "name": "Ribbed Headband - Rose",
+    "product_url": "https://babymori.com/products/ribbed-headband",
+    "description": "The Ribbed Headband is the perfect finishing touch to your little one's outfit. Crafted from the softest fabric with a hint of stretch for a comfortable fit. • Made from 67% bamboo, 28% organic cotton and 5% elastane • Soft knot detailing • Stretch fabric to grow with little one • newborn - 12 m",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "8.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 26,
+    "product_id": "cmu3qw8k507tztcod473jxh0u",
+    "name": "Ribbed Pyjamas - Mint",
+    "product_url": "https://babymori.com/products/ribbed-pyjama-set-mint",
+    "description": "Cosy sofa days and peaceful slumbers call for the comfiest pyjamas . Ours are made from supersoft fabric with stretch. Top features: • Made from our ribbed fabric: 67% bamboo, 28% organic cotton and 5% elastane • Popper placket on front Bottoms feature: • Made from our ribbed fabric: 67% bamboo, 28% organic cotton and 5% elastane • Elasticated waistband • Cuffs on leg",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "33.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 27,
+    "product_id": "cmu3qwzil07x1tcodmd6cixxp",
+    "name": "Baby Hat - White",
+    "product_url": "https://babymori.com/products/hat",
+    "description": "Our supersoft baby hats are perfect for keeping little heads warm. They're made from breathable and temperature-regulating fabrics. Made from our signature fabric: 70% bamboo and 30% organic cotton Flexible roll-up length",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "12",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 28,
+    "product_id": "cmu3qw8k607u5tcodpiiqmov0",
+    "name": "Ribbed Pyjamas - Blue",
+    "product_url": "https://babymori.com/products/ribbed-pyjama-set-blue",
+    "description": "Cosy sofa days and peaceful slumbers call for the comfiest pyjamas . Ours are made from supersoft fabric with stretch. Top features: • Made from our ribbed fabric: 67% bamboo, 28% organic cotton and 5% elastane • Popper placket on front Bottoms feature: • Made from our ribbed fabric: 67% bamboo, 28% organic cotton and 5% elastane • Elasticated waistband • Cuffs on leg",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "33.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 29,
+    "product_id": "cmu3qw8k707udtcodwgaf1yq5",
+    "name": "Baby Mittens - Oatmeal Stripe",
+    "product_url": "https://babymori.com/products/baby-mittens-oatmeal-stripe",
+    "description": "Keep little hands warm with our baby mittens Made from our signature fabric, the mittens have ribbed cuffs to ensure they stay put . • Made from our signature fabric: 70% bamboo and 30% organic cotton • Ribbed cuffs to keep mittens on hands • Scratch-free design • Fits ages 0-3m",
+    "current_category": "Outerwear",
+    "retailer": "babymori.com",
+    "price": "3.75",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 30,
+    "product_id": "cmu3qw8k707uftcodcxsf2yqa",
+    "name": "Baby Mittens - Grey",
+    "product_url": "https://babymori.com/products/baby-mittens-grey",
+    "description": "Keep little hands warm with our baby mittens Made from our signature fabric, the mittens have ribbed cuffs to ensure they stay put . • Made from our signature fabric: 70% bamboo and 30% organic cotton • Ribbed cuffs to keep mittens on hands • Scratch-free design • Fits ages 0-3m",
+    "current_category": "Outerwear",
+    "retailer": "babymori.com",
+    "price": "7.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 31,
+    "product_id": "cmu3qw8k707uhtcodfcdtje8u",
+    "name": "Baby Mittens - Blue Stripe",
+    "product_url": "https://babymori.com/products/baby-mittens-blue-stripe",
+    "description": "Keep little hands warm with our baby mittens Made from our signature fabric, the mittens have ribbed cuffs to ensure they stay put . • Made from our signature fabric: 70% bamboo and 30% organic cotton • Ribbed cuffs to keep mittens on hands • Scratch-free design • Fits ages 0-3m",
+    "current_category": "Outerwear",
+    "retailer": "babymori.com",
+    "price": "7.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 32,
+    "product_id": "cmu3qw8k907uttcodafam77j1",
+    "name": "Long Sleeve Kimono Bodysuit 4 Pack",
+    "product_url": "https://babymori.com/products/long-sleeve-kimono-bodysuit-4-pack",
+    "description": "Our Long Sleeve Kimono Bodysuit 4 Pack is crafted from our signature bamboo and organic cotton fabric, to ensure only the softest touch on baby’s sensitive skin. Designed for both style and practicality, the baby bodysuits feature a wrap-style front with poppers for fuss-free dressing. Save 25% on RRP when you purchase 4 pack (one bodysuit free) • Made from our signature 30% organic cotton and 70% bamboo fabric • Kimono wrap front • Fold over scratch mitts up to 6m • Nickel-free poppers on crotc",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "67.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 33,
+    "product_id": "cmu3qw8ka07uvtcodx3z6mpyd",
+    "name": "Clever Zip Sleepsuit 2 Pack",
+    "product_url": "https://babymori.com/products/zip-up-sleepsuit-2-pack",
+    "description": "Our Clever Zip Sleepsuit 2 Pack is designed to keep little ones sleeping comfortably all night long. They're crafted in our softest signature fabric for a gentle touch on a baby's sensitive skin. The sleepsuits have a zip from top to toe which makes nighttime changes quick & easy. • Made from our signature 30% organic cotton and 70% bamboo fabric • Two-way zip, concealed for safety • Safety tab on zipper • With feet up to 9m, without feet over 9m • Fold over scratch mitts up to 9m",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "55.25",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 34,
+    "product_id": "cmu3qw8k907urtcod8a7996jy",
+    "name": "Everyday Leggings 3 Pack",
+    "product_url": "https://babymori.com/products/everyday-leggings-3-pack",
+    "description": "Perfect for pairing on with our soft T-Shirts or Sweatshirts, our Leggings Set is perfect for little ones to explore in. • Made from our signature organic cotton 30% and 70% bamboo fabric • Soft elasticated waistband for extra comfort",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "49.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 35,
+    "product_id": "cmu3qw8ka07uxtcodnly8mxi5",
+    "name": "Bunny Comforter - Blush Stripe",
+    "product_url": "https://babymori.com/products/bunny-comforter",
+    "description": "Our Bunny Comforter is bound to become your little one's favourite cuddle companion. Made from our softest signature fabric, it features an adorable bunny face & a loop attachment so it won't get lost. • Made from our signature organic cotton 30% and 70% bamboo fabric • 30 cm x 30 cm • Loop to attach to dummy or pushchair ***MORE INFO*** PERSONALISATION: case sensitive, up to 10 characters. Please note: Personalised items will be fulfilled in 5 working days. Personalised items are non-refundable",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "17",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 36,
+    "product_id": "cmu3qw8kb07v1tcod0aaptepi",
+    "name": "Welcome to our World Set",
+    "product_url": "https://babymori.com/products/welcome-to-our-world-set",
+    "description": "Our Newborn Baby Gift Set is the perfect gift for welcoming a newborn to the world. It includes four of our softest, yet practical essentials all crafted in our signature organic cotton and bamboo fabric which is gentle on a newborn's sensitive skin. The set features our bestselling Clever Zip-Up Sleepsuit & Kimono Bodysuit ideal for keeping little ones comfortably covered day & night, along with a hat and blanket. Clever Zip-Up Sleepsuit features: • Made from our signature 30% organic cotton an",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "58",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 37,
+    "product_id": "cmu3qw8kb07v3tcodx0s5igbm",
+    "name": "Roll Neck Bodysuit & Leggings Set",
+    "product_url": "https://babymori.com/products/roll-neck-bodysuit-leggings-set",
+    "description": "Keep little ones comfortable all day in the Roll Neck Bodysuit & Leggings Set. Both crafted in the softest organic cotton and bamboo. The fabric is breathable with a little stretch for a comfortable fit. The baby bodysuit features popper fastening on the back to make changing babies and toddlers simpler. Bodysuit features: • Made from our signature 30% organic cotton and 70% bamboo fabric • Back opening with poppers • High neck Leggings feature: • Made from our signature 30% organic cotton and 7",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "42",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 38,
+    "product_id": "cmu3qwzit07ybtcod25e4r2tr",
+    "name": "Long Sleeve Bodysuit - Blue Stripe",
+    "product_url": "https://babymori.com/products/long-sleeve-bodysuit-blue-stripe",
+    "description": "An essential for any little one's wardrobe, our Long Sleeve Bodysuit is perfect for day & night. Crafted from our signature organic cotton and bamboo fabric, the baby bodysuit is designed to keep your little one comfortable with long sleeves & an envelope neckline for easy changes. • Made from our signature 30% organic cotton and 70% bamboo fabric • Envelope neck opening for easy dressing • Fold over scratch mitts up to 6m • Nickel-free poppers on crotch PERSONALISATION: case sensitive, up to 10",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 39,
+    "product_id": "cmu3qw8kc07vbtcodbx70qy6x",
+    "name": "Roll Neck Bodysuit 2 Pack",
+    "product_url": "https://babymori.com/products/roll-neck-bodysuit-2-pack",
+    "description": "Our Roll Neck Bodysuit 2 Pack makes dressing your little one simpler. Both are crafted in our signature organic cotton and bamboo fabric which is supersoft and gentle on sensitive skin. The bodysuits feature a back popper opening. • Made from our signature 30% organic cotton and 70% bamboo fabric • Back opening with poppers • High neck • Fold over scratch mitts up to 6m • Nickel-free poppers on crotch Pair with our comfy jogger s for an easy outift.",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "40.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 40,
+    "product_id": "cmu3qwzib07vltcodukdtkdn9",
+    "name": "Bib - Blush Stripe",
+    "product_url": "https://babymori.com/products/bib-blush-stripe",
+    "description": "Ideal for spills and milk dribbles, our Bib is double-ply for an extra layer of absorption. Made in our softest signature fabric, this bandana style bib features poppers for three neck sizes so it fits your little one perfectly. • Made from our signature organic cotton 30% and 70% bamboo fabric • Adjustable to three neck sizes • Double-ply for extra absorption",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "11",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 41,
+    "product_id": "cmu3qwzib07vntcodyziy14tz",
+    "name": "Bib - Blue Stripe",
+    "product_url": "https://babymori.com/products/bib",
+    "description": "Ideal for spills and milk dribbles, our Bib is double-ply for an extra layer of absorption. Made in our softest signature fabric, this bandana style bib features poppers for three neck sizes so it fits your little one perfectly. • Made from our signature organic cotton 30% and 70% bamboo fabric • Adjustable to three neck sizes • Double-ply for extra absorption",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "11",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 42,
+    "product_id": "cmu3qwzia07vhtcodincld6sv",
+    "name": "Pre-Washed Mixed Muslins 6 Pack",
+    "product_url": "https://babymori.com/products/pre-washed-mixed-muslins-6-pack",
+    "description": "Be ready for every moment with our 6-pack of muslins. The pack contains 2 large-sized muslins and 4 regular-sized. Perfect for a myriad of uses from burp cloth to swaddle, or even as wearable blankets. Made from 100% pure cotton Pre-washed material All over MORI print Large measures: 110 x 110cm Regular measures: 75 x 75cm",
+    "current_category": "Home & interiors",
+    "retailer": "babymori.com",
+    "price": "56",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 43,
+    "product_id": "cmu3qwzic07vptcodcm92ki2g",
+    "name": "Short Sleeve Kimono Bodysuit 4 Pack",
+    "product_url": "https://babymori.com/products/short-sleeve-kimono-bodysuit-4-pack",
+    "description": "Keep your little one feeling comfortable on warm days with our Short Sleeve Kimono Bodysuits 4 Pack. Made in our signature fabric, these baby bodysuits have a wrap style front for easy dressing. • Made from our signature 30% organic cotton & 70% bamboo fabric • Wrap kimono style • Nickel-free poppers on crotch Pair with ou r comfy jogge rs for an easy outift.",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "64.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 44,
+    "product_id": "cmu3qwzii07wptcodhxszyegn",
+    "name": "Baby Booties - Oatmeal Stripe",
+    "product_url": "https://babymori.com/products/baby-booties-oatmeal-stripe",
+    "description": "Keep baby's little toes nice and toasty with our Baby Booties. Crafted from our soft signature fabric, the booties have elastic in the heel to make getting dressed simpler. • Made from our signature organic cotton 30% and 70% bamboo fabric • Stretch material at heel to make dressing simple • Without rubber pads for under 9m • With rubber pads on sole for over 9m",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "7.25",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 45,
+    "product_id": "cmu3qwzic07vrtcod5co6uad5",
+    "name": "Front Opening Sleepsuit",
+    "product_url": "https://babymori.com/products/front-opening-sleepsuit",
+    "description": "Crafted in our softest signature fabric, our Front Opening Sleepsuit will ensure your little one has a comfortable sleep every night. Made for those who like to get dressed on their backs, this sleepsuit is designed with nickel-free poppers from head to toe. • Made from our signature 30% organic cotton and 70% bamboo fabric • Nickel-free popper fastening • Fold over scratch mitts up to 9m • With feet up to 9m, without feet over 9m PERSONALISATION : case sensitive, up to 10 characters. Please not",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "20",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 46,
+    "product_id": "cmu3pxfao00sbtcodm0tzoy7y",
+    "name": "Liewood Chase Chair - Tuscany Rose",
+    "product_url": "https://babymori.com/products/liewood-chase-chair-tuscany-rose",
+    "description": "The Liewood Chase Chair gives children a comfy, secure place to sit for crafts, meals or garden play. Made from sturdy recycled materials with anti-slip feet, it’s light enough for them to move themselves and stackable when you need extra space. An ergonomic shape supports little backs, so they can sit happily for longer. • Versatile lounge chair for indoors and outdoors • Made from 60% recycled ABS, easy to wipe clean • Anti-slip TPE feet and wide legs for extra stability • Ergonomic back suppo",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "37.1",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 47,
+    "product_id": "cmu3qwzie07w1tcodxagmrswj",
+    "name": "Long Sleeve Bodysuit 7 Pack",
+    "product_url": "https://babymori.com/products/long-sleeve-bodysuit-7-pack",
+    "description": "We know that little ones get through a lot of clothes, which is why we created the Long Sleeve Bodysuit 7 Pack, ideal for every day of the week. Crafted from our softest and safest signature organic cotton and bamboo fabric, so your baby or toddler is always comfortable. • Made from our signature 30% organic cotton and 70% bamboo fabric • Long sleeves • Envelope neck fastening for easy dressing • Fold over mitts for babies under 6m • Nickel-free poppers on crotch",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "91",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 48,
+    "product_id": "cmu3qwzie07w3tcodxyczpj8a",
+    "name": "Kimono Bodysuit 7 Pack",
+    "product_url": "https://babymori.com/products/kimono-bodysuit-7-pack",
+    "description": "Your little one will spend a lot of their time in a bodysuit , which is why we curated our Kimono Bodysuit 7 Pack to make every day simpler. Made using our softest signature fabric, which provides comfort for your baby or toddler. • Made from our signature 30% organic cotton and 70% bamboo fabric • Long sleeves • Wrap kimono style • Fold over mitts for babies under 6m • Nickel-free poppers on crotch",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "102.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  },
+  {
+    "row_number": 49,
+    "product_id": "cmu3qwzid07vxtcodi24kf325",
+    "name": "Front Opening Sleepsuit 7 Pack",
+    "product_url": "https://babymori.com/products/front-opening-sleepsuit-7-pack",
+    "description": "Sleep is important for your little one's development and health. For the softest sleep every night we’ve created the Front Opening Sleepsuit 7 Pack. All the babgrows included are made from signature organic cotton and bamboo, which is breathable to keep your little one comfortable when dreaming. • Made from our signature organic cotton 30% and 70% bamboo fabric • Nickel-free popper fastening • Safety tab on zipper • Fold over scratch mitts up to 9m • With feet up to 9m, without feet over 9m Pair",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "152.5",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "EIGHTEEN_TO_30",
+      "ELEVEN_TO_17",
+      "FIFTY_ONE_PLUS",
+      "THIRTY_ONE_TO_50"
+    ]
+  },
+  {
+    "row_number": 50,
+    "product_id": "cmu3qwzif07wbtcod5fkixg8r",
+    "name": "Baby Hat - Grey",
+    "product_url": "https://babymori.com/products/hat-grey",
+    "description": "Our supersoft baby hats are perfect for keeping little heads warm. They're made from breathable and temperature-regulating fabrics. Made from our signature fabric: 70% bamboo and 30% organic cotton Flexible roll-up length",
+    "current_category": "Fashion & accessories",
+    "retailer": "babymori.com",
+    "price": "12",
+    "gender": "KIDS",
+    "suitable_age_bands": [
+      "Under 5"
+    ]
+  }
+]

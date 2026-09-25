@@ -1,0 +1,858 @@
+[
+  {
+    "id": "cmtk4fn4j00017p33twvd8nfn",
+    "subscriberId": "cmtjsg00900025zd4j9o1yohd",
+    "name": "Janson",
+    "relationship": "Brother",
+    "occasion": "Birthday",
+    "occasionDay": 6,
+    "occasionMonth": 9,
+    "occasions": [
+      {
+        "day": 6,
+        "type": "Birthday",
+        "month": 9,
+        "budget_max": 600,
+        "budget_min": 250
+      }
+    ],
+    "birthday": "--09-06",
+    "gender": "MALE",
+    "ageRange": "12-17",
+    "childAgeBracket": null,
+    "ageBand": "ELEVEN_TO_17",
+    "budgetMin": "250",
+    "budgetMax": "600",
+    "interests": [
+      "Cooking & food",
+      "Music",
+      "Fashion & accessories",
+      "Tech & gadgets",
+      "Outdoor pursuits",
+      "Theatre & performing arts",
+      "Sustainability & eco living",
+      "Gardening",
+      "Children & family activities",
+      "Film & TV"
+    ],
+    "interestsDetail": null,
+    "personality": [
+      "Practical and no-nonsense",
+      "Adventurous and spontaneous",
+      "Homebody who loves comfort"
+    ],
+    "personalityOther": null,
+    "giftTypes": [
+      "Beautiful objects for the home",
+      "Books or creative content",
+      "Practical but high quality",
+      "Personalised or bespoke items",
+      "Something to wear or carry"
+    ],
+    "giftTypesOther": null,
+    "avoidNotes": null,
+    "whoTheyAre": null,
+    "hobbiesAndInterests": null,
+    "thingsYouKnow": null,
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": null,
+    "lastGiftGenerated": null,
+    "derivedProfile": {
+      "avoid_categories": [
+        "alcohol",
+        "fragrance",
+        "jewelry"
+      ],
+      "persona_keywords": [
+        "teen gadgets",
+        "outdoor adventure gear",
+        "cooking kits",
+        "eco-friendly products",
+        "trendy accessories",
+        "band merch",
+        "gardening starter kit",
+        "creative books",
+        "personalised gifts",
+        "practical everyday items",
+        "film & tv memorabilia",
+        "family activity kits",
+        "durable backpack",
+        "sustainable lifestyle",
+        "music accessories",
+        "young performer supplies"
+      ],
+      "life_stage_summary": "A teenage boy exploring diverse interests from cooking to tech, balancing adventurous outdoor pursuits with home comfort.",
+      "canonical_interests": [
+        "Cooking & food",
+        "Music",
+        "Fashion & accessories",
+        "Tech & gadgets",
+        "Outdoor pursuits",
+        "Art & culture",
+        "Sustainability",
+        "Gardening"
+      ],
+      "canonical_gift_types": [
+        "Beautiful objects for the home",
+        "Books or creative content",
+        "Practical but high quality",
+        "Personalised or bespoke items",
+        "Something to wear or carry"
+      ]
+    },
+    "derivedProfileHash": "5f9abcf4a4d5f6886426e9a4d0f0e485",
+    "createdById": "cmtjsg00000005zd4psliui8h",
+    "createdAt": "2026-09-02T13:17:49.651Z",
+    "updatedAt": "2026-09-08T13:17:55.110Z",
+    "subscriber": {
+      "id": "cmtjsg00000005zd4psliui8h",
+      "email": "pph2shoaib@gmail.com",
+      "password": "$2b$10$xQ2pKprWthSUg4nhQz08NuraN.yrs3YKeWgShXaO5W6ukZzX6z5gC",
+      "firstName": null,
+      "lastName": null,
+      "role": "ADMIN",
+      "isEmailVerified": false,
+      "emailVerificationToken": null,
+      "emailVerifiedAt": null,
+      "passwordResetToken": "cf521f63a61fb855b4641b992babab94ac1f8ad4bcf5b5643a014b4fd03fc4b8",
+      "passwordResetExpires": "2026-09-11T10:50:40.062Z",
+      "lastLoginAt": "2026-09-15T13:43:43.116Z",
+      "createdAt": "2026-09-02T07:42:10.944Z",
+      "updatedAt": "2026-09-15T13:43:43.117Z"
+    }
+  },
+  {
+    "id": "cmtwtxwg1000812fmmnod41pm",
+    "subscriberId": "cmtwtrwon000212fms12xzyos",
+    "name": "Mate",
+    "relationship": "Daughter",
+    "occasion": "Some Special Occassion",
+    "occasionDay": 26,
+    "occasionMonth": 9,
+    "occasions": [
+      {
+        "day": 26,
+        "type": "Some Special Occassion",
+        "month": 9,
+        "budget_max": 230,
+        "budget_min": 100,
+        "custom_label": "Some Special Occassion"
+      }
+    ],
+    "birthday": "--09-26",
+    "gender": "FEMALE",
+    "ageRange": "18-25",
+    "childAgeBracket": null,
+    "ageBand": "EIGHTEEN_TO_30",
+    "budgetMin": "100",
+    "budgetMax": "230",
+    "interests": [
+      "Fashion & accessories",
+      "Art & culture",
+      "Cooking & food",
+      "Beauty & skincare"
+    ],
+    "interestsDetail": {
+      "followUps": {
+        "Pets": [
+          "Dog"
+        ],
+        "Music": [
+          "Listening"
+        ],
+        "Gaming (video games)": [
+          "Mobile"
+        ]
+      },
+      "interests": [
+        "Cooking & food",
+        "Music",
+        "Gaming (video games)",
+        "Pets"
+      ]
+    },
+    "personality": [
+      "Creative and expressive"
+    ],
+    "personalityOther": null,
+    "giftTypes": [
+      "Things to eat or drink"
+    ],
+    "giftTypesOther": null,
+    "avoidNotes": "does not drink at all",
+    "whoTheyAre": "some special day for her",
+    "hobbiesAndInterests": "love to sing or listen songs",
+    "thingsYouKnow": "i need best gifts minimum 10",
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": null,
+    "lastGiftGenerated": null,
+    "derivedProfile": {
+      "avoid_categories": [
+        "alcohol"
+      ],
+      "persona_keywords": [
+        "gourmet snacks",
+        "artisan chocolates",
+        "specialty tea",
+        "mocktail mixers",
+        "non-alcoholic drinks",
+        "skincare set",
+        "makeup palette",
+        "trendy accessories",
+        "statement jewelry",
+        "art supplies",
+        "creative journal",
+        "music playlist gift",
+        "vinyl record",
+        "concert-inspired",
+        "aesthetic packaging",
+        "colorful and expressive",
+        "self-care kit",
+        "curated gift box",
+        "artisanal food",
+        "birthday celebration"
+      ],
+      "life_stage_summary": "A young adult daughter celebrating a special occasion, expressing creativity through fashion, art, and food while avoiding alcohol.",
+      "canonical_interests": [
+        "Fashion & accessories",
+        "Art & culture",
+        "Cooking & food",
+        "Beauty & skincare",
+        "Music"
+      ],
+      "canonical_gift_types": [
+        "Things to eat or drink"
+      ]
+    },
+    "derivedProfileHash": "4dde0456dcc1bff57c66d781784a6dda",
+    "createdById": "cmtwtrwoj000012fmxhkvoo3x",
+    "createdAt": "2026-09-11T10:45:06.050Z",
+    "updatedAt": "2026-09-11T13:21:36.874Z",
+    "subscriber": {
+      "id": "cmtwtrwoj000012fmxhkvoo3x",
+      "email": "nicklos99@sumiu.email",
+      "password": "$2b$10$fexT1yUn2xkxiaJRilGggeU27q0DMzn4xnNGjx2g2O1i/lIN7YcLG",
+      "firstName": "Nicolas",
+      "lastName": "Jack",
+      "role": "USER",
+      "isEmailVerified": false,
+      "emailVerificationToken": "44a91d45546f0d4e04d9d60ab30422f8347e7c2b1fff30afcd94f6ab6e94e12c",
+      "emailVerifiedAt": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null,
+      "lastLoginAt": "2026-09-11T13:51:39.949Z",
+      "createdAt": "2026-09-11T10:40:26.419Z",
+      "updatedAt": "2026-09-11T13:51:39.950Z"
+    }
+  },
+  {
+    "id": "cmtx0djsz000pkxic45lare3b",
+    "subscriberId": "cmtwtrwon000212fms12xzyos",
+    "name": "Sam",
+    "relationship": "Son",
+    "occasion": "Birthday",
+    "occasionDay": 22,
+    "occasionMonth": 11,
+    "occasions": [
+      {
+        "day": 22,
+        "type": "Birthday",
+        "month": 11,
+        "budget_max": 450,
+        "budget_min": 50
+      }
+    ],
+    "birthday": "--11-22",
+    "gender": "MALE",
+    "ageRange": "12-17",
+    "childAgeBracket": null,
+    "ageBand": "ELEVEN_TO_17",
+    "budgetMin": "50",
+    "budgetMax": "450",
+    "interests": [
+      "Cooking & food",
+      "Wine & Drinks",
+      "Beauty & skincare",
+      "Sustainability & eco living",
+      "Football",
+      "Swimming",
+      "Art & culture",
+      "Music",
+      "Film & TV",
+      "Podcasts & audiobooks",
+      "Home & interiors",
+      "Watches",
+      "Fashion & accessories",
+      "Gaming (video games)",
+      "Board games & puzzles",
+      "Science & nature",
+      "Pets"
+    ],
+    "interestsDetail": {
+      "followUps": {
+        "Pets": [
+          "Dog",
+          "Cat"
+        ],
+        "Music": [
+          "Listening",
+          "Playing an instrument"
+        ],
+        "Wine & Drinks": [
+          "Wine",
+          "Beer"
+        ],
+        "Gaming (video games)": [
+          "Console",
+          "Mobile"
+        ]
+      },
+      "interests": [
+        "Cooking & food",
+        "Wine & Drinks",
+        "Beauty & skincare",
+        "Sustainability & eco living",
+        "Football",
+        "Swimming",
+        "Art & culture",
+        "Music",
+        "Film & TV",
+        "Podcasts & audiobooks",
+        "Home & interiors",
+        "Watches",
+        "Fashion & accessories",
+        "Gaming (video games)",
+        "Board games & puzzles",
+        "Science & nature",
+        "Pets"
+      ]
+    },
+    "personality": [
+      "Adventurous and spontaneous",
+      "Ambitious and career-focused",
+      "Homebody who loves comfort"
+    ],
+    "personalityOther": null,
+    "giftTypes": [
+      "Subscriptions or memberships",
+      "Pampering and self-care",
+      "Things to eat or drink",
+      "Something to wear or carry"
+    ],
+    "giftTypesOther": null,
+    "avoidNotes": "",
+    "whoTheyAre": "",
+    "hobbiesAndInterests": "",
+    "thingsYouKnow": "",
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": "",
+    "lastGiftGenerated": null,
+    "derivedProfile": null,
+    "derivedProfileHash": null,
+    "createdById": "cmtwtrwoj000012fmxhkvoo3x",
+    "createdAt": "2026-09-11T13:45:13.859Z",
+    "updatedAt": "2026-09-11T13:45:13.859Z",
+    "subscriber": {
+      "id": "cmtwtrwoj000012fmxhkvoo3x",
+      "email": "nicklos99@sumiu.email",
+      "password": "$2b$10$fexT1yUn2xkxiaJRilGggeU27q0DMzn4xnNGjx2g2O1i/lIN7YcLG",
+      "firstName": "Nicolas",
+      "lastName": "Jack",
+      "role": "USER",
+      "isEmailVerified": false,
+      "emailVerificationToken": "44a91d45546f0d4e04d9d60ab30422f8347e7c2b1fff30afcd94f6ab6e94e12c",
+      "emailVerifiedAt": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null,
+      "lastLoginAt": "2026-09-11T13:51:39.949Z",
+      "createdAt": "2026-09-11T10:40:26.419Z",
+      "updatedAt": "2026-09-11T13:51:39.950Z"
+    }
+  },
+  {
+    "id": "cmty5cqrg000a13bbmrvqsz3b",
+    "subscriberId": "cmty57h7q000413bbwoa7zqb0",
+    "name": "Izzy",
+    "relationship": "Partner / spouse",
+    "occasion": "Birthday",
+    "occasionDay": 11,
+    "occasionMonth": 10,
+    "occasions": [
+      {
+        "day": 11,
+        "type": "Birthday",
+        "month": 10,
+        "budget_max": 800,
+        "budget_min": 200
+      }
+    ],
+    "birthday": "--10-11",
+    "gender": "FEMALE",
+    "ageRange": "46-55",
+    "childAgeBracket": null,
+    "ageBand": "THIRTY_ONE_TO_50",
+    "budgetMin": "200",
+    "budgetMax": "800",
+    "interests": [
+      "Wine & Drinks",
+      "Wellness & self-care",
+      "Beauty & skincare",
+      "Watches",
+      "Jewellery"
+    ],
+    "interestsDetail": {
+      "followUps": {
+        "Wine & Drinks": [
+          "Wine"
+        ]
+      },
+      "interests": [
+        "Wine & Drinks",
+        "Wellness & self-care",
+        "Beauty & skincare",
+        "Watches",
+        "Jewellery"
+      ]
+    },
+    "personality": [
+      "Adventurous and spontaneous",
+      "Social and outgoing"
+    ],
+    "personalityOther": null,
+    "giftTypes": [
+      "Something to wear or carry",
+      "Things to eat or drink",
+      "Pampering and self-care"
+    ],
+    "giftTypesOther": null,
+    "avoidNotes": null,
+    "whoTheyAre": "Mother, very busy and takes little time for herself, loves to socialize and loves fashion and designer brands",
+    "hobbiesAndInterests": null,
+    "thingsYouKnow": "Blue is her favourite colour, prefers gold jewelry",
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": null,
+    "lastGiftGenerated": null,
+    "derivedProfile": {
+      "avoid_categories": [],
+      "persona_keywords": [
+        "gold jewelry",
+        "blue accents",
+        "fine wine",
+        "cocktail set",
+        "spa day",
+        "luxury skincare",
+        "statement watch",
+        "self-care ritual",
+        "elegant accessories",
+        "champagne",
+        "gold necklace",
+        "adventure travel",
+        "social gatherings",
+        "chic and stylish",
+        "indulgent treats",
+        "premium beauty products",
+        "spontaneous getaway",
+        "gold-tone jewelry",
+        "wellness retreat"
+      ],
+      "life_stage_summary": "An adventurous, socially active woman in her 30s-40s who values self-care, style, and quality experiences with her partner.",
+      "canonical_interests": [
+        "Wine & drinks",
+        "Wellness & self-care",
+        "Beauty & skincare",
+        "Fashion & accessories"
+      ],
+      "canonical_gift_types": [
+        "Things to eat or drink",
+        "Something to wear or carry",
+        "Pampering and self-care"
+      ]
+    },
+    "derivedProfileHash": "5fe1dde4a98f4f90d44bf6b9c61f9620",
+    "createdById": "cmty57h7l000213bbdo9h5q7q",
+    "createdAt": "2026-09-12T08:52:20.477Z",
+    "updatedAt": "2026-09-14T14:21:19.883Z",
+    "subscriber": {
+      "id": "cmty57h7l000213bbdo9h5q7q",
+      "email": "gemmayuill@gmail.com",
+      "password": "$2b$10$.95jTuZ5PqgMYqa0CScIY.eIuDgtzgQKEHokS3SRbxpdFkYcu67Qe",
+      "firstName": "Gemma",
+      "lastName": "Yuill",
+      "role": "USER",
+      "isEmailVerified": false,
+      "emailVerificationToken": null,
+      "emailVerifiedAt": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null,
+      "lastLoginAt": "2026-09-12T08:57:22.996Z",
+      "createdAt": "2026-09-12T08:48:14.817Z",
+      "updatedAt": "2026-09-12T08:57:22.997Z"
+    }
+  },
+  {
+    "id": "cmty5lzgk001413bb6i4dtfp0",
+    "subscriberId": "cmty57h7q000413bbwoa7zqb0",
+    "name": "Mum",
+    "relationship": "Mother",
+    "occasion": "Birthday",
+    "occasionDay": 1,
+    "occasionMonth": 11,
+    "occasions": [
+      {
+        "day": 1,
+        "type": "Birthday",
+        "month": 11,
+        "budget_max": 300,
+        "budget_min": 100
+      }
+    ],
+    "birthday": "--11-01",
+    "gender": "FEMALE",
+    "ageRange": "66-75",
+    "childAgeBracket": null,
+    "ageBand": "FIFTY_ONE_TO_70",
+    "budgetMin": "100",
+    "budgetMax": "300",
+    "interests": [
+      "Coffee & tea",
+      "Cooking & food",
+      "Beauty & skincare",
+      "Fashion & accessories"
+    ],
+    "interestsDetail": {
+      "followUps": {},
+      "interests": [
+        "Coffee & tea",
+        "Cooking & food",
+        "Beauty & skincare",
+        "Fashion & accessories"
+      ]
+    },
+    "personality": [
+      "Practical and no-nonsense",
+      "Deeply sentimental",
+      "Homebody who loves comfort"
+    ],
+    "personalityOther": null,
+    "giftTypes": [
+      "Beautiful objects for the home",
+      "Things to eat or drink",
+      "Something to wear or carry"
+    ],
+    "giftTypesOther": null,
+    "avoidNotes": "",
+    "whoTheyAre": "",
+    "hobbiesAndInterests": "",
+    "thingsYouKnow": "",
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": "",
+    "lastGiftGenerated": null,
+    "derivedProfile": {
+      "avoid_categories": [
+        "tech",
+        "plastic"
+      ],
+      "persona_keywords": [
+        "artisan tea",
+        "specialty coffee",
+        "gourmet ingredients",
+        "cozy home decor",
+        "luxury skincare",
+        "hand cream",
+        "elegant scarf",
+        "quality handbag",
+        "comfortable loungewear",
+        "sentimental keepsake",
+        "practical elegance",
+        "kitchen accessories",
+        "soft blanket",
+        "classic accessories",
+        "self-care essentials",
+        "no-fuss quality",
+        "timeless style",
+        "comfort-focused"
+      ],
+      "life_stage_summary": "A mature woman in her mature adult years who values comfort, quality, and sentimentality in her practical, home-centered lifestyle.",
+      "canonical_interests": [
+        "Cooking & food",
+        "Beauty & skincare",
+        "Fashion & accessories"
+      ],
+      "canonical_gift_types": [
+        "Beautiful objects for the home",
+        "Things to eat or drink",
+        "Something to wear or carry"
+      ]
+    },
+    "derivedProfileHash": "85f1bea76890bdcce59b48595e0bd1a0",
+    "createdById": "cmty57h7l000213bbdo9h5q7q",
+    "createdAt": "2026-09-12T08:59:31.652Z",
+    "updatedAt": "2026-09-14T07:08:39.896Z",
+    "subscriber": {
+      "id": "cmty57h7l000213bbdo9h5q7q",
+      "email": "gemmayuill@gmail.com",
+      "password": "$2b$10$.95jTuZ5PqgMYqa0CScIY.eIuDgtzgQKEHokS3SRbxpdFkYcu67Qe",
+      "firstName": "Gemma",
+      "lastName": "Yuill",
+      "role": "USER",
+      "isEmailVerified": false,
+      "emailVerificationToken": null,
+      "emailVerifiedAt": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null,
+      "lastLoginAt": "2026-09-12T08:57:22.996Z",
+      "createdAt": "2026-09-12T08:48:14.817Z",
+      "updatedAt": "2026-09-12T08:57:22.997Z"
+    }
+  },
+  {
+    "id": "cmty5fe8j000c13bbfb3o6ww9",
+    "subscriberId": "cmty57h7q000413bbwoa7zqb0",
+    "name": "Ben",
+    "relationship": "Brother",
+    "occasion": "Birthday",
+    "occasionDay": 7,
+    "occasionMonth": 10,
+    "occasions": [
+      {
+        "day": 7,
+        "type": "Birthday",
+        "month": 10,
+        "budget_max": 150,
+        "budget_min": 50
+      }
+    ],
+    "birthday": "--10-07",
+    "gender": "MALE",
+    "ageRange": "46-55",
+    "childAgeBracket": null,
+    "ageBand": "THIRTY_ONE_TO_50",
+    "budgetMin": "50",
+    "budgetMax": "150",
+    "interests": [
+      "Cooking & food",
+      "Watches",
+      "DIY & tools",
+      "Gardening",
+      "Tech & gadgets"
+    ],
+    "interestsDetail": {
+      "followUps": {},
+      "interests": [
+        "Cooking & food",
+        "Watches",
+        "DIY & tools",
+        "Gardening",
+        "Tech & gadgets"
+      ]
+    },
+    "personality": [
+      "Practical and no-nonsense",
+      "Adventurous and spontaneous"
+    ],
+    "personalityOther": null,
+    "giftTypes": [
+      "Experiences",
+      "Things to eat or drink"
+    ],
+    "giftTypesOther": null,
+    "avoidNotes": "Alcohol they don’t drink",
+    "whoTheyAre": null,
+    "hobbiesAndInterests": null,
+    "thingsYouKnow": "Just moved into a new home and doing up their garden",
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": null,
+    "lastGiftGenerated": null,
+    "derivedProfile": {
+      "avoid_categories": [
+        "alcohol"
+      ],
+      "persona_keywords": [
+        "gourmet snacks",
+        "artisan condiments",
+        "garden tools",
+        "outdoor gadgets",
+        "smart home devices",
+        "watch accessories",
+        "diy kit",
+        "planters",
+        "grilling gear",
+        "adventure experience",
+        "non-alcoholic craft drinks",
+        "kitchen gadgets",
+        "practical homeware",
+        "new homeowner",
+        "spontaneous getaway",
+        "quality toolset",
+        "coffee or tea selection",
+        "gardening starter set"
+      ],
+      "life_stage_summary": "A practical, adventurous man in his 30s-40s settling into a new home and building out his garden.",
+      "canonical_interests": [
+        "Cooking & food",
+        "Gardening",
+        "Tech & gadgets",
+        "Home & interior"
+      ],
+      "canonical_gift_types": [
+        "Experiences",
+        "Things to eat or drink",
+        "Practical but high quality"
+      ]
+    },
+    "derivedProfileHash": "2bc8460f653f61efb685fa1dc4c79f76",
+    "createdById": "cmty57h7l000213bbdo9h5q7q",
+    "createdAt": "2026-09-12T08:54:24.212Z",
+    "updatedAt": "2026-09-15T12:23:22.999Z",
+    "subscriber": {
+      "id": "cmty57h7l000213bbdo9h5q7q",
+      "email": "gemmayuill@gmail.com",
+      "password": "$2b$10$.95jTuZ5PqgMYqa0CScIY.eIuDgtzgQKEHokS3SRbxpdFkYcu67Qe",
+      "firstName": "Gemma",
+      "lastName": "Yuill",
+      "role": "USER",
+      "isEmailVerified": false,
+      "emailVerificationToken": null,
+      "emailVerifiedAt": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null,
+      "lastLoginAt": "2026-09-12T08:57:22.996Z",
+      "createdAt": "2026-09-12T08:48:14.817Z",
+      "updatedAt": "2026-09-12T08:57:22.997Z"
+    }
+  },
+  {
+    "id": "cmu2q2iz1028118qyhgt2mmxj",
+    "subscriberId": "cmu2q0b70027v18qya9zytgp0",
+    "name": "Alester",
+    "relationship": "Brother",
+    "occasion": "Birthday",
+    "occasionDay": 31,
+    "occasionMonth": 9,
+    "occasions": [
+      {
+        "day": 31,
+        "type": "Birthday",
+        "month": 9,
+        "budget_max": 200,
+        "budget_min": 80
+      }
+    ],
+    "birthday": "--09-31",
+    "gender": "MALE",
+    "ageRange": "18-25",
+    "childAgeBracket": null,
+    "ageBand": "EIGHTEEN_TO_30",
+    "budgetMin": "80",
+    "budgetMax": "200",
+    "interests": [
+      "Cooking & food",
+      "Travel & adventure",
+      "Wine & Drinks",
+      "Film & TV",
+      "Reading & books",
+      "Watches"
+    ],
+    "interestsDetail": {
+      "followUps": {
+        "Wine & Drinks": [
+          "Wine",
+          "Beer"
+        ]
+      },
+      "interests": [
+        "Cooking & food",
+        "Travel & adventure",
+        "Wine & Drinks",
+        "Film & TV",
+        "Reading & books",
+        "Watches"
+      ]
+    },
+    "personality": [],
+    "personalityOther": null,
+    "giftTypes": [],
+    "giftTypesOther": null,
+    "avoidNotes": null,
+    "whoTheyAre": null,
+    "hobbiesAndInterests": null,
+    "thingsYouKnow": null,
+    "milestones": null,
+    "involvementLevel": null,
+    "commsPreferences": null,
+    "notes": null,
+    "lastGiftGenerated": null,
+    "derivedProfile": {
+      "avoid_categories": [],
+      "persona_keywords": [
+        "craft cocktails",
+        "wine tasting",
+        "gourmet cooking",
+        "travel gear",
+        "watch accessories",
+        "leather goods",
+        "film buff",
+        "novel",
+        "adventure trip",
+        "kitchen gadgets",
+        "whisky",
+        "world cuisine",
+        "classic watches",
+        "cinema",
+        "foodie",
+        "exploration",
+        "bookshop finds",
+        "sophisticated",
+        "young professional"
+      ],
+      "life_stage_summary": "A young adult male exploring career and lifestyle interests, likely early in professional life with a taste for culture and adventure.",
+      "canonical_interests": [
+        "Cooking & food",
+        "Travel & adventure",
+        "Wine & drinks",
+        "Art & culture",
+        "Reading & literature",
+        "Fashion & accessories"
+      ],
+      "canonical_gift_types": [
+        "Experiences",
+        "Things to eat or drink",
+        "Practical but high quality",
+        "Books or creative content",
+        "Something to wear or carry"
+      ]
+    },
+    "derivedProfileHash": "47ed253c23b12e7e76e6fde32ab563c2",
+    "createdById": "cmu2q0b6w027t18qyc6415554",
+    "createdAt": "2026-09-15T13:43:20.461Z",
+    "updatedAt": "2026-09-15T13:43:25.272Z",
+    "subscriber": {
+      "id": "cmu2q0b6w027t18qyc6415554",
+      "email": "jasonroy@gonebox.email",
+      "password": "$2b$10$3dxUby.RfcUwrcxbKZqrZ.Xbhd.Cq1tmcQ/2Zt45bJN/ZNuTX3UA.",
+      "firstName": "Jason",
+      "lastName": "Roy",
+      "role": "USER",
+      "isEmailVerified": false,
+      "emailVerificationToken": null,
+      "emailVerifiedAt": null,
+      "passwordResetToken": null,
+      "passwordResetExpires": null,
+      "lastLoginAt": null,
+      "createdAt": "2026-09-15T13:41:37.065Z",
+      "updatedAt": "2026-09-15T13:41:37.065Z"
+    }
+  }
+]

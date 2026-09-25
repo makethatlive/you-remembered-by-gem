@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, CheckSquare, Users, CalendarDays, Send, BarChart3, Store, Package, UserCog, ClipboardList, BookOpen, Activity } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Users, CalendarDays, Send, BarChart3, Store, Package, UserCog, ClipboardList, BookOpen, Activity, CalendarClock } from "lucide-react";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -8,6 +8,7 @@ const TABS = [
   { id: "retailers", label: "Retailers", icon: Store },
   { id: "products", label: "Products", icon: Package },
   { id: "calendar", label: "Calendar", icon: CalendarDays },
+  { id: "occasions", label: "Occasions", icon: CalendarClock },
   { id: "sent", label: "Sent", icon: Send },
   { id: "insights", label: "Insights", icon: BarChart3 },
   { id: "audit", label: "Audit", icon: ClipboardList },

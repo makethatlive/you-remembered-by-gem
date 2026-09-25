@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-09-17T13:19:06.439Z",
+  "stats": {
+    "total": 10,
+    "scraped": 5,
+    "skipped": 0,
+    "failed": 5,
+    "errors": 0
+  },
+  "results": [
+    {
+      "success": true,
+      "productId": "cmu5jo9bd013oksb0bxu9jtr4",
+      "status": "scraped",
+      "description": "Mysteries in Time delivers a new historical era every month — stories, crafts, maps and hands-on activities for kids aged 6–11. Loved by families, homeschoolers and schools. Families rate us 4.9 out of 5. Start your adventure today.",
+      "descriptionLength": 232
+    },
+    {
+      "success": false,
+      "productId": "cmu5jo8rj013lksb03mv7r1yc",
+      "status": "failed",
+      "reason": "no_description_found"
+    },
+    {
+      "success": false,
+      "productId": "cmu5jo8hk013jksb08wpgcnsx",
+      "status": "failed",
+      "reason": "HTTP 403"
+    },
+    {
+      "success": false,
+      "productId": "cmu5jo87d013hksb0tzl02y4z",
+      "status": "failed",
+      "reason": "HTTP 403"
+    },
+    {
+      "success": true,
+      "productId": "cmu5jo7mu013eksb0vwovwpcs",
+      "status": "scraped",
+      "description": "Rookie Quad Roller Skates RosaMake a statement with Rookie's new Rosa skates which feature delicate Rose embroidered detailing. Based on the timeless shape of Rookie's classic figure skating model with extra padded fleece lining.Synthetic padded soft boot with fleece liningPU cast wheels 58mm x 32mm",
+      "descriptionLength": 300
+    },
+    {
+      "success": true,
+      "productId": "cmu5jo731013bksb0dbch1pkh",
+      "status": "scraped",
+      "description": "Experience the pinnacle of throwing performance with the Aerobie Pro Ring. This isn't just a flying disc—it is the legendary, world-record-setting design capable of traveling an astonishing 1,333 feet (406...",
+      "descriptionLength": 208
+    },
+    {
+      "success": false,
+      "productId": "cmu5jo6sy0139ksb08ueu9s1h",
+      "status": "failed",
+      "reason": "no_description_found"
+    },
+    {
+      "success": true,
+      "productId": "cmu5jo6iw0137ksb07zj8rkwi",
+      "status": "scraped",
+      "description": "<p>Make every party an unforgettable event with KIDYKARAOKE, the portable karaoke speaker that combines powerful sound and lighting effects. Equipped with two wireless microphones and a host of fun features, this speaker turns any venue into a performance stage. With its 40W speaker and varied sound and lighting effects, KIDYKARAOKE is the ideal companion for your parties, whether you're at home or on the move.</p> <p>Box Contents<br>KIDYKARAOKE<br>Two wireless microphones<br>USB-C charging cable<br>User manual</p> <p>Product Age: 5+<br>Product Dimensions: 22 x 22 x 9.8 cm (l x w x h)<br>Product Weight: 963 grams<br>Packaging Dimensions: 10 x 22.2 x 22.7 cm (l x w x h)<br>Packaged Product Weight: 1134 grams<br>Barcode: 5407009181788<br>HS Code: 8518210000<br>Battery Type: Li-Ion<br>Battery Capacity: Rechargeable 3,7V 1800 mAh<br>Battery Weight: 40 grams</p>",
+      "descriptionLength": 869
+    },
+    {
+      "success": false,
+      "productId": "cmu5jo5pg0134ksb061i7n3a5",
+      "status": "failed",
+      "reason": "HTTP 403"
+    },
+    {
+      "success": true,
+      "productId": "cmu5jo5fs0132ksb015b13hk0",
+      "status": "scraped",
+      "description": "Moulin Roty Giant Soap Bubbles Set - 5 different rings and a string to make wonderful soap bubbles of all sizes and shapes! Shop Moulin Roty at Crafts4Kids 🎁Gift Wrap and Send Service",
+      "descriptionLength": 184
+    }
+  ]
+}

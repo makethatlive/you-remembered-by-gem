@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-16T06:20:28.853Z",
+  "databaseUrl": "Set (hidden)",
+  "counts": {
+    "products": 1797,
+    "retailers": 298,
+    "subscribers": 7,
+    "recipients": 7,
+    "giftLists": 14,
+    "giftItems": 16,
+    "users": 7,
+    "emailLogs": 3,
+    "scrapeStates": 1
+  }
+}

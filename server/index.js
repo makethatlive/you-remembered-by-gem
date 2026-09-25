@@ -2506,6 +2506,98 @@ app.post('/api/audit/forensic', async (req, res) => {
   }
 });
 
+// ==================== GLOBAL OCCASION DATES (ADMIN) ====================
+
+/**
+ * GET /api/admin/occasion-dates
+ * 
+ * Get all global occasion dates (admin only)
+ * Returns occasions sorted by type and year
+ */
+app.get('/api/admin/occasion-dates', async (req, res) => {
+  try {
+    const dates = await prisma.globalOccasionDate.findMany({
+      orderBy: [
+        { occasionType: 'asc' },
+        { year: 'asc' }
+      ]
+    });
+    res.json(dates);
+  } catch (error) {
+    console.error('Error fetching occasion dates:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/occasion-dates
+ * 
+ * Create or update a global occasion date (admin only)
+ * Body: { occasionType, year, month, day, notes }
+ */
+app.post('/api/admin/occasion-dates', async (req, res) => {
+  try {
+    const { occasionType, year, month, day, notes } = req.body;
+    
+    if (!occasionType || !year || !month || !day) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: occasionType, year, month, day' 
+      });
+    }
+    
+    // Validate month and day
+    if (month < 1 || month > 12) {
+      return res.status(400).json({ error: 'Month must be between 1 and 12' });
+    }
+    if (day < 1 || day > 31) {
+      return res.status(400).json({ error: 'Day must be between 1 and 31' });
+    }
+    
+    const date = await prisma.globalOccasionDate.upsert({
+      where: {
+        occasionType_year: {
+          occasionType,
+          year: parseInt(year)
+        }
+      },
+      create: {
+        occasionType,
+        year: parseInt(year),
+        month: parseInt(month),
+        day: parseInt(day),
+        notes: notes || null
+      },
+      update: {
+        month: parseInt(month),
+        day: parseInt(day),
+        notes: notes || null
+      }
+    });
+    
+    res.json(date);
+  } catch (error) {
+    console.error('Error saving occasion date:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/occasion-dates/:id
+ * 
+ * Delete a global occasion date (admin only)
+ */
+app.delete('/api/admin/occasion-dates/:id', async (req, res) => {
+  try {
+    await prisma.globalOccasionDate.delete({
+      where: { id: req.params.id }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting occasion date:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 API Server running on http://localhost:${PORT}`);

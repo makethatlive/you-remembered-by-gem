@@ -1,0 +1,899 @@
+{
+  "timestamp": "2026-09-21T09:27:55.010Z",
+  "totalUpdates": 83,
+  "successCount": 83,
+  "failCount": 0,
+  "ageBandStats": {
+    "1-2": 16,
+    "3-4": 45,
+    "5-6": 63,
+    "7-8": 59,
+    "9-11": 37
+  },
+  "updates": [
+    {
+      "id": "cmu5jmsvi00y7ksb0xkxx91p7",
+      "name": "Spot's First Little Library",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4"
+      ],
+      "reasoning": "Board books teaching colours, shapes, words and numbers for little ones. Ideal for toddlers and preschoolers; content too simple for older children."
+    },
+    {
+      "id": "cmu5jmtf300yaksb0cfao7hui",
+      "name": "Montessori Stacking Toy Wooden Blocks",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Large wooden stacking blocks for cognitive development, motor skills and creativity. Safe for toddlers through early primary; too basic for older kids."
+    },
+    {
+      "id": "cmu5jmtyn00ydksb06tb01n05",
+      "name": "Happy Veggies Wooden Puzzle",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4"
+      ],
+      "reasoning": "Colourful wooden puzzle for toddlers to develop fine motor skills and shape recognition. Suitable for 1-4 years; too simple for school-age children."
+    },
+    {
+      "id": "cmu5jmu8j00yfksb0mh0jopdm",
+      "name": "Personalised Bedtime For You Book",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Personalised bedtime story in verse for little ones. Appeals to toddlers through early primary who enjoy cosy bedtime reading."
+    },
+    {
+      "id": "cmu5jmuiq00yhksb0fpjr3802",
+      "name": "Peanut Penguin",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Soft cuddly Jellycat penguin plush. Safe for babies and loved by young children up to early primary school age."
+    },
+    {
+      "id": "cmu5jmuso00yjksb0tgev48gn",
+      "name": "Steiff Soft Cuddly Friends My First Hoppie Rabbit",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4"
+      ],
+      "reasoning": "Soft first rabbit for newborns and babies with stitched features and bean bags. Designed as a first companion; less appealing beyond preschool."
+    },
+    {
+      "id": "cmu5jmvcc00ymksb0d7axtm8z",
+      "name": "Gaby Bath Toys",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4"
+      ],
+      "reasoning": "Bath toys set for young children. Safe and engaging for toddlers and preschoolers during bath time."
+    },
+    {
+      "id": "cmu5jmvw300ypksb0cnbl0kot",
+      "name": "DreamHaven Canvas Play Teepee",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Premium canvas teepee for imaginative play. Suitable for preschool through primary school children who enjoy role-play dens."
+    },
+    {
+      "id": "cmu5jmwfy00ysksb0yw4eqo8b",
+      "name": "LEGO DUPLO 10914 Deluxe Brick Box Classic Building Bricks Set",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Large DUPLO bricks designed for toddlers and preschoolers. Safe for 1+, engages children up to early primary before they move to standard LEGO."
+    },
+    {
+      "id": "cmu5jmx9k00yvksb0838zl7n1",
+      "name": "Janod Tropik - Multi Activity Trolley",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4"
+      ],
+      "reasoning": "Wooden multi-activity trolley for 12 months+ to aid walking and motor skills. Perfect for toddlers and young preschoolers."
+    },
+    {
+      "id": "cmu5jmxjo00yxksb0bx2t6qf7",
+      "name": "Mini 3in1 Deluxe Ride On Scooter, Blue",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "3-in-1 ride-on scooter that converts as child grows. Suitable from toddlers learning to balance through early primary school."
+    },
+    {
+      "id": "cmu5jmy3i00z0ksb02g03u26j",
+      "name": "Petit Collage Carry Along Kitten Sketch Book Set",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Sketchbook with stickers and pencils for creative drawing. Appeals to preschool through early primary children."
+    },
+    {
+      "id": "cmu5jmynj00z3ksb0d8qixk27",
+      "name": "Farm Yard Tales Craft Kit",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Magnetic farm art board for ages 3+. Develops creativity and fine motor skills for preschool and early primary."
+    },
+    {
+      "id": "cmu5jmyxh00z5ksb0sntqd5ai",
+      "name": "Kids Space Hopper - Super Heroes",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Space hopper for ages 3-6. Active play toy ideal for preschool and early primary children."
+    },
+    {
+      "id": "cmu5jmz7h00z7ksb0j907a8z8",
+      "name": "Educational Wooden Games - Djeco Crococroc",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Memory and sequencing wooden game for 3+. Suitable for preschool and early primary school children."
+    },
+    {
+      "id": "cmu5jmzhh00z9ksb0n04k5tmd",
+      "name": "Jungle Dough Sensory Kids Craft Kit",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Scented play dough with mats for ages 3-7. Engages preschool through early primary children in sensory play."
+    },
+    {
+      "id": "cmu5jmzrl00zbksb0uiddevai",
+      "name": "Hot Wheels Monster Trucks 1:64 Trophy Champions Collection",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Die-cast monster trucks with small parts. Suitable for school-age children from 5+ who enjoy vehicle play."
+    },
+    {
+      "id": "cmu5jn01j00zdksb09f1vom82",
+      "name": "Pup Squad Racers Gift Set",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "PAW Patrol small race cars for imaginative play. Appeals to preschool through primary school fans of the show."
+    },
+    {
+      "id": "cmu5jn0bg00zfksb0ckeeh8l7",
+      "name": "Super Mario Deluxe Bowser's Airship Playset",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Super Mario playset with figures and vehicle. Suitable for primary school children familiar with the franchise."
+    },
+    {
+      "id": "cmu5jn0v500ziksb0dbyzi8h8",
+      "name": "Montessori Colour Puzzle with Challenge Cards",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Montessori stacking colour puzzle with challenge cards for ages 3-5+. Builds focus and spatial skills through primary years."
+    },
+    {
+      "id": "cmu5jn1f300zlksb0c3lwqjn8",
+      "name": "Hot Wheels City Hot Wheels Ultimate Dual Dragon Transporter and Cars Playset",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Large Hot Wheels transporter playset. Engaging for school-age children who love cars and track play."
+    },
+    {
+      "id": "cmu5jn1z200zoksb0vkdsdlqo",
+      "name": "LEGO® DUPLO® 10459 Bluey: Bluey's Family House",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "DUPLO set for ages 3+ with Bluey figures and memory game. Perfect for preschool and early primary Bluey fans."
+    },
+    {
+      "id": "cmu5jn29100zqksb0ki4ggxeh",
+      "name": "Brio World Animal Farm Wooden Train Set, FSC-Certified",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Wooden train and farm set promoting motor skills and imaginative play. Suitable for preschool through primary school."
+    },
+    {
+      "id": "cmu5jn2j300zsksb0041lu022",
+      "name": "PAW Patrol My Size Lookout Tower with Chase Figure and Vehicle",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Large PAW Patrol tower playset. Appeals to preschool and primary school children who love the show."
+    },
+    {
+      "id": "cmu5jn2wi00zuksb0kkjhcbk4",
+      "name": "NERF Marvel Spider-Man Strike 'N Splash Blaster",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Water blaster for outdoor play. Suitable for school-age children who enjoy active superhero games."
+    },
+    {
+      "id": "cmu5jn36f00zwksb0nzqhsjr2",
+      "name": "Tumble Tower Game - Wooden Animal Blocks & Dice",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Animal-themed wooden tumble tower teaching recognition and motor skills. Ideal for preschool through primary."
+    },
+    {
+      "id": "cmu5jn3ge00zyksb0flx7a6nf",
+      "name": "LEGO Creator 3 in 1 Fierce Dinosaur Construction Set",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Standard LEGO Creator set with multiple builds. Suitable for primary school children developing building skills."
+    },
+    {
+      "id": "cmu5jn4020101ksb0vp1jgeqr",
+      "name": "The Peter Rabbit Library",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Classic Peter Rabbit book collection. Enjoyed by preschool through primary school children for reading and stories."
+    },
+    {
+      "id": "cmu5jn49w0103ksb060wsyo3q",
+      "name": "Djeco Guitar - 6 Metal Strings",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Wooden toy guitar that functions as a real instrument. Suitable for preschool through primary musical exploration."
+    },
+    {
+      "id": "cmu5jn4ju0105ksb0qlyvsv9t",
+      "name": "Marvel Spider-Man Remote Control Skateboard Figure Set",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "RC skateboard figure set. Appeals to school-age children who enjoy remote control and superhero toys."
+    },
+    {
+      "id": "cmu5jn53q0108ksb06sasdhfh",
+      "name": "Woody Interactive Talking Action Figure, Toy Story",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Interactive talking Woody figure. Suitable for preschool and primary school Toy Story fans."
+    },
+    {
+      "id": "cmu5jn5dm010aksb0yu1xuw9q",
+      "name": "Hot Wheels City Hot Wheels Ultimate Dual Dragon Transporter and Cars Playset",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Hot Wheels transporter playset (duplicate listing). Suitable for school-age children."
+    },
+    {
+      "id": "cmu5jn5nh010cksb04tmxkd3s",
+      "name": "Neon Creative Wall Art Video Game Controller",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Creative neon wall art kit themed around video game controllers. Best for older primary children interested in gaming aesthetics."
+    },
+    {
+      "id": "cmu5jn76g010fksb0qlc24a75",
+      "name": "Tovla Jr. Montessori Pizza-Making Kit",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Real cooking pizza kit for ages 4+. Develops practical skills for early primary through upper primary."
+    },
+    {
+      "id": "cmu5jn7ic010hksb0355op6fu",
+      "name": "My Magic Show Set - 20 Tricks",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Magic set with 20 tricks. Suitable for school-age children developing performance and fine motor skills."
+    },
+    {
+      "id": "cmu5jn7s8010jksb0m55h18r6",
+      "name": "Laser X Revolution Laser Tag Double Blasters 2 Pack",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Laser tag blasters for active outdoor play. Best for older primary children who can follow rules and coordinate."
+    },
+    {
+      "id": "cmu5jn82c010lksb0icddazbh",
+      "name": "Moulin Roty Giant Soap Bubbles Set",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Giant bubble set with rings and string. Fun outdoor play for preschool through primary school."
+    },
+    {
+      "id": "cmu5jn8ca010nksb0tmdpz6zl",
+      "name": "Urban Return Ball",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Return ball toy requiring coordination. Suitable for older primary school children."
+    },
+    {
+      "id": "cmu5jn95y010qksb0ds8ehs9v",
+      "name": "Antarctic Animals Science Kit",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Science kit focused on Antarctic animals. Engaging educational activity for older primary children."
+    },
+    {
+      "id": "cmu5jn9py010tksb0pnm7133u",
+      "name": "loog mini acoustic",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "3-string mini guitar for ages 3+. Ideal first instrument for preschool through primary school music learning."
+    },
+    {
+      "id": "cmu5jnaa5010wksb0tti73f80",
+      "name": "School of Icing Class",
+      "oldBands": [],
+      "newBands": [
+        "9-11"
+      ],
+      "reasoning": "In-person icing class with minimum age 14. Restricted to older children/teens capable of following detailed instructions; listed under children but age-restricted."
+    },
+    {
+      "id": "cmu5jnaty010zksb0w6nozr0t",
+      "name": "Aerobie Pro Ring",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "High-performance flying ring. Suitable for older primary children with good throwing and catching skills."
+    },
+    {
+      "id": "cmu5jnbds0112ksb0azx58w1o",
+      "name": "Anime Pinball",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Anime-themed pinball game. Appeals to older primary children interested in anime and arcade-style play."
+    },
+    {
+      "id": "cmu5jnbqj0114ksb06ev04l2i",
+      "name": "Double Dance Mat Dance Game",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Dance mat game for active play. Suitable for primary school children of various ages."
+    },
+    {
+      "id": "cmu5jne4f0117ksb09bs54sdw",
+      "name": "Ultimate Go Karting Race Experience",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Indoor go-karting experience. Height and safety restrictions typically limit to older primary children and up."
+    },
+    {
+      "id": "cmu5jnfbz0119ksb0dcazy4ge",
+      "name": "Hydraulic Robot Arm",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Buildable hydraulic robot arm kit. Suitable for older primary children interested in engineering and STEM."
+    },
+    {
+      "id": "cmu5jngns011cksb0p2c10c48",
+      "name": "Kids' Ages 8 to 12 Years Skateboard",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Skateboard explicitly for ages 8-12. Matches upper primary school range."
+    },
+    {
+      "id": "cmu5jnh6t011eksb0dbgw3ogk",
+      "name": "Kids Interactive, Inflatable LED Punch Bag",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Inflatable LED punch bag for active play. Suitable for primary school children."
+    },
+    {
+      "id": "cmu5jnhqh011gksb0gi84o6o9",
+      "name": "OXELO Kids' Scooter",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Kids scooter for outdoor riding. Suitable for primary school ages with adjustable features."
+    },
+    {
+      "id": "cmu5jnizl011jksb0p1yrzqwz",
+      "name": "Spiekball Pro Set",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Roundnet/spikeball set for more serious play. Best for older primary children with coordination and strength."
+    },
+    {
+      "id": "cmu5jnjv3011lksb0rmqy7ahd",
+      "name": "Discovering Stem - Architecture Set",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "STEM architecture building set. Suitable for older primary children interested in design and engineering."
+    },
+    {
+      "id": "cmu5jnkh9011oksb0isheit1h",
+      "name": "Personalised Rag Doll, Brook",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Soft rag doll suitable from birth. Loved by toddlers through early primary for cuddles and imaginative play."
+    },
+    {
+      "id": "cmu5jnl6l011qksb0m8t0spij",
+      "name": "Mini 3in1 Deluxe Ride On Scooter, Pink",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "3-in-1 ride-on scooter that grows with the child. Suitable from toddlers to early primary."
+    },
+    {
+      "id": "cmu5jnlnm011sksb0tyvfw2cq",
+      "name": "Pokemon Pikachu 8\" Plush Soft Toy",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Soft Pikachu plush for ages 2+. Appeals broadly from toddlers through primary school Pokémon fans."
+    },
+    {
+      "id": "cmu5jnly1011uksb05ws4vtuf",
+      "name": "Peppa Pig Wooden Tea Party Set",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Wooden tea set for imaginative play. Ideal for preschool and early primary Peppa Pig fans."
+    },
+    {
+      "id": "cmu5jnma3011wksb0lipqngmh",
+      "name": "Djeco Musical Boxes - Melody of the Woods",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4"
+      ],
+      "reasoning": "Musical box for ages 12 months+. Enchanting for toddlers and young preschoolers."
+    },
+    {
+      "id": "cmu5jnmx6011zksb09xbx8c01",
+      "name": "Liewood - Lennart Doctor Set",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Silicone doctor playset for imaginative role-play. Suitable for preschool and early primary."
+    },
+    {
+      "id": "cmu5jnnhm0122ksb0gki4edfh",
+      "name": "Strawberry Basket Bag",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Cute accessory bag. Appeals to preschool through primary school children for dress-up and play."
+    },
+    {
+      "id": "cmu5jnnsk0124ksb0r8020rki",
+      "name": "Fairy Wings Costume",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Costume wings for imaginative dress-up. Popular with preschool and primary school children."
+    },
+    {
+      "id": "cmu5jno2n0126ksb05yhal8vg",
+      "name": "Bluey 3 in 1 Transforming Plane",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Bluey transforming plane playset. Suitable for preschool through primary Bluey fans."
+    },
+    {
+      "id": "cmu5jnomr0128ksb04ohomgg4",
+      "name": "Bluey's Family House with Memory Game",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Bluey house playset with memory game. Ideal for preschool and early primary children."
+    },
+    {
+      "id": "cmu5jnpag012aksb0cdn5xz1f",
+      "name": "Djeco Wooden Toy Piano",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Colourful wooden toy piano for ages 3+. Encourages musical play for preschool through primary."
+    },
+    {
+      "id": "cmu5jnq4b012dksb0s5j6zhrr",
+      "name": "BANWOOD BALANCE BIKE FIRST GO VINTAGE - PINK",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Balance bike for ages 2-5. Develops balance and confidence from toddlers through early primary."
+    },
+    {
+      "id": "cmu5jnqee012fksb0ebi0irxx",
+      "name": "Djeco Do It Yourself - Funky Family - 15 Magnets to Decorate",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "DIY magnet decoration kit for ages 4+. Suitable for early to mid primary children."
+    },
+    {
+      "id": "cmu5jnqod012hksb0i8fp29nk",
+      "name": "Djeco Inspired By Frida Kahlo - 3D Pictures",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "3D picture craft kit for ages 5+. Creative activity for primary school children."
+    },
+    {
+      "id": "cmu5jnrbz012kksb07b3fnb0t",
+      "name": "Pink PAW Patrol Skye Backpack",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Character backpack for young children. Suitable for preschool through primary PAW Patrol fans."
+    },
+    {
+      "id": "cmu5jnrns012mksb0qhv0fjmx",
+      "name": "Wooden Shuffleboard & Puck 2 in 1 Game",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Two-in-one wooden game for ages 4+. Family game suitable for primary school children."
+    },
+    {
+      "id": "cmu5jnsaa012pksb0oj4477ku",
+      "name": "Great Pretenders The 5th Avenue Paillette Cape",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Sequinned dress-up cape. Perfect for imaginative play from preschool through primary."
+    },
+    {
+      "id": "cmu5jnvfq012sksb0n5tnbr8f",
+      "name": "Liewood Dante Silicone Beach Set",
+      "oldBands": [],
+      "newBands": [
+        "1-2",
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Silicone beach toys for sensory and motor play. Safe and fun for toddlers through early primary."
+    },
+    {
+      "id": "cmu5jnx16012uksb0ozjhokkp",
+      "name": "Vtech Kidi® Dj Drums",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Interactive electronic drums. Suitable for preschool through primary music play."
+    },
+    {
+      "id": "cmu5jnyby012wksb0t41nf8vu",
+      "name": "Vtech Kidizoom Printcam",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Kids camera with printing function. Best for school-age children who can handle tech toys."
+    },
+    {
+      "id": "cmu5jnyn0012yksb02vx4u592",
+      "name": "EUGY Whale Shark - Kids Cardboard Craft Kit",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "3D cardboard model kit for ages 6+. Educational craft for primary school children."
+    },
+    {
+      "id": "cmu5jo52f0130ksb0cz92lhwd",
+      "name": "Janod Kawaii Create Your Own Origami Boxes",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Origami craft kit. Suitable for primary school children with developing fine motor skills."
+    },
+    {
+      "id": "cmu5jo5fs0132ksb015b13hk0",
+      "name": "Moulin Roty Giant Soap Bubbles Set",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6",
+        "7-8"
+      ],
+      "reasoning": "Giant bubble set (duplicate). Fun for preschool through primary outdoor play."
+    },
+    {
+      "id": "cmu5jo5pg0134ksb061i7n3a5",
+      "name": "K-Pop Demon Hunters HUNTR/X Rumi",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Character figure/merchandise from popular series. Appeals to older primary children interested in the franchise."
+    },
+    {
+      "id": "cmu5jo6iw0137ksb07zj8rkwi",
+      "name": "KIDYKARAOKE Portable Karaoke Speaker Green by Kidywolf",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Portable karaoke speaker with mics for ages 5+. Fun for primary school parties and music play."
+    },
+    {
+      "id": "cmu5jo6sy0139ksb08ueu9s1h",
+      "name": "Power Pony Electric Ride On Princess",
+      "oldBands": [],
+      "newBands": [
+        "3-4",
+        "5-6"
+      ],
+      "reasoning": "Electric ride-on pony. Suitable for preschool and early primary children under adult supervision."
+    },
+    {
+      "id": "cmu5jo731013bksb0dbch1pkh",
+      "name": "Aerobie Pro Ring",
+      "oldBands": [],
+      "newBands": [
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "High-performance flying ring (duplicate). Best for older primary with good motor skills."
+    },
+    {
+      "id": "cmu5jo7mu013eksb0vwovwpcs",
+      "name": "Quad Roller Skates",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Quad roller skates with padded lining. Suitable for primary school children learning to skate."
+    },
+    {
+      "id": "cmu5jo87d013hksb0tzl02y4z",
+      "name": "Skate Lesson",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Skate lesson experience. Appropriate for primary school children of various skill levels."
+    },
+    {
+      "id": "cmu5jo8hk013jksb08wpgcnsx",
+      "name": "OXELO Kids' Scooter",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Kids scooter (duplicate). Suitable for primary school ages."
+    },
+    {
+      "id": "cmu5jo8rj013lksb03mv7r1yc",
+      "name": "The Craft Adventure Box",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "Monthly craft subscription box. Designed for primary school children interested in creative projects."
+    },
+    {
+      "id": "cmu5jo9bd013oksb0bxu9jtr4",
+      "name": "History Subscription Box for ages 6-11; learn through story driven adventures",
+      "oldBands": [],
+      "newBands": [
+        "5-6",
+        "7-8",
+        "9-11"
+      ],
+      "reasoning": "History subscription explicitly for ages 6-11. Matches early to upper primary school range."
+    }
+  ]
+}

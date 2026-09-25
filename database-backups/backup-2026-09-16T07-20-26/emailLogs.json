@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cmtwtrx0n000612fmbl48rwlx",
+    "subscriberId": "cmtwtrwon000212fms12xzyos",
+    "recipientId": null,
+    "giftListId": null,
+    "emailType": "WELCOME",
+    "occasionYear": null,
+    "sentAt": "2026-09-11T10:40:26.854Z",
+    "status": "SENT",
+    "createdAt": "2026-09-11T10:40:26.855Z",
+    "updatedAt": "2026-09-11T10:40:26.855Z"
+  },
+  {
+    "id": "cmty57hf3000813bbywbfpzcr",
+    "subscriberId": "cmty57h7q000413bbwoa7zqb0",
+    "recipientId": null,
+    "giftListId": null,
+    "emailType": "WELCOME",
+    "occasionYear": null,
+    "sentAt": "2026-09-12T08:48:15.086Z",
+    "status": "SENT",
+    "createdAt": "2026-09-12T08:48:15.087Z",
+    "updatedAt": "2026-09-12T08:48:15.087Z"
+  },
+  {
+    "id": "cmu2q0bd3027z18qys2rgv0m1",
+    "subscriberId": "cmu2q0b70027v18qya9zytgp0",
+    "recipientId": null,
+    "giftListId": null,
+    "emailType": "WELCOME",
+    "occasionYear": null,
+    "sentAt": "2026-09-15T13:41:37.287Z",
+    "status": "SENT",
+    "createdAt": "2026-09-15T13:41:37.288Z",
+    "updatedAt": "2026-09-15T13:41:37.288Z"
+  }
+]

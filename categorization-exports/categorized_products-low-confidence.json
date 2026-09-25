@@ -1,0 +1,596 @@
+[
+  {
+    "product_id": "cmu3qqwnp06s3tcod14mp5h07",
+    "row_number": 2636,
+    "name": "KEW Terracotta Dish Planter Set",
+    "current_category": "Plant Pot",
+    "corrected_category": "Lifestyle & Wellbeing > Wellness & self-care",
+    "confidence": "low",
+    "reasoning": "Gift set, general"
+  },
+  {
+    "product_id": "cmu3qqwnq06s7tcodil4v3b61",
+    "row_number": 2697,
+    "name": "KEW Terracotta Pot | Medium",
+    "current_category": "Plant Pot",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qqwnp06s5tcodximz1q92",
+    "row_number": 2698,
+    "name": "KEW Terracotta Pot | Petite",
+    "current_category": "Plant Pot",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qqwnq06s9tcod2dh4ll2d",
+    "row_number": 2699,
+    "name": "KEW Terracotta Pot | Large",
+    "current_category": "Plant Pot",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhi06tftcodrqs4s1jo",
+    "row_number": 2712,
+    "name": "Stove Utensil Jar",
+    "current_category": "Utensil Jar",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhl06tptcodiiqpqng8",
+    "row_number": 2718,
+    "name": "Hair Scrunchie | Neutral Tones",
+    "current_category": "Hair Scrunchie",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhn06tttcodfytkwya9",
+    "row_number": 2720,
+    "name": "ITHACA Colander",
+    "current_category": "Colander",
+    "corrected_category": "Lifestyle & Wellbeing > Wellness & self-care",
+    "confidence": "low",
+    "reasoning": "Gift set, general"
+  },
+  {
+    "product_id": "cmu3qrqhx06uptcodnl71hdo9",
+    "row_number": 2728,
+    "name": "Bottle Opener",
+    "current_category": "Bottle Opener",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhw06untcod8022zmf6",
+    "row_number": 2731,
+    "name": "Citrus Press",
+    "current_category": "Citrus Press",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qq4el06kttcodbh8pygel",
+    "row_number": 2801,
+    "name": "Polished Jute Ball | 250g",
+    "current_category": "Jute Ball",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhz06uxtcodupv4i5mm",
+    "row_number": 2803,
+    "name": "Wooden Dish Head | Replacement Head",
+    "current_category": "Dish Brush",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qq4et06lltcod1m24wqa2",
+    "row_number": 2805,
+    "name": "Flax Yarn Holder",
+    "current_category": "Flax Yarn Holder",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qqwn606pttcodxtz1zm1v",
+    "row_number": 2807,
+    "name": "Wooden Spatula",
+    "current_category": "Spatula",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qshm106zftcodbbc1h9hm",
+    "row_number": 2809,
+    "name": "Wooden Dish Drainer",
+    "current_category": "Wooden Dish Drainer",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhs06u9tcod9mok3uqu",
+    "row_number": 2810,
+    "name": "Multi-Purpose Cleaning Cloths",
+    "current_category": "Cleaning Cloths",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhi06tdtcodmci6vdyg",
+    "row_number": 2813,
+    "name": "Marmalade Jar",
+    "current_category": "Utensil Jar",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhg06t3tcodggwn248u",
+    "row_number": 2814,
+    "name": "Wooden Cooking Spoon",
+    "current_category": "Spoons",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qrqhk06tntcodvhlstyq9",
+    "row_number": 2815,
+    "name": "Denim Style Fabric Scrunchie",
+    "current_category": "Hair Scrunchie",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q8pw60321tcodmuivwcq8",
+    "row_number": 2952,
+    "name": "Vintage Rose Key Strap",
+    "current_category": "Miscellanous",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q4ogo0267tcodaw90qqcr",
+    "row_number": 3008,
+    "name": "Broderie Handkerchief",
+    "current_category": "All Products Exc. Food & Drinks",
+    "corrected_category": "Lifestyle & Wellbeing > Wellness & self-care",
+    "confidence": "low",
+    "reasoning": "Gift set, general"
+  },
+  {
+    "product_id": "cmu3q4ogm025ztcodu1umyfi9",
+    "row_number": 3010,
+    "name": "Sticker Pack",
+    "current_category": "All Products Exc. Food & Drinks",
+    "corrected_category": "Lifestyle & Wellbeing > Wellness & self-care",
+    "confidence": "low",
+    "reasoning": "Gift set, general"
+  },
+  {
+    "product_id": "cmu3q1ej001k5tcodqsk6xx0z",
+    "row_number": 3019,
+    "name": "Vintage Rose Dog Bandana",
+    "current_category": "Pet Accessories",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q0kin01jftcodd4qad5xl",
+    "row_number": 3040,
+    "name": "Vintage Rose Dog Lead",
+    "current_category": "Pet Accessories",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q4ogr026ntcodmi93nzns",
+    "row_number": 3149,
+    "name": "Owala FreeSip 0.45L / 16oz Water Bottle",
+    "current_category": "6-8 yrs",
+    "corrected_category": "Lifestyle & Wellbeing > Wellness & self-care",
+    "confidence": "low",
+    "reasoning": "Gift set, general"
+  },
+  {
+    "product_id": "cmu3q0kin01jhtcodcletub5e",
+    "row_number": 3327,
+    "name": "Vintage Rose Dog Collar",
+    "current_category": "Pet Accessories",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q7ys102xftcod325up8bp",
+    "row_number": 3339,
+    "name": "Amla Juice",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q1ejc01lxtcodb7x01nxb",
+    "row_number": 3354,
+    "name": "Multi Mushroom Daily Immune Defense",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qa7x403c9tcod3f9toedn",
+    "row_number": 3356,
+    "name": "AG1 Travel Packs",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q7ys202xhtcodosw6jmcw",
+    "row_number": 3364,
+    "name": "Amazfit Amazfit Balance 2",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q9gwt038btcod0c9oa9wo",
+    "row_number": 3365,
+    "name": "Grass-fed Beef Organs",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q9gwo037ltcodq6b07f25",
+    "row_number": 3366,
+    "name": "Apollo Neuro Apollo® Wearable + SmartVibes™ AI Membership - Twilight",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qayvo03gftcodfaci4q2q",
+    "row_number": 3367,
+    "name": "True Biome Jar",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qayuw03f9tcod5kfiqygs",
+    "row_number": 3370,
+    "name": "Vitamin C+Probiotics",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3py7dj00y3tcod1lvthb0z",
+    "row_number": 3374,
+    "name": "Ancient Nutrition Rapid Hydration Powder - Lemon Lime",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qaywc03j7tcod2di44t0s",
+    "row_number": 3375,
+    "name": "Vegetarian Collagen Peptides Powder",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q1ejr01ojtcod07ou4ucz",
+    "row_number": 3376,
+    "name": "Multi Collagen Protein - Pure",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q4ogp026htcodo83p4cts",
+    "row_number": 3377,
+    "name": "Bone Broth Collagen - Pure",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q3v0r024ftcodxw31hfj2",
+    "row_number": 3378,
+    "name": "Multi Collagen Protein Beauty Within",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q27zu01pntcodxhbesan0",
+    "row_number": 3379,
+    "name": "Men's Multi",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3pzqn10191tcod8tkw612n",
+    "row_number": 3380,
+    "name": "Activated Charcoal Powder",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qa7we0391tcod5a2xrw4b",
+    "row_number": 3384,
+    "name": "Grass-Fed Beef Spleen",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggw03s1tcodkbfd9gqg",
+    "row_number": 3711,
+    "name": "24-Hour Eyeshadow and Liner 1.64g",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q8pvo030xtcodis62xjb8",
+    "row_number": 3716,
+    "name": "7 Elixir 50ml",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggo03qttcod0fn5ym5h",
+    "row_number": 3717,
+    "name": "50 Angled Eye Lining Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggq03r5tcod09rlc2t8",
+    "row_number": 3718,
+    "name": "3D Eyelash Mascara Waterproof 4.2g",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggq03r1tcodk50h6ioo",
+    "row_number": 3720,
+    "name": "37 Bronzer Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qlh9o05nttcodz8ta9nek",
+    "row_number": 3724,
+    "name": "100 Precision Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcgh103svtcod0lda25vw",
+    "row_number": 3725,
+    "name": "23 Angled Crease Contour Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggn03qjtcodkefhlogr",
+    "row_number": 3728,
+    "name": "40 Medium Laydown Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggn03qltcoduplnwdgg",
+    "row_number": 3729,
+    "name": "54 Va Va Voom Smudge Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggj03pvtcodo13zwm5t",
+    "row_number": 3732,
+    "name": "65 Angled Contour Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q3v0a021ntcodb4dwfkj8",
+    "row_number": 4017,
+    "name": "24-Hour Eyeshadow and Liner 1.64g",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q3v01020ftcodrr0b71x8",
+    "row_number": 4019,
+    "name": "7 Elixir 100ml",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3q3v0b021ttcod1wbtgs75",
+    "row_number": 4020,
+    "name": "29 Tapered Blending Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggv03rttcod0mqpjnfa",
+    "row_number": 4022,
+    "name": "3-Ply Stainless Steel Square Roaster",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggo03qptcod0j71fvvd",
+    "row_number": 4024,
+    "name": "5 Powder Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggv03rvtcodkvlfvtx7",
+    "row_number": 4042,
+    "name": "3-Ply Stainless Steel Sauté Pan with Lid",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggr03r7tcodukq6472t",
+    "row_number": 4250,
+    "name": "3D Eyelash Mascara 4.2g",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggs03rhtcodasfwckda",
+    "row_number": 4253,
+    "name": "3-Ply Stainless Steel Rectangular Roaster",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggs03rftcod3q7xhug1",
+    "row_number": 4255,
+    "name": "3-Dot Round Sunglasses",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggx03sbtcod651u4t4x",
+    "row_number": 4257,
+    "name": "24-Hour Eyeshadow and Liner 1.64g",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggw03s7tcodxh3cx2s7",
+    "row_number": 4263,
+    "name": "2PK Peacock Garden 45x45cm Napkin",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggk03q3tcodfnxwibvj",
+    "row_number": 4536,
+    "name": "62 Fan Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qd71u03wptcodvw7aqm8z",
+    "row_number": 4580,
+    "name": "200 Medium Precision Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggp03qvtcodasq5uxc8",
+    "row_number": 4740,
+    "name": "48 Blending Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  },
+  {
+    "product_id": "cmu3qcggu03rptcodaosjdyip",
+    "row_number": 4748,
+    "name": "300 Large Precision Brush",
+    "current_category": "",
+    "corrected_category": "Home, Style & Objects > Fashion & accessories",
+    "confidence": "low",
+    "reasoning": "Default fashion/accessory"
+  }
+]
