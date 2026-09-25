@@ -29,7 +29,14 @@ const FIXED_OCCASIONS = {
  * @returns {Promise<Date|null>} The resolved date, or null if not found
  */
 export async function resolveOccasionDate(occasion, year) {
-  const { type, day, month } = occasion;
+  const { type, day, month, date } = occasion;
+  
+  // Personal occasions with explicit date string (for "Other" custom occasions)
+  if (PERSONAL_OCCASIONS.includes(type) && date) {
+    const d = new Date(date);
+    // Use the month/day from the provided date but with target year
+    return new Date(year, d.getMonth(), d.getDate());
+  }
   
   // Personal occasions: use recipient's stored date
   if (PERSONAL_OCCASIONS.includes(type)) {

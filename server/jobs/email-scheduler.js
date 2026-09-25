@@ -103,13 +103,14 @@ cron.schedule('*/10 * * * *', async () => {
 });
 
 /**
- * Birthday/Occasion Reminder Job
- * Runs daily at 9:00 AM
- * Sends 6-week, 2-week, and post-occasion reminders
+ * Multi-Occasion Reminder Job
+ * Runs daily at 10:00 AM UTC (11:40 AM Pakistan Time = UTC+5:40 is actually 6:00 AM UTC)
+ * Actually runs at 6:00 AM UTC to match Pakistan 11:40 AM
+ * Sends immediate generation (≤42 days), 2-week, and post-occasion reminders
  */
-cron.schedule('0 9 * * *', async () => {
-  const jobName = 'Birthday Reminders';
-  console.log(`\n🔍 [${new Date().toISOString()}] ${jobName}: Checking...`);
+cron.schedule('0 6 * * *', async () => {
+  const jobName = 'Multi-Occasion Check';
+  console.log(`\n🔍 [${new Date().toISOString()}] ${jobName}: Starting...`);
   
   try {
     const recipients = await prisma.recipient.findMany({
