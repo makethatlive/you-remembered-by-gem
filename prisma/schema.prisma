@@ -410,6 +410,8 @@ model EmailLog {
   giftListId   String?    @map("gift_list_id")
   emailType    EmailType  @map("email_type")
   occasionYear Int?       @map("occasion_year")
+  occasionType String?    @map("occasion_type") // NEW: Track which occasion (Birthday, Christmas, Eid, etc.)
+  occasionDate DateTime?  @map("occasion_date") @db.Date // NEW: Actual date of the occasion
   sentAt       DateTime   @default(now()) @map("sent_at")
   status       EmailStatus @default(SENT)
   createdAt    DateTime   @default(now()) @map("created_at")
@@ -422,6 +424,7 @@ model EmailLog {
 
   @@index([subscriberId])
   @@index([emailType])
+  @@index([occasionType])
   @@map("email_logs")
 }
 

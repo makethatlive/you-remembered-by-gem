@@ -2598,6 +2598,202 @@ app.delete('/api/admin/occasion-dates/:id', async (req, res) => {
   }
 });
 
+// ==================== OCCASION CHECK (TESTING) ====================
+
+/**
+ * POST /api/admin/run-occasion-check
+ * 
+ * Manually run the occasion check (for testing Phase 2)
+ * Checks all recipients for upcoming occasions and sends appropriate emails
+ * 
+ * This is a TESTING endpoint - will be replaced by scheduled cron job in production
+ */
+app.post('/api/admin/run-occasion-check', async (req, res) => {
+  try {
+    const {
+      getAllRecipientOccasions,
+      daysUntil,
+      daysSince,
+      hasEmailBeenSent,
+      logEmailSend
+    } = await import('./utils/occasion-resolver.js');
+    
+    console.log('\n🔍 Starting occasion check...\n');
+    
+    // Get all recipients
+    const recipients = await prisma.recipient.findMany({
+      include: {
+        subscriber: true
+      }
+    });
+    
+    const currentYear = new Date().getFullYear();
+    const results = [];
+    let emailsSent = 0;
+    
+    for (const recipient of recipients) {
+      if (!recipient.subscriber?.email) {
+        console.log(`⏭️  Skipping ${recipient.name} - no subscriber email`);
+        continue;
+      }
+      
+      // Get all occasions for this recipient
+      const occasions = await getAllRecipientOccasions(recipient, currentYear);
+      
+      console.log(`\n👤 ${recipient.name} - ${occasions.length} occasion(s)`);
+      
+      for (const occasion of occasions) {
+        const until = daysUntil(occasion.date);
+        const since = daysSince(occasion.date);
+        const occasionLabel = occasion.customLabel || occasion.type;
+        
+        console.log(`   📅 ${occasionLabel}: ${occasion.date.toDateString()} (${until} days)`);
+        
+        // 6-week reminder (42 days before)
+        if (until === 42) {
+          const alreadySent = await hasEmailBeenSent(
+            recipient.id,
+            occasion.type,
+            'SIX_WEEK_REMINDER',
+            currentYear
+          );
+          
+          if (!alreadySent) {
+            console.log(`      ✉️  Sending 6-week reminder...`);
+            
+            // TODO: Send actual email via Resend
+            // For now, just log it
+            
+            await logEmailSend({
+              subscriberId: recipient.subscriberId,
+              recipientId: recipient.id,
+              emailType: 'SIX_WEEK_REMINDER',
+              occasionType: occasion.type,
+              occasionYear: currentYear,
+              occasionDate: occasion.date,
+              status: 'SENT'
+            });
+            
+            emailsSent++;
+            results.push({
+              recipient: recipient.name,
+              occasion: occasionLabel,
+              type: '6_week_reminder',
+              status: 'sent'
+            });
+          } else {
+            console.log(`      ⏭️  6-week reminder already sent`);
+          }
+        }
+        
+        // 2-week reminder (14 days before)
+        if (until === 14) {
+          const alreadySent = await hasEmailBeenSent(
+            recipient.id,
+            occasion.type,
+            'FOURTEEN_DAY',
+            currentYear
+          );
+          
+          if (!alreadySent) {
+            console.log(`      ✉️  Sending 2-week reminder...`);
+            
+            await logEmailSend({
+              subscriberId: recipient.subscriberId,
+              recipientId: recipient.id,
+              emailType: 'FOURTEEN_DAY',
+              occasionType: occasion.type,
+              occasionYear: currentYear,
+              occasionDate: occasion.date,
+              status: 'SENT'
+            });
+            
+            emailsSent++;
+            results.push({
+              recipient: recipient.name,
+              occasion: occasionLabel,
+              type: '2_week_reminder',
+              status: 'sent'
+            });
+          } else {
+            console.log(`      ⏭️  2-week reminder already sent`);
+          }
+        }
+        
+        // Post-occasion follow-up (2 days after)
+        if (since === 2) {
+          const alreadySent = await hasEmailBeenSent(
+            recipient.id,
+            occasion.type,
+            'POST_OCCASION',
+            currentYear
+          );
+          
+          if (!alreadySent) {
+            console.log(`      ✉️  Sending post-occasion follow-up...`);
+            
+            await logEmailSend({
+              subscriberId: recipient.subscriberId,
+              recipientId: recipient.id,
+              emailType: 'POST_OCCASION',
+              occasionType: occasion.type,
+              occasionYear: currentYear,
+              occasionDate: occasion.date,
+              status: 'SENT'
+            });
+            
+            emailsSent++;
+            results.push({
+              recipient: recipient.name,
+              occasion: occasionLabel,
+              type: 'post_occasion',
+              status: 'sent'
+            });
+          } else {
+            console.log(`      ⏭️  Post-occasion follow-up already sent`);
+          }
+        }
+        
+        // Immediate generation (< 42 days away, no list yet)
+        if (until > 0 && until < 42) {
+          // Check if gift list already generated for this occasion
+          const existingList = await prisma.giftList.findFirst({
+            where: {
+              recipientId: recipient.id,
+              birthdayDate: occasion.date
+            }
+          });
+          
+          if (!existingList) {
+            console.log(`      🎁 IMMEDIATE GENERATION NEEDED (${until} days away)`);
+            results.push({
+              recipient: recipient.name,
+              occasion: occasionLabel,
+              type: 'needs_generation',
+              daysUntil: until
+            });
+          }
+        }
+      }
+    }
+    
+    console.log(`\n✅ Occasion check complete:`);
+    console.log(`   Recipients scanned: ${recipients.length}`);
+    console.log(`   Emails sent: ${emailsSent}\n`);
+    
+    res.json({
+      scanned: recipients.length,
+      emailsSent: emailsSent,
+      results: results
+    });
+    
+  } catch (error) {
+    console.error('❌ Error running occasion check:', error);
+    console.error(error.stack);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 API Server running on http://localhost:${PORT}`);
