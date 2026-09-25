@@ -578,65 +578,34 @@ app.patch('/api/gift-lists/:id', async (req, res) => {
   try {
     const data = req.body;
     
-    // Normalize enum values to uppercase if provided and convert snake_case to camelCase
-    const updateData = { ...data };
+    // Map snake_case (from Base44 SDK) to camelCase (Prisma)
+    const fieldMapping = {
+      list_type: 'listType',
+      rejection_reason: 'rejectionReason',
+      rejection_note: 'rejectionNote',
+      approved_at: 'approvedAt',
+      visible_to_subscriber: 'visibleToSubscriber',
+      supersedes_list_id: 'supersedesListId',
+      refresh_requested_at: 'refreshRequestedAt',
+      refresh_reason: 'refreshReason',
+      ai_prompt_used: 'aiPromptUsed',
+      recipient_id: 'recipientId',
+      subscriber_id: 'subscriberId',
+      subscriber_user_id: 'subscriberUserId',
+      birthday_date: 'birthdayDate',
+      generated_at: 'generatedAt'
+    };
     
-    // Status enum
+    const updateData = {};
+    for (const [key, value] of Object.entries(data)) {
+      const mappedKey = fieldMapping[key] || key;
+      updateData[mappedKey] = value;
+    }
+    
+    // Normalize enum values to uppercase if provided
     if (updateData.status) updateData.status = updateData.status.toUpperCase();
-    
-    // List type
-    if (updateData.list_type) {
-      updateData.listType = updateData.list_type.toUpperCase();
-      delete updateData.list_type;
-    }
-    
-    // Rejection reason
-    if (updateData.rejection_reason) {
-      updateData.rejectionReason = updateData.rejection_reason.toUpperCase();
-      delete updateData.rejection_reason;
-    }
-    
-    // Rejection note
-    if (updateData.rejection_note) {
-      updateData.rejectionNote = updateData.rejection_note;
-      delete updateData.rejection_note;
-    }
-    
-    // Approved at
-    if (updateData.approved_at) {
-      updateData.approvedAt = updateData.approved_at;
-      delete updateData.approved_at;
-    }
-    
-    // Visible to subscriber
-    if (updateData.visible_to_subscriber !== undefined) {
-      updateData.visibleToSubscriber = updateData.visible_to_subscriber;
-      delete updateData.visible_to_subscriber;
-    }
-    
-    // Supersedes list ID
-    if (updateData.supersedes_list_id !== undefined) {
-      updateData.supersedesListId = updateData.supersedes_list_id;
-      delete updateData.supersedes_list_id;
-    }
-    
-    // Refresh requested at
-    if (updateData.refresh_requested_at !== undefined) {
-      updateData.refreshRequestedAt = updateData.refresh_requested_at;
-      delete updateData.refresh_requested_at;
-    }
-    
-    // Refresh reason
-    if (updateData.refresh_reason !== undefined) {
-      updateData.refreshReason = updateData.refresh_reason;
-      delete updateData.refresh_reason;
-    }
-    
-    // AI prompt used
-    if (updateData.ai_prompt_used !== undefined) {
-      updateData.aiPromptUsed = updateData.ai_prompt_used;
-      delete updateData.ai_prompt_used;
-    }
+    if (updateData.listType) updateData.listType = updateData.listType.toUpperCase();
+    if (updateData.rejectionReason) updateData.rejectionReason = updateData.rejectionReason.toUpperCase();
     
     const giftList = await prisma.giftList.update({
       where: { id: req.params.id },
@@ -754,8 +723,26 @@ app.patch('/api/gift-items/:id', async (req, res) => {
   try {
     const data = req.body;
     
+    // Map snake_case (from Base44 SDK) to camelCase (Prisma)
+    const fieldMapping = {
+      subscriber_action: 'subscriberAction',
+      admin_feedback_reason: 'adminFeedbackReason',
+      admin_feedback_note: 'adminFeedbackNote',
+      source_type: 'sourceType',
+      delivery_speed: 'deliverySpeed',
+      selection_score: 'selectionScore',
+      matched_signals: 'matchedSignals',
+      product_id: 'productId',
+      gift_list_id: 'giftListId'
+    };
+    
+    const updateData = {};
+    for (const [key, value] of Object.entries(data)) {
+      const mappedKey = fieldMapping[key] || key;
+      updateData[mappedKey] = value;
+    }
+    
     // Normalize enum values to uppercase if provided
-    const updateData = { ...data };
     if (updateData.status) updateData.status = updateData.status.toUpperCase();
     if (updateData.subscriberAction) updateData.subscriberAction = updateData.subscriberAction.toUpperCase();
     if (updateData.feedback) updateData.feedback = updateData.feedback.toUpperCase();
@@ -834,6 +821,18 @@ app.post('/api/gift-items', async (req, res) => {
     res.json(giftItem);
   } catch (error) {
     console.error('Error creating gift item:', error);
+    
+    // Better error messages for foreign key violations
+    if (error.code === 'P2003') {
+      const field = error.meta?.field_name || 'unknown';
+      if (field.includes('product_id')) {
+        return res.status(400).json({ error: 'Product ID does not exist in database' });
+      } else if (field.includes('gift_list_id')) {
+        return res.status(400).json({ error: 'Gift list ID does not exist in database' });
+      }
+      return res.status(400).json({ error: `Foreign key constraint failed on field: ${field}` });
+    }
+    
     res.status(500).json({ error: error.message });
   }
 });
