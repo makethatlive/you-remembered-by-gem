@@ -1062,21 +1062,40 @@ app.post('/api/functions/requestGiftRefresh', async (req, res) => {
       });
       
       const generateData = await generateResponse.json();
+      console.log('🔍 Generate response:', JSON.stringify(generateData, null, 2));
       
-      if (!generateResponse.ok || generateData.error || generateData.status !== 'pending_approval') {
-        return res.status(422).json({
-          error: generateData.error || 'Fresh suggestions could not be prepared'
+      // Response structure is: { success: true, data: { status: "...", giftList: {...} } }
+      const result = generateData.data || generateData;
+      console.log('🔍 Result status:', result.status);
+      console.log('🔍 Gift list ID:', result.giftListId || result.giftList?.id);
+      
+      // Check if generation was successful (status: pending_approval means success)
+      if (result.status === 'pending_approval' || result.status === 'PENDING_APPROVAL') {
+        console.log('✅ Gift list generated successfully, returning success to subscriber');
+        return res.json({
+          status: 'pending_approval',
+          giftListId: result.giftList?.id || result.giftListId,
+          message: 'Your request has been sent to admin for approval. You\'ll receive new gift suggestions once reviewed.'
         });
       }
       
-      return res.json({
-        status: 'pending_approval',
-        giftListId: generateData.giftListId || generateData.data?.giftListId
+      // If there's an error, return it
+      if (generateData.error || result.error) {
+        console.error('❌ Error from generate-gift-list:', generateData.error || result.error);
+        return res.status(422).json({
+          error: generateData.error || result.error
+        });
+      }
+      
+      // Unknown response - treat as error
+      console.error('❌ Unknown response structure:', generateData);
+      return res.status(422).json({
+        error: 'Sorry you were not happy with the ideas. Your feedback has been sent to Gem and new presents will be with you within 48 hours.'
       });
     } catch (error) {
       console.error('Error generating new gift list:', error);
       return res.status(422).json({
-        error: 'Fresh suggestions could not be prepared'
+        error: 'Sorry you were not happy with the ideas. Your feedback has been sent to Gem and new presents will be with you within 48 hours.'
       });
     }
   } catch (error) {
@@ -1605,7 +1624,7 @@ app.post('/api/products/recover-catalogue', requireAdmin, async (req, res) => {
  */
 app.post('/api/generate-gift-list', async (req, res) => {
   try {
-    const { recipient_id, list_type = 'curated', days_until, exclude_product_ids = [], supersedes_list_id } = req.body;
+    const { recipient_id, list_type = 'curated', days_until, occasion_date, exclude_product_ids = [], supersedes_list_id } = req.body;
 
     if (!recipient_id) {
       return res.status(400).json({ error: 'recipient_id is required' });
@@ -1635,6 +1654,7 @@ app.post('/api/generate-gift-list', async (req, res) => {
     console.log(`\n🎁 Generating gift list for recipient: ${recipient_id}`);
     console.log(`📝 List type: ${list_type}`);
     console.log(`📅 Days until: ${days_until || 'not specified'}`);
+    console.log(`📅 Occasion date: ${occasion_date || 'not specified'}`);
 
     // Import the service modules (ESM)
     const { default: ClaudeClient } = await import('./services/ai/claude-client.js');
@@ -1650,6 +1670,7 @@ app.post('/api/generate-gift-list', async (req, res) => {
       recipientId: recipient_id,
       listType: list_type,
       daysUntil: days_until,
+      occasionDate: occasion_date ? new Date(occasion_date) : undefined,  // Pass occasion date
       excludeProductIds: exclude_product_ids,
       supersedesListId: supersedes_list_id,
     });

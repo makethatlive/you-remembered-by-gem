@@ -84,11 +84,26 @@ Deno.serve(async (req) => {
       if (!body) throw invokeError; // no callee payload: a genuine transport/runtime failure
       result = { data: body };
     }
+    
+    // Handle both direct response and wrapped response formats
     const data = result?.data || result || {};
-    if (data.error || data.status !== "pending_approval") {
-      return Response.json({ error: data.error || "Fresh suggestions could not be prepared" }, { status: 422 });
+    
+    // If status is pending_approval, it's a success - return to subscriber with proper message
+    if (data.status === "pending_approval") {
+      return Response.json({ 
+        status: "pending_approval", 
+        giftListId: data.giftListId,
+        message: "Your request has been sent to admin for approval. You'll receive new gift suggestions once reviewed."
+      });
     }
-    return Response.json({ status: "pending_approval", giftListId: data.giftListId });
+    
+    // Otherwise it's an error
+    if (data.error) {
+      return Response.json({ error: data.error }, { status: 422 });
+    }
+    
+    // Unknown status - treat as error
+    return Response.json({ error: "Fresh suggestions could not be prepared" }, { status: 422 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

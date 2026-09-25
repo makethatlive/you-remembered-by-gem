@@ -72,8 +72,25 @@ cron.schedule('*/10 * * * *', async () => {
         
         console.log(`      📅 ${occasionLabel}: ${occasion.date.toDateString()} (${until} days)`);
         
-        // ===== IMMEDIATE GENERATION: ≤42 days and >2 days =====
-        if (until <= 42 && until > 2) {
+        // ===== 6-WEEK TRIGGER: Exactly 42 days =====
+        // NOTE: Immediate generation for <42 days is handled by autoGenerateOnRecipient at signup
+        if (until === 42) {
+          // Check if gift list already exists for this recipient + occasion date
+          const existingGiftList = await prisma.giftList.findFirst({
+            where: {
+              recipientId: recipient.id,
+              birthdayDate: occasion.date,
+              status: {
+                in: ['PENDING_APPROVAL', 'APPROVED', 'SENT']
+              }
+            }
+          });
+          
+          if (existingGiftList) {
+            console.log(`         ⏭️  Gift list already exists (${existingGiftList.status})`);
+            continue;
+          }
+          
           const alreadySent = await hasEmailBeenSent(
             recipient.id,
             occasion.type,
@@ -82,17 +99,18 @@ cron.schedule('*/10 * * * *', async () => {
           );
           
           if (!alreadySent) {
-            console.log(`         ✉️  Sending immediate generation email (${until} days)`);
+            console.log(`         ✉️  Sending 6-week reminder email (exactly 42 days)`);
             
             try {
-              // Generate gift list
+              // Generate gift list with occasion date
               const giftListResponse = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001'}/api/generate-gift-list`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   recipient_id: recipient.id,
                   list_type: 'curated',
-                  days_until: until
+                  days_until: 42,
+                  occasion_date: occasion.date.toISOString().split('T')[0]
                 })
               });
               
@@ -109,14 +127,14 @@ cron.schedule('*/10 * * * *', async () => {
                 subscriberName: recipient.subscriber.firstName || recipient.subscriber.name || 'there',
                 occasionLabel,
                 occasionDate: occasion.date,
-                daysUntil: until,
+                daysUntil: 42,
                 giftListId: giftList.id,
                 type: 'immediate'
               });
               
               // Log email
               await logEmailSend({
-                subscriberId: recipient.subscriber.id,
+                subscriberId: recipient.subscriberId,
                 recipientId: recipient.id,
                 giftListId: giftList.id,
                 emailType: 'SIX_WEEK_REMINDER',
@@ -127,7 +145,7 @@ cron.schedule('*/10 * * * *', async () => {
               });
               
               emailsSent++;
-              console.log(`         ✅ Email sent + gift list generated`);
+              console.log(`         ✅ 6-week email sent + gift list generated`);
             } catch (error) {
               console.error(`         ❌ Failed:`, error.message);
             }
@@ -160,7 +178,7 @@ cron.schedule('*/10 * * * *', async () => {
               });
               
               await logEmailSend({
-                subscriberId: recipient.subscriber.id,
+                subscriberId: recipient.subscriberId,  // FIX: Use subscriberId field
                 recipientId: recipient.id,
                 emailType: 'FOURTEEN_DAY',
                 occasionType: occasion.type,
@@ -199,7 +217,7 @@ cron.schedule('*/10 * * * *', async () => {
               });
               
               await logEmailSend({
-                subscriberId: recipient.subscriber.id,
+                subscriberId: recipient.subscriberId,  // FIX: Use subscriberId field
                 recipientId: recipient.id,
                 emailType: 'POST_OCCASION',
                 occasionType: occasion.type,
