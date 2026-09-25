@@ -32,7 +32,6 @@ export default function OccasionCalendar() {
   const [occasions, setOccasions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false); // NEW: For test button
   const [editingId, setEditingId] = useState(null);
   const [expandedOccasions, setExpandedOccasions] = useState(new Set()); // Track which occasions are expanded
   const [newOccasion, setNewOccasion] = useState({
@@ -158,38 +157,6 @@ export default function OccasionCalendar() {
 
   const isExpanded = (occasionType) => expandedOccasions.has(occasionType);
 
-  const handleTestOccasionCheck = async () => {
-    setTesting(true);
-    try {
-      const response = await fetch('/api/admin/run-occasion-check', {
-        method: 'POST'
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Test failed');
-      }
-
-      const data = await response.json();
-      
-      toast({
-        title: 'Occasion Check Complete',
-        description: `Scanned ${data.scanned} recipients, sent ${data.emailsSent} emails. Check console for details.`
-      });
-      
-      console.log('📊 Occasion Check Results:', data);
-    } catch (error) {
-      console.error('Test error:', error);
-      toast({
-        title: 'Test Failed',
-        description: error.message,
-        variant: 'destructive'
-      });
-    } finally {
-      setTesting(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -204,30 +171,11 @@ export default function OccasionCalendar() {
   return (
     <div className="max-w-8xl mx-auto px-8 sm:px-12 lg:px-16 pt-6 pb-16">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl text-brand-dark mb-1">Occasion Calendar</h1>
-          <p className="font-body text-sm text-brand-dark/50">
-            Manage dates for variable occasions (Eid, Diwali, Lunar New Year, etc.)
-          </p>
-        </div>
-        <Button
-          onClick={handleTestOccasionCheck}
-          disabled={testing}
-          className="bg-brand-gold hover:bg-brand-gold/90 text-brand-dark font-body font-semibold"
-        >
-          {testing ? (
-            <>
-              <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Testing...
-            </>
-          ) : (
-            '🧪 Test Occasion Check'
-          )}
-        </Button>
+      <div className="mb-6">
+        <h1 className="font-display text-3xl text-brand-dark mb-1">Occasion Calendar</h1>
+        <p className="font-body text-sm text-brand-dark/50">
+          Manage dates for variable occasions (Eid, Diwali, Lunar New Year, etc.)
+        </p>
       </div>
 
       {/* Info Card */}
