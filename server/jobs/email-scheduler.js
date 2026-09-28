@@ -25,7 +25,7 @@ startAutoGenerationJob();
 /**
  * Onboarding Email Job
  * Runs every 10 minutes
- * Sends onboarding email to subscribers 30 minutes after signup
+ * Sends onboarding email to subscribers immediately after signup (0-5 minutes)
  */
 cron.schedule('*/10 * * * *', async () => {
   const jobName = 'Onboarding Emails';
@@ -33,20 +33,20 @@ cron.schedule('*/10 * * * *', async () => {
   
   try {
     const now = new Date();
-    const cutoff30min = new Date(now.getTime() - 30 * 60 * 1000); // 30 minutes ago
+    const cutoff5min = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
     const cutoff24h = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
     
-    // Find subscribers created between 30 minutes and 24 hours ago
+    // Find subscribers created between 5 minutes and 24 hours ago
     const subscribers = await prisma.subscriber.findMany({
       where: {
         createdAt: {
           gte: cutoff24h,
-          lte: cutoff30min
+          lte: cutoff5min
         }
       }
     });
     
-    console.log(`   Found ${subscribers.length} subscribers in 30min-24hr window`);
+    console.log(`   Found ${subscribers.length} subscribers in 5min-24hr window`);
     
     let sent = 0;
     let skipped = 0;
@@ -158,13 +158,29 @@ cron.schedule('0 6 * * *', async () => {
           recipient
         );
       } else if (diffDays === 14) {
+        // Check if gift list exists for this recipient
+        const giftList = await prisma.giftList.findFirst({
+          where: {
+            recipientId: recipient.id,
+            status: 'APPROVED'
+          },
+          orderBy: { approvedAt: 'desc' }
+        });
+        
+        if (!giftList) {
+          console.log(`   ⚠️  No approved gift list found for ${recipient.name}, skipping 2-week reminder`);
+          continue;
+        }
+        
         emailType = 'TWO_WEEK_REMINDER';
         emailSubject = `A quick nudge — ${recipient.name}'s ${recipient.occasion || 'occasion'} is in 2 weeks 🔔`;
         emailHtml = createTwoWeekReminderEmail(
           recipient.subscriber.firstName || recipient.subscriber.name || 'there',
           recipient.name,
           recipient.occasion || 'occasion',
-          birthdayThisYear
+          birthdayThisYear,
+          recipient.id,
+          giftList.id
         );
       } else if (diffDays === -2) {
         emailType = 'POST_OCCASION';
@@ -172,7 +188,9 @@ cron.schedule('0 6 * * *', async () => {
         emailHtml = createPostOccasionEmail(
           recipient.subscriber.firstName || recipient.subscriber.name || 'there',
           recipient.name,
-          recipient.occasion || 'occasion'
+          recipient.occasion || 'occasion',
+          recipient.id,
+          2 // days since occasion
         );
       } else {
         continue; // Not a reminder day
@@ -295,6 +313,16 @@ function createSixWeekReminderEmail(subscriberName, recipientName, occasionDate,
   giftIdeasDate.setDate(giftIdeasDate.getDate() - 28);
   const giftIdeasLabel = `${giftIdeasDate.getDate()} ${['January','February','March','April','May','June','July','August','September','October','November','December'][giftIdeasDate.getMonth()]}`;
   
+  // Build profile summary
+  const relationship = recipient.relationship || 'Person';
+  const ageRange = recipient.ageRange || recipient.ageBand || 'Not specified';
+  const interests = recipient.interests && recipient.interests.length > 0 
+    ? recipient.interests.join(', ') 
+    : 'Not specified';
+  const budgetMin = recipient.budgetMin || 0;
+  const budgetMax = recipient.budgetMax || 100;
+  const notes = recipient.thingsYouKnow || recipient.notes || 'None';
+  
   return `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:#FDFAF5;">
 <div style="max-width:520px;margin:0 auto;">
@@ -306,12 +334,21 @@ function createSixWeekReminderEmail(subscriberName, recipientName, occasionDate,
     <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;color:#1a1a2e;margin:0 0 16px;">Six weeks to go</h1>
     <div style="color:#1a1a2e;font-size:15px;line-height:1.6;">
       <p>Hi ${subscriberName},</p>
-      <p>${recipientName}'s ${occasion} is coming up on ${dateLabel} — which means it's time to start finding something truly special for them.</p>
+      <p>${recipientName}'s ${occasion} is coming up on <strong>${dateLabel}</strong> — which means it's time to start finding something truly special for them.</p>
       <p>Here's what I've got noted down for ${recipientName} so far — have a quick look and see if anything's changed:</p>
+      
+      <div style="background:#FFF8E7;padding:16px;border-radius:6px;margin:20px 0;">
+        <p style="margin:0 0 8px;"><strong>Relationship:</strong> ${relationship}</p>
+        <p style="margin:0 0 8px;"><strong>Age range:</strong> ${ageRange}</p>
+        <p style="margin:0 0 8px;"><strong>Interests:</strong> ${interests}</p>
+        <p style="margin:0 0 8px;"><strong>Budget:</strong> £${budgetMin} min / £${budgetMax} max</p>
+        <p style="margin:0;"><strong>Notes:</strong> ${notes}</p>
+      </div>
+      
       <p><strong>Does anything need updating?</strong><br/>Life moves fast — and the best gift ideas often come from small details. Has anything changed recently? A new hobby? A big life moment? Something they've mentioned wanting?</p>
       <p style="margin:24px 0;"><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/people?edit=${recipient.id}" style="background:#164E63;color:#FDFAF5;text-decoration:none;padding:13px 28px;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;display:inline-block;">Update ${recipientName}'s profile →</a></p>
       <p>If everything looks good and you're happy for me to go ahead, you don't need to do a thing.</p>
-      <p>Your gift ideas will land in your inbox on ${giftIdeasLabel}.</p>
+      <p>Your gift ideas will land in your inbox on <strong>${giftIdeasLabel}</strong>.</p>
       <p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>
     </div>
   </div>
@@ -324,7 +361,7 @@ function createSixWeekReminderEmail(subscriberName, recipientName, occasionDate,
 </body></html>`;
 }
 
-function createTwoWeekReminderEmail(subscriberName, recipientName, occasion, occasionDate) {
+function createTwoWeekReminderEmail(subscriberName, recipientName, occasion, occasionDate, recipientId, giftListId) {
   const dateLabel = `${occasionDate.getDate()} ${['January','February','March','April','May','June','July','August','September','October','November','December'][occasionDate.getMonth()]}`;
   
   return `<!DOCTYPE html>
@@ -338,10 +375,10 @@ function createTwoWeekReminderEmail(subscriberName, recipientName, occasion, occ
     <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;color:#1a1a2e;margin:0 0 16px;">Two weeks to go</h1>
     <div style="color:#1a1a2e;font-size:15px;line-height:1.6;">
       <p>Hi ${subscriberName},</p>
-      <p>Just a quick one — ${recipientName}'s ${occasion} is two weeks away, on ${dateLabel}. I know life is busy, so this is just a gentle reminder to make sure the gift ideas I sent over weren't missed.</p>
+      <p>Just a quick one — ${recipientName}'s ${occasion} is two weeks away, on <strong>${dateLabel}</strong>. I know life is busy, so this is just a gentle reminder to make sure the gift ideas I sent over weren't missed.</p>
       <p>Here they are again, ready when you are:</p>
-      <p style="margin:24px 0;"><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/gifts" style="background:#164E63;color:#FDFAF5;text-decoration:none;padding:13px 28px;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;display:inline-block;">View ${recipientName}'s gift ideas →</a></p>
-      <p><strong>Not quite right?</strong><br/>If none of these feel like the one, just email me directly at concierge@yourememberedbygem.com with a little more detail on ${recipientName} and I'll personally look for alternatives — there's still time.</p>
+      <p style="margin:24px 0;"><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/people/${recipientId}/gifts/${giftListId}" style="background:#164E63;color:#FDFAF5;text-decoration:none;padding:13px 28px;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;display:inline-block;">View ${recipientName}'s gift ideas →</a></p>
+      <p><strong>Not quite right?</strong><br/>If none of these feel like the one, just email me directly at <a href="mailto:concierge@yourememberedbygem.com" style="color:#164E63;text-decoration:underline;">concierge@yourememberedbygem.com</a> with a little more detail on ${recipientName} and I'll personally look for alternatives — there's still time.</p>
       <p><strong>A gentle note on timing:</strong><br/>Most retailers can deliver within a week, so there's still time to order comfortably — just worth not leaving it much longer if you'd like anything personalised.</p>
       <p>Here if you need me,</p>
       <p>Gem<br/>You Remembered, by Gem<br/>yourememberedbygem.com<br/>@yourememberedbygem</p>
@@ -356,7 +393,9 @@ function createTwoWeekReminderEmail(subscriberName, recipientName, occasion, occ
 </body></html>`;
 }
 
-function createPostOccasionEmail(subscriberName, recipientName, occasion) {
+function createPostOccasionEmail(subscriberName, recipientName, occasion, recipientId, daysSince) {
+  const daysText = daysSince === 2 ? '2 days' : daysSince === 3 ? '3 days' : `${daysSince} days`;
+  
   return `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:#FDFAF5;">
 <div style="max-width:520px;margin:0 auto;">
@@ -368,10 +407,10 @@ function createPostOccasionEmail(subscriberName, recipientName, occasion) {
     <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;color:#1a1a2e;margin:0 0 16px;">How did it go?</h1>
     <div style="color:#1a1a2e;font-size:15px;line-height:1.6;">
       <p>Hi ${subscriberName},</p>
-      <p>${recipientName}'s ${occasion} was 2 days ago — and I've been thinking about you.</p>
+      <p>${recipientName}'s ${occasion} was ${daysText} ago — and I've been thinking about you.</p>
       <p><strong>Did the gift land well?</strong></p>
       <p>I ask partly because I genuinely want to know, and partly because your feedback makes next year's suggestions even better. It only takes a minute — just tap below:</p>
-      <p style="margin:24px 0;"><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/feedback?recipient=${recipientName}" style="background:#164E63;color:#FDFAF5;text-decoration:none;padding:13px 28px;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;display:inline-block;">Share how it went →</a></p>
+      <p style="margin:24px 0;"><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/feedback?recipientId=${recipientId}" style="background:#164E63;color:#FDFAF5;text-decoration:none;padding:13px 28px;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;display:inline-block;">Share how it went →</a></p>
       <p>You'll be able to tell me whether you went with one of my suggestions, how ${recipientName} reacted, and anything that didn't feel quite right — all of which helps me get next year's ideas even closer to perfect.</p>
       <p><strong>One small favour</strong><br/>If You Remembered, by Gem made a difference — if it saved you time, helped you give something truly thoughtful, or simply meant you didn't have to panic — I'd be so grateful if you'd share it with one person who might love it too.</p>
       <p>A personal recommendation from you means more than any advertising I could ever do. And if they subscribe, I'll add an extra bonus gift consultation to your account as a thank you.</p>

@@ -336,7 +336,7 @@ model GiftItem {
   id                     String            @id @default(cuid())
   giftListId             String            @map("gift_list_id")
   subscriberUserId       String            @map("subscriber_user_id")
-  productId              String            @map("product_id")
+  productId              String?           @map("product_id")  // Made optional for manual gifts
   title                  String
   description            String?           @db.Text
   whyThisGift            String?           @map("why_this_gift") @db.Text
@@ -361,8 +361,8 @@ model GiftItem {
   updatedAt              DateTime          @updatedAt @map("updated_at")
 
   // Relations
-  giftList GiftList @relation(fields: [giftListId], references: [id], onDelete: Cascade)
-  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  giftList GiftList  @relation(fields: [giftListId], references: [id], onDelete: Cascade)
+  product  Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)  // Made optional
 
   @@index([giftListId])
   @@index([productId])

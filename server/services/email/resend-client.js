@@ -151,71 +151,257 @@ export async function sendWelcomeEmail(subscriberEmail, subscriberName, subscrib
 
 /**
  * Send gift list approval notification
+ * Matches client's Email #4 template exactly
  */
 export async function sendApprovalEmail(subscriberEmail, subscriberName, recipientName, giftCount, subscriberId, recipientId, giftListId) {
-  const subject = `🎉 Your gift list for ${recipientName} is ready!`;
-  
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #0D5C63; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
-          .button { display: inline-block; background: #D4AF37; color: #0D5C63; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; }
-          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-          .highlight { background: #FFF8E7; padding: 15px; border-left: 4px solid #D4AF37; margin: 20px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎉 Your Gift List is Ready!</h1>
+  try {
+    // Fetch complete data for email
+    const giftList = await prisma.giftList.findUnique({
+      where: { id: giftListId },
+      include: {
+        recipient: true,
+        subscriber: true
+      }
+    });
+
+    if (!giftList) {
+      console.error('Gift list not found:', giftListId);
+      return { success: false, error: 'Gift list not found' };
+    }
+
+    // Fetch gift items (ACTIVE only, top 5)
+    const giftItems = await prisma.giftItem.findMany({
+      where: {
+        giftListId: giftListId,
+        status: 'ACTIVE'
+      },
+      take: 5,
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const recipient = giftList.recipient;
+    const occasion = (recipient?.occasion || 'occasion').toLowerCase();
+    
+    // Format occasion date
+    const formatOccasionDate = (date) => {
+      if (!date) return 'coming up soon';
+      const d = new Date(date);
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+      return `${d.getDate()} ${months[d.getMonth()]}`;
+    };
+
+    const occasionDate = formatOccasionDate(giftList.birthdayDate);
+    
+    // Build recipient summary from their profile
+    const buildRecipientSummary = (recipient) => {
+      const parts = [];
+      if (recipient.whoTheyAre) parts.push(recipient.whoTheyAre);
+      if (recipient.hobbiesAndInterests) parts.push(recipient.hobbiesAndInterests);
+      if (recipient.interests && recipient.interests.length > 0) {
+        parts.push(`who loves ${recipient.interests.slice(0, 2).join(' and ')}`);
+      }
+      if (recipient.thingsYouKnow) parts.push(recipient.thingsYouKnow);
+      
+      return parts.length > 0 
+        ? parts.join(', ').substring(0, 150) 
+        : 'someone truly special';
+    };
+
+    const recipientSummary = buildRecipientSummary(recipient);
+    
+    // Format budget
+    const formatBudget = (min, max) => {
+      if (!min && !max) return '';
+      return `£${min || 0}–£${max || 100}`;
+    };
+    
+    const budgetText = formatBudget(recipient?.budgetMin, recipient?.budgetMax);
+    
+    // Build individual gift HTML matching client template
+    const renderGiftItems = (items) => {
+      return items.map((item, index) => {
+        const retailer = item.retailerName || 'the retailer';
+        const price = item.price ? `£${parseFloat(item.price).toFixed(2)}` : '£0.00';
+        const productLink = item.affiliateUrl || item.productUrl || '#';
+        const reasoning = item.whyThisGift || item.description || '';
+        
+        return `
+          <div style="margin: 0 0 28px 0;">
+            <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; color: #1a1a2e; font-size: 16px; font-weight: 700;">
+              ${index + 1}. ${item.title}
+            </p>
+            <p style="margin: 6px 0 0; color: #164E63; font-size: 14px; font-weight: 600;">
+              ${retailer} — ${price}
+            </p>
+            ${reasoning ? `
+            <p style="margin: 10px 0 0; color: #1a1a2e; opacity: 0.85; font-size: 15px; line-height: 1.6;">
+              ${reasoning}
+            </p>
+            ` : ''}
+            <p style="margin: 12px 0 0;">
+              <a href="${productLink}" 
+                 style="color: #164E63; font-size: 14px; font-weight: 600; text-decoration: underline;"
+                 target="_blank" rel="noopener noreferrer">
+                View at ${retailer} →
+              </a>
+            </p>
           </div>
-          <div class="content">
-            <p>Hi ${subscriberName || 'there'},</p>
+        `;
+      }).join('');
+    };
+
+    const giftsHtml = renderGiftItems(giftItems);
+    const relationship = recipient?.relationship || 'person';
+    
+    // Client template exact match
+    const subject = `Five ideas for ${recipientName}'s ${occasion} — chosen just for them ✨`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { 
+              margin: 0; 
+              padding: 0; 
+              background: #FDFAF5; 
+              font-family: Arial, Helvetica, sans-serif;
+            }
+            .container { max-width: 560px; margin: 0 auto; }
+            .header { 
+              background: #164E63; 
+              padding: 28px 24px 22px; 
+              text-align: center; 
+            }
+            .header-title {
+              font-family: 'Cormorant Garamond', Georgia, serif;
+              font-size: 26px;
+              color: #FDFAF5;
+              margin: 0;
+            }
+            .divider { height: 4px; background: #C9A96E; }
+            .content { 
+              padding: 32px 24px; 
+              color: #1a1a2e; 
+              font-size: 15px; 
+              line-height: 1.6; 
+            }
+            .content h1 {
+              font-family: 'Cormorant Garamond', Georgia, serif;
+              font-size: 22px;
+              color: #1a1a2e;
+              margin: 0 0 16px;
+            }
+            .section-title {
+              font-family: 'Cormorant Garamond', Georgia, serif;
+              font-size: 19px;
+              color: #1a1a2e;
+              margin: 32px 0 20px;
+            }
+            .footer-divider { 
+              height: 1px; 
+              background: rgba(201, 169, 110, 0.3); 
+              margin: 0 24px; 
+            }
+            .footer { padding: 16px 24px 32px; }
+            .footer-text {
+              font-size: 12px;
+              color: #1a1a2e;
+              opacity: 0.5;
+              margin: 0;
+            }
+            .footer-note {
+              font-size: 11px;
+              color: #1a1a2e;
+              opacity: 0.4;
+              margin: 8px 0 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <!-- Header -->
+            <div class="header">
+              <p class="header-title">
+                You Remembered, <span style="font-style: italic;">by Gem</span>
+              </p>
+            </div>
+            <div class="divider"></div>
             
-            <p>Great news! We've curated ${giftCount} special gift suggestions for <strong>${recipientName}</strong>.</p>
-            
-            <div class="highlight">
-              <p><strong>✨ Handpicked just for ${recipientName}</strong></p>
-              <p>Our AI has selected gifts that match their personality, interests, and your budget.</p>
+            <!-- Content -->
+            <div class="content">
+              <h1>Chosen just for them</h1>
+              
+              <p>Hi ${subscriberName || 'there'},</p>
+              
+              <p>${recipientName}'s ${occasion} is on <strong>${occasionDate}</strong> — so here are five ideas I've chosen with them specifically in mind.</p>
+              
+              <p>Each one reflects what you've told me about them: ${recipientSummary}.${budgetText ? ` I've kept everything within your ${budgetText} budget.` : ''}</p>
+              
+              <p>Take your time browsing — every link goes directly to the retailer.</p>
+              
+              <p class="section-title">Five ideas for ${recipientName}</p>
+              
+              ${giftsHtml}
+              
+              <p style="margin: 32px 0 0;"><strong>A thought before you buy</strong></p>
+              <p>These are five ideas I genuinely think ${recipientName} would love — but you'll always know your ${relationship} better than I do. Have a browse through what I've suggested, and if something's not quite right — a different colour, a slightly different style — feel free to have a look around the retailer's site for an alternative. Spending just a few minutes tailoring my suggestions to what you know about them will make the end result even more perfect.</p>
+              
+              <p style="margin: 24px 0 0;"><strong>Not quite right?</strong></p>
+              <p>If none of these feel quite right, just email me directly at <a href="mailto:concierge@yourememberedbygem.com" style="color: #164E63; text-decoration: underline;">concierge@yourememberedbygem.com</a> with a little more detail on ${recipientName} — anything at all that might help — and I'll personally look for alternatives. That's genuinely what I'm here for.</p>
+              
+              <p style="margin: 24px 0 0;"><strong>Worth knowing:</strong></p>
+              <p>Most retailers can deliver within a week, so if something needs a personal touch added — engraving, wrapping, a handwritten note — it's worth ordering in good time.</p>
+              
+              <p style="margin: 32px 0 8px;">Enjoy giving,</p>
+              <p style="margin: 0;">Gem</p>
+              <p style="margin: 4px 0 0; font-size: 13px; color: #1a1a2e; opacity: 0.7;">
+                You Remembered, by Gem<br>
+                yourememberedbygem.com<br>
+                @yourememberedbygem
+              </p>
             </div>
             
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/gifts" class="button">View Gift Suggestions</a>
-            
-            <p>You can review the suggestions, save your favorites, or request a refresh if you'd like different options.</p>
-            
-            <p>Happy gifting!<br>The Gem Team</p>
+            <!-- Footer -->
+            <div class="footer-divider"></div>
+            <div class="footer">
+              <p class="footer-text">You Remembered, by Gem</p>
+              <p class="footer-note">
+                You're receiving this as part of your You Remembered, by Gem subscription. 
+                To update ${recipientName}'s profile for next year, visit 
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/people?edit=${recipientId}" style="color: #164E63;">this link</a>. 
+                To manage your account or unsubscribe, click 
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" style="color: #164E63;">here</a>.
+              </p>
+            </div>
           </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} You Remembered By Gem. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+        </body>
+      </html>
+    `;
 
-  const result = await sendEmail({
-    to: subscriberEmail,
-    subject,
-    html,
-  });
-
-  // Create email log
-  if (result.success && !result.disabled && subscriberId) {
-    await createEmailLog({
-      subscriberId,
-      recipientId: recipientId || null,
-      giftListId: giftListId || null,
-      emailType: 'THIRTY_DAY', // Using THIRTY_DAY as closest match for approval notification
-      status: 'SENT',
+    const result = await sendEmail({
+      to: subscriberEmail,
+      subject,
+      html,
     });
-  }
 
-  return result;
+    // Create email log
+    if (result.success && !result.disabled && subscriberId) {
+      await createEmailLog({
+        subscriberId,
+        recipientId: recipientId || null,
+        giftListId: giftListId || null,
+        emailType: 'THIRTY_DAY',
+        status: 'SENT',
+      });
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error in sendApprovalEmail:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 /**

@@ -17,6 +17,9 @@ import { runForensicAudit } from './services/audit/forensic-audit-service.js';
 import ClaudeClient from './services/ai/claude-client.js';
 import GiftListGenerator from './services/gifts/gift-list-generator.js';
 
+// Import and start email scheduler (cron jobs for reminders)
+import './jobs/email-scheduler.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -766,10 +769,383 @@ app.patch('/api/gift-items/:id', async (req, res) => {
   }
 });
 
+// ============================================================================
+// EMAIL TESTING ENDPOINTS
+// ============================================================================
+
+/**
+ * TEST: Manually trigger email scheduler check
+ * GET /api/test/trigger-reminders
+ */
+app.get('/api/test/trigger-reminders', async (req, res) => {
+  try {
+    console.log('\n🔍 [MANUAL TEST] Running reminder check...');
+    
+    const recipients = await prisma.recipient.findMany({
+      include: {
+        subscriber: true
+      }
+    });
+    
+    console.log(`   Found ${recipients.length} recipients to check`);
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const results = [];
+    
+    for (const recipient of recipients) {
+      if (!recipient.birthday) continue;
+      
+      // Parse birthday (format: --MM-DD or YYYY-MM-DD)
+      const birthdayMatch = recipient.birthday.match(/(\d{2})-(\d{2})$/);
+      if (!birthdayMatch) continue;
+      
+      const [_, month, day] = birthdayMatch;
+      const birthdayThisYear = new Date(currentYear, parseInt(month) - 1, parseInt(day));
+      birthdayThisYear.setHours(0, 0, 0, 0);
+      
+      const todayNormalized = new Date(today);
+      todayNormalized.setHours(0, 0, 0, 0);
+      
+      // Calculate days until birthday
+      const diffTime = birthdayThisYear - todayNormalized;
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      
+      let emailType = null;
+      
+      if (diffDays === 42) {
+        emailType = 'SIX_WEEK_REMINDER';
+      } else if (diffDays === 14) {
+        emailType = 'TWO_WEEK_REMINDER';
+      } else if (diffDays === -2) {
+        emailType = 'POST_OCCASION';
+      }
+      
+      results.push({
+        name: recipient.name,
+        birthday: recipient.birthday,
+        birthdayThisYear: birthdayThisYear.toISOString().split('T')[0],
+        daysUntil: diffDays,
+        emailType: emailType || 'NONE',
+        subscriberEmail: recipient.subscriber?.email
+      });
+    }
+    
+    res.json({
+      today: today.toISOString().split('T')[0],
+      recipientsChecked: recipients.length,
+      results: results.sort((a, b) => a.daysUntil - b.daysUntil)
+    });
+    
+  } catch (error) {
+    console.error('Error testing reminders:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * TEST: Preview approval email HTML
+ * GET /api/test/preview-approval-email/:giftListId
+ */
+app.get('/api/test/preview-approval-email/:giftListId', async (req, res) => {
+  try {
+    const { giftListId } = req.params;
+
+    // Fetch complete data for email
+    const giftList = await prisma.giftList.findUnique({
+      where: { id: giftListId },
+      include: {
+        recipient: true,
+        subscriber: true
+      }
+    });
+
+    if (!giftList) {
+      return res.status(404).json({ error: 'Gift list not found' });
+    }
+
+    // Fetch gift items (ACTIVE only, top 5)
+    const giftItems = await prisma.giftItem.findMany({
+      where: {
+        giftListId: giftListId,
+        status: 'ACTIVE'
+      },
+      take: 5,
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const recipient = giftList.recipient;
+    const subscriber = giftList.subscriber;
+    const occasion = (recipient?.occasion || 'occasion').toLowerCase();
+    
+    // Format occasion date
+    const formatOccasionDate = (date) => {
+      if (!date) return 'coming up soon';
+      const d = new Date(date);
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+      return `${d.getDate()} ${months[d.getMonth()]}`;
+    };
+
+    const occasionDate = formatOccasionDate(giftList.birthdayDate);
+    
+    // Build recipient summary from their profile
+    const buildRecipientSummary = (recipient) => {
+      const parts = [];
+      if (recipient.whoTheyAre) parts.push(recipient.whoTheyAre);
+      if (recipient.hobbiesAndInterests) parts.push(recipient.hobbiesAndInterests);
+      if (recipient.interests && recipient.interests.length > 0) {
+        parts.push(`who loves ${recipient.interests.slice(0, 2).join(' and ')}`);
+      }
+      if (recipient.thingsYouKnow) parts.push(recipient.thingsYouKnow);
+      
+      return parts.length > 0 
+        ? parts.join(', ').substring(0, 150) 
+        : 'someone truly special';
+    };
+
+    const recipientSummary = buildRecipientSummary(recipient);
+    
+    // Format budget
+    const formatBudget = (min, max) => {
+      if (!min && !max) return '';
+      return `£${min || 0}–£${max || 100}`;
+    };
+    
+    const budgetText = formatBudget(recipient?.budgetMin, recipient?.budgetMax);
+    
+    // Build individual gift HTML matching client template
+    const renderGiftItems = (items) => {
+      return items.map((item, index) => {
+        const retailer = item.retailerName || 'the retailer';
+        const price = item.price ? `£${parseFloat(item.price).toFixed(2)}` : '£0.00';
+        const productLink = item.affiliateUrl || item.productUrl || '#';
+        const reasoning = item.whyThisGift || item.description || '';
+        
+        return `
+          <div style="margin: 0 0 28px 0;">
+            <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; color: #1a1a2e; font-size: 16px; font-weight: 700;">
+              ${index + 1}. ${item.title}
+            </p>
+            <p style="margin: 6px 0 0; color: #164E63; font-size: 14px; font-weight: 600;">
+              ${retailer} — ${price}
+            </p>
+            ${reasoning ? `
+            <p style="margin: 10px 0 0; color: #1a1a2e; opacity: 0.85; font-size: 15px; line-height: 1.6;">
+              ${reasoning}
+            </p>
+            ` : ''}
+            <p style="margin: 12px 0 0;">
+              <a href="${productLink}" 
+                 style="color: #164E63; font-size: 14px; font-weight: 600; text-decoration: underline;"
+                 target="_blank" rel="noopener noreferrer">
+                View at ${retailer} →
+              </a>
+            </p>
+          </div>
+        `;
+      }).join('');
+    };
+
+    const giftsHtml = renderGiftItems(giftItems);
+    const relationship = recipient?.relationship || 'person';
+    const recipientName = recipient?.name || 'Recipient';
+    const subscriberName = subscriber?.name || 'Subscriber';
+    
+    // Client template exact match
+    const subject = `Five ideas for ${recipientName}'s ${occasion} — chosen just for them ✨`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { 
+              margin: 0; 
+              padding: 0; 
+              background: #FDFAF5; 
+              font-family: Arial, Helvetica, sans-serif;
+            }
+            .container { max-width: 560px; margin: 0 auto; }
+            .header { 
+              background: #164E63; 
+              padding: 28px 24px 22px; 
+              text-align: center; 
+            }
+            .header-title {
+              font-family: 'Cormorant Garamond', Georgia, serif;
+              font-size: 26px;
+              color: #FDFAF5;
+              margin: 0;
+            }
+            .divider { height: 4px; background: #C9A96E; }
+            .content { 
+              padding: 32px 24px; 
+              color: #1a1a2e; 
+              font-size: 15px; 
+              line-height: 1.6; 
+            }
+            .content h1 {
+              font-family: 'Cormorant Garamond', Georgia, serif;
+              font-size: 22px;
+              color: #1a1a2e;
+              margin: 0 0 16px;
+            }
+            .section-title {
+              font-family: 'Cormorant Garamond', Georgia, serif;
+              font-size: 19px;
+              color: #1a1a2e;
+              margin: 32px 0 20px;
+            }
+            .footer-divider { 
+              height: 1px; 
+              background: rgba(201, 169, 110, 0.3); 
+              margin: 0 24px; 
+            }
+            .footer { padding: 16px 24px 32px; }
+            .footer-text {
+              font-size: 12px;
+              color: #1a1a2e;
+              opacity: 0.5;
+              margin: 0;
+            }
+            .footer-note {
+              font-size: 11px;
+              color: #1a1a2e;
+              opacity: 0.4;
+              margin: 8px 0 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <!-- Header -->
+            <div class="header">
+              <p class="header-title">
+                You Remembered, <span style="font-style: italic;">by Gem</span>
+              </p>
+            </div>
+            <div class="divider"></div>
+            
+            <!-- Content -->
+            <div class="content">
+              <h1>Chosen just for them</h1>
+              
+              <p>Hi ${subscriberName},</p>
+              
+              <p>${recipientName}'s ${occasion} is on <strong>${occasionDate}</strong> — so here are five ideas I've chosen with them specifically in mind.</p>
+              
+              <p>Each one reflects what you've told me about them: ${recipientSummary}.${budgetText ? ` I've kept everything within your ${budgetText} budget.` : ''}</p>
+              
+              <p>Take your time browsing — every link goes directly to the retailer.</p>
+              
+              <p class="section-title">Five ideas for ${recipientName}</p>
+              
+              ${giftsHtml}
+              
+              <p style="margin: 32px 0 0;"><strong>A thought before you buy</strong></p>
+              <p>These are five ideas I genuinely think ${recipientName} would love — but you'll always know your ${relationship} better than I do. Have a browse through what I've suggested, and if something's not quite right — a different colour, a slightly different style — feel free to have a look around the retailer's site for an alternative. Spending just a few minutes tailoring my suggestions to what you know about them will make the end result even more perfect.</p>
+              
+              <p style="margin: 24px 0 0;"><strong>Not quite right?</strong></p>
+              <p>If none of these feel quite right, just email me directly at <a href="mailto:concierge@yourememberedbygem.com" style="color: #164E63; text-decoration: underline;">concierge@yourememberedbygem.com</a> with a little more detail on ${recipientName} — anything at all that might help — and I'll personally look for alternatives. That's genuinely what I'm here for.</p>
+              
+              <p style="margin: 24px 0 0;"><strong>Worth knowing:</strong></p>
+              <p>Most retailers can deliver within a week, so if something needs a personal touch added — engraving, wrapping, a handwritten note — it's worth ordering in good time.</p>
+              
+              <p style="margin: 32px 0 8px;">Enjoy giving,</p>
+              <p style="margin: 0;">Gem</p>
+              <p style="margin: 4px 0 0; font-size: 13px; color: #1a1a2e; opacity: 0.7;">
+                You Remembered, by Gem<br>
+                yourememberedbygem.com<br>
+                @yourememberedbygem
+              </p>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer-divider"></div>
+            <div class="footer">
+              <p class="footer-text">You Remembered, by Gem</p>
+              <p class="footer-note">
+                You're receiving this as part of your You Remembered, by Gem subscription. 
+                To update ${recipientName}'s profile for next year, visit 
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/people?edit=${recipient.id}" style="color: #164E63;">this link</a>. 
+                To manage your account or unsubscribe, click 
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" style="color: #164E63;">here</a>.
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Return HTML for browser preview + debug data
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Email Preview: ${subject}</title>
+          <style>
+            body { font-family: monospace; background: #f5f5f5; padding: 20px; }
+            .debug { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+            .debug h2 { margin-top: 0; }
+            .debug pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+            .preview { background: white; padding: 20px; border-radius: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="debug">
+            <h2>📧 Email Preview Debug Info</h2>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Gift List ID:</strong> ${giftListId}</p>
+            <p><strong>Subscriber:</strong> ${subscriberName} (${subscriber?.email})</p>
+            <p><strong>Recipient:</strong> ${recipientName} (${occasion} on ${occasionDate})</p>
+            <p><strong>Budget:</strong> ${budgetText || 'Not specified'}</p>
+            <p><strong>Relationship:</strong> ${relationship}</p>
+            <p><strong>Gift Items:</strong> ${giftItems.length} ACTIVE items found</p>
+            <details>
+              <summary><strong>Recipient Summary:</strong></summary>
+              <pre>${recipientSummary}</pre>
+            </details>
+            <details>
+              <summary><strong>Gift Items Details:</strong></summary>
+              <pre>${JSON.stringify(giftItems.map(g => ({
+                title: g.title,
+                retailer: g.retailerName,
+                price: g.price,
+                hasWhyThisGift: !!g.whyThisGift,
+                hasUrl: !!(g.affiliateUrl || g.productUrl)
+              })), null, 2)}</pre>
+            </details>
+          </div>
+          <div class="preview">
+            <h2>📧 Email Preview</h2>
+            ${html}
+          </div>
+        </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error previewing email:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
+// GIFT ITEMS ENDPOINTS
+// ============================================================================
+
 // Create gift item (for manual gift entry and catalogue swaps)
 app.post('/api/gift-items', async (req, res) => {
   try {
     const data = req.body;
+    
+    console.log('📦 Creating gift item:', {
+      giftListId: data.gift_list_id,
+      productId: data.product_id,
+      title: data.title,
+      sourceType: data.source_type
+    });
     
     // Normalize enum values to uppercase if provided
     const createData = { ...data };
@@ -780,20 +1156,41 @@ app.post('/api/gift-items', async (req, res) => {
     if (createData.sourceType) createData.sourceType = createData.sourceType.toUpperCase();
     if (createData.deliverySpeed) createData.deliverySpeed = createData.deliverySpeed.toUpperCase();
     
+    // Check if product_id is valid (if provided and not "manual")
+    const productId = createData.product_id;
+    
+    // For manual gifts, set productId to null instead of "manual"
+    const finalProductId = (productId === 'manual' || !productId) ? null : productId;
+    
+    if (finalProductId) {
+      // Verify product exists in database
+      const productExists = await prisma.product.findUnique({
+        where: { id: finalProductId },
+        select: { id: true }
+      });
+      
+      if (!productExists) {
+        console.error(`❌ Product not found: ${finalProductId}`);
+        return res.status(400).json({ 
+          error: `Product with ID "${finalProductId}" does not exist in the catalogue. Please add it to products first, or use manual gift entry.` 
+        });
+      }
+    }
+    
     // Rename snake_case fields to camelCase for Prisma
     const prismaData = {
       giftListId: createData.gift_list_id,
       subscriberUserId: createData.subscriber_user_id,
-      productId: createData.product_id,
+      productId: finalProductId,  // null for manual gifts, or real product ID
       title: createData.title,
       description: createData.description,
       whyThisGift: createData.why_this_gift,
       productUrl: createData.product_url,
       affiliateUrl: createData.affiliate_url,
       retailerName: createData.retailer_name,
-      price: createData.price,
+      price: createData.price ? parseFloat(createData.price) : null,
       imageUrl: createData.image_url,
-      sourceType: createData.sourceType || createData.source_type?.toUpperCase(),
+      sourceType: createData.sourceType || createData.source_type?.toUpperCase() || 'CURATED_PRODUCT',
       deliverySpeed: createData.deliverySpeed || createData.delivery_speed?.toUpperCase(),
       status: createData.status || 'ACTIVE',
       selectionScore: createData.selection_score,
@@ -810,6 +1207,13 @@ app.post('/api/gift-items', async (req, res) => {
       }
     });
     
+    console.log('💾 Creating with Prisma data:', {
+      giftListId: prismaData.giftListId,
+      productId: prismaData.productId,
+      sourceType: prismaData.sourceType,
+      status: prismaData.status
+    });
+    
     const giftItem = await prisma.giftItem.create({
       data: prismaData,
       include: {
@@ -818,17 +1222,23 @@ app.post('/api/gift-items', async (req, res) => {
       }
     });
     
+    console.log('✅ Gift item created successfully:', giftItem.id);
     res.json(giftItem);
   } catch (error) {
-    console.error('Error creating gift item:', error);
+    console.error('❌ Error creating gift item:', error);
+    console.error('Request body:', req.body);
     
     // Better error messages for foreign key violations
     if (error.code === 'P2003') {
       const field = error.meta?.field_name || 'unknown';
       if (field.includes('product_id')) {
-        return res.status(400).json({ error: 'Product ID does not exist in database' });
+        return res.status(400).json({ 
+          error: 'Product does not exist in catalogue. Please add it to Products first, or use "Add a gift manually" instead.' 
+        });
       } else if (field.includes('gift_list_id')) {
         return res.status(400).json({ error: 'Gift list ID does not exist in database' });
+      } else if (field.includes('subscriber_user_id')) {
+        return res.status(400).json({ error: 'Subscriber user ID does not exist in database' });
       }
       return res.status(400).json({ error: `Foreign key constraint failed on field: ${field}` });
     }
