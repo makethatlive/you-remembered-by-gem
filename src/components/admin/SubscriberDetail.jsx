@@ -120,16 +120,15 @@ export default function SubscriberDetail({ subscriber, onBack }) {
   const deleteAccount = async () => {
     setDeleting(true);
     try {
-      const recipIds = myRecipients.map((r) => r.id);
-      const myLists = lists.filter((l) => l.subscriberId === subscriber.id);
-      const items = await base44.entities.GiftItem.list("-created_date", 5000);
-      const listIds = new Set(myLists.map((l) => l.id));
-      const orphanItems = items.filter((i) => listIds.has(i.giftListId));
+      // Use standalone Express API instead of Base44
+      const response = await fetch(`http://localhost:3001/api/subscribers/${subscriber.id}`, {
+        method: 'DELETE',
+      });
 
-      for (const item of orphanItems) await base44.entities.GiftItem.delete(item.id);
-      for (const l of myLists) await base44.entities.GiftList.delete(l.id);
-      for (const id of recipIds) await base44.entities.Recipient.delete(id);
-      await base44.entities.Subscriber.delete(subscriber.id);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Delete failed');
+      }
 
       toast({ description: `${subscriber.name}'s account and all their data have been removed.` });
       queryClient.invalidateQueries({ queryKey: ["subscribers"] });
@@ -137,8 +136,9 @@ export default function SubscriberDetail({ subscriber, onBack }) {
       queryClient.invalidateQueries({ queryKey: ["giftlists-all"] });
       queryClient.invalidateQueries({ queryKey: ["giftitems-all"] });
       onBack();
-    } catch {
-      toast({ description: "Couldn't delete this account — please try again." });
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({ description: error.message || "Couldn't delete this account — please try again." });
       setDeleting(false);
     }
   };

@@ -270,6 +270,63 @@ app.patch('/api/subscribers/:id', async (req, res) => {
   }
 });
 
+// Delete subscriber (CASCADE deletes all related data)
+app.delete('/api/subscribers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`🗑️  Deleting subscriber: ${id}`);
+    
+    // Get subscriber info before deletion for logging
+    const subscriber = await prisma.subscriber.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            recipients: true,
+            giftLists: true,
+            emailLogs: true
+          }
+        }
+      }
+    });
+    
+    if (!subscriber) {
+      return res.status(404).json({ error: 'Subscriber not found' });
+    }
+    
+    console.log(`   Name: ${subscriber.name}`);
+    console.log(`   Email: ${subscriber.email}`);
+    console.log(`   Recipients: ${subscriber._count.recipients}`);
+    console.log(`   Gift Lists: ${subscriber._count.giftLists}`);
+    console.log(`   Email Logs: ${subscriber._count.emailLogs}`);
+    
+    // Prisma will CASCADE delete:
+    // - Recipients (via onDelete: Cascade)
+    // - Gift Lists (via onDelete: Cascade) 
+    // - Gift Items (via gift list cascade)
+    // - Email Logs (via onDelete: Cascade)
+    await prisma.subscriber.delete({
+      where: { id }
+    });
+    
+    console.log(`✅ Subscriber deleted successfully`);
+    
+    res.json({ 
+      success: true, 
+      message: `${subscriber.name}'s account and all related data have been deleted`,
+      deletedCount: {
+        recipients: subscriber._count.recipients,
+        giftLists: subscriber._count.giftLists,
+        emailLogs: subscriber._count.emailLogs
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error deleting subscriber:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== RECIPIENTS ====================
 
 // Get all recipients
