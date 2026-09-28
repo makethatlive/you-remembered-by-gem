@@ -143,18 +143,18 @@ export default function GiftListView({ listId, onBack }) {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
             {visibleItems.map((item, index) => {
-              const link = item.affiliate_url || item.product_url;
+              const link = item.affiliateUrl || item.productUrl;
               const hasImage = item.imageUrl && !broken[item.id];
               
               return (
-                <div key={item.id} className="bg-brand-cream-card rounded-2xl shadow-md overflow-hidden border border-brand-gold/10 hover:shadow-lg transition-shadow relative group">
+                <div key={item.id} className="bg-brand-cream-card rounded-2xl shadow-md overflow-hidden border border-brand-gold/10 hover:shadow-lg transition-shadow relative group cursor-pointer">
                   {/* Clickable overlay - entire card links to product */}
                   {link && (
                     <a
                       href={link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute inset-0 z-0"
+                      className="absolute inset-0 z-0 cursor-pointer"
                       aria-label={`View ${item.title}`}
                     />
                   )}
@@ -190,9 +190,9 @@ export default function GiftListView({ listId, onBack }) {
                     {item.retailerName && (
                       <p className="font-body text-xs text-brand-teal font-medium mt-1">{item.retailerName}</p>
                     )}
-                    {item.why_this_gift && (
+                    {item.whyThisGift && (
                       <div className="mt-3 p-2.5 bg-brand-gold-soft/20 rounded-lg">
-                        <p className="font-body text-xs text-brand-dark/80 leading-relaxed line-clamp-3">{item.why_this_gift}</p>
+                        <p className="font-body text-xs text-brand-dark/80 leading-relaxed line-clamp-3">{item.whyThisGift}</p>
                       </div>
                     )}
                     <div className="mt-4 space-y-2">
