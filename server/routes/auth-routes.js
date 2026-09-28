@@ -149,7 +149,7 @@ router.post('/register',
  * Login user
  */
 router.post('/login',
-  rateLimit(5, 15 * 60 * 1000), // 5 attempts per 15 minutes
+  rateLimit(10, 15 * 60 * 1000), // 10 attempts per 15 minutes (increased for dev)
   [
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required'),
