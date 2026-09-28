@@ -147,7 +147,18 @@ export default function GiftListView({ listId, onBack }) {
               const hasImage = item.imageUrl && !broken[item.id];
               
               return (
-                <div key={item.id} className="bg-brand-cream-card rounded-2xl shadow-md overflow-hidden border border-brand-gold/10 hover:shadow-lg transition-shadow">
+                <div key={item.id} className="bg-brand-cream-card rounded-2xl shadow-md overflow-hidden border border-brand-gold/10 hover:shadow-lg transition-shadow relative group">
+                  {/* Clickable overlay - entire card links to product */}
+                  {link && (
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 z-0"
+                      aria-label={`View ${item.title}`}
+                    />
+                  )}
+                  
                   <div className="h-56 bg-brand-cream relative">
                     {hasImage ? (
                       <img
@@ -163,11 +174,13 @@ export default function GiftListView({ listId, onBack }) {
                         </svg>
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 bg-brand-teal text-brand-cream font-body text-sm font-bold rounded-full w-9 h-9 flex items-center justify-center shadow-md">
+                    <div className="absolute top-3 left-3 bg-brand-teal text-brand-cream font-body text-sm font-bold rounded-full w-9 h-9 flex items-center justify-center shadow-md z-10">
                       {index + 1}
                     </div>
                   </div>
-                  <div className="p-4">
+                  
+                  {/* All interactive elements need relative z-index to be above the card link overlay */}
+                  <div className="p-4 relative z-10">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <p className="font-display text-lg text-brand-dark leading-tight line-clamp-2">{item.title}</p>
                       <span className="font-body text-base text-brand-gold font-bold whitespace-nowrap">
@@ -188,19 +201,19 @@ export default function GiftListView({ listId, onBack }) {
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center gap-2 bg-brand-teal text-brand-cream font-body text-sm font-semibold rounded-xl px-4 py-2.5 min-h-[44px] transition-colors hover:bg-brand-teal-dark shadow-sm"
+                          className="w-full inline-flex items-center justify-center gap-2 bg-brand-teal text-brand-cream font-body text-sm font-semibold rounded-xl px-4 py-2.5 min-h-[44px] transition-colors hover:bg-brand-teal-dark shadow-sm relative z-20"
                         >
                           View Product <ExternalLink className="w-4 h-4" />
                         </a>
                       )}
                       <button
                         onClick={() => setReportItem(item)}
-                        className="w-full inline-flex items-center justify-center gap-1.5 text-brand-dark/40 font-body text-xs font-medium min-h-[40px] hover:text-brand-dark/70 transition-colors"
+                        className="w-full inline-flex items-center justify-center gap-1.5 text-brand-dark/40 font-body text-xs font-medium min-h-[40px] hover:text-brand-dark/70 transition-colors relative z-20"
                       >
                         <AlertTriangle className="w-3.5 h-3.5" /> Report broken link
                       </button>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="mt-3 grid grid-cols-2 gap-2 relative z-20">
                       <ActionBtn active={item.subscriber_action === "purchased"} activeClass="bg-brand-teal text-brand-cream" onClick={() => submitFeedback(item, "subscriber_action", "purchased")} icon={Check} label="Purchased" />
                       <ActionBtn active={item.subscriber_action === "not_purchased"} activeClass="bg-brand-dark/80 text-brand-cream" onClick={() => submitFeedback(item, "subscriber_action", "not_purchased")} label="Didn't Buy" />
                       <ActionBtn active={item.feedback === "loved_it"} activeClass="bg-rose-500 text-white" onClick={() => submitFeedback(item, "feedback", "loved_it")} icon={Heart} label="Loved It" />
