@@ -163,15 +163,11 @@ export default function ApprovalDetail({ list, subscriber, recipient, onBack, on
   // block writes last_gift_generated onto the Recipient AFTER generated_at is stamped
   // (gg:1458 vs gg:1170) on every successful generation, and completePaidSignup bumps
   // updated_date during signup linkage (completePaidSignup/entry.ts:113) — a timestamp
-  // comparison would badge essentially every list, forever. derived_profile_hash is
-  // written by the derive cache (gg:493-496) and untouched on cache hits (gg:418-420),
-  // so it always reflects the profile as last generated. No derived_profile_hash
-  // (legacy recipient / failed derive) → no badge. Budget changes sit outside the
-  // hash — already visible in the profile card below.
-  const profileEditedAfterGeneration = !!(
-    recipient?.derivedProfileHash &&
-    computeProfileHash(recipient) !== recipient.derivedProfileHash
-  );
+  // Profile update warning disabled - server and frontend use incompatible hash algorithms
+  // Server: MD5 with TAXONOMY_VERSION + thingsYouKnow only
+  // Frontend: FNV-1a with all user fields except TAXONOMY_VERSION
+  // This mismatch causes false positives on ALL gift lists
+  const profileEditedAfterGeneration = false;
 
   const activeItems = items.filter((i) => i.status === "ACTIVE");
   const standbyItems = items.filter((i) => i.status === "STANDBY");
