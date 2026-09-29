@@ -778,6 +778,41 @@ app.get('/api/gift-items/:id', async (req, res) => {
   }
 });
 
+// Update gift item feedback (subscriber_action and feedback fields)
+app.patch('/api/gift-items/:id/feedback', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { subscriber_action, feedback } = req.body;
+    
+    // Build update object - only update fields that are provided
+    const updateData = {};
+    if (subscriber_action !== undefined) {
+      // Convert to UPPERCASE for Prisma enum (PURCHASED, NOT_PURCHASED)
+      updateData.subscriberAction = subscriber_action.toUpperCase();
+    }
+    if (feedback !== undefined) {
+      // Convert to UPPERCASE for Prisma enum (LOVED_IT, BAD_SUGGESTION)
+      updateData.feedback = feedback.toUpperCase();
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No feedback data provided' });
+    }
+    
+    const updatedItem = await prisma.giftItem.update({
+      where: { id },
+      data: updateData
+    });
+    
+    console.log(`✅ Gift item feedback updated: ${id}`, updateData);
+    
+    res.json(updatedItem);
+  } catch (error) {
+    console.error('❌ Error updating gift item feedback:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update gift item (for admin feedback, status changes, etc.)
 app.patch('/api/gift-items/:id', async (req, res) => {
   try {
@@ -1542,7 +1577,7 @@ app.post('/api/functions/requestGiftRefresh', async (req, res) => {
         return res.json({
           status: 'pending_approval',
           giftListId: result.giftList?.id || result.giftListId,
-          message: 'Your request has been sent to admin for approval. You\'ll receive new gift suggestions once reviewed.'
+          message: 'Your feedback has been sent to Gem and new presents will be with you within 48 hours.'
         });
       }
       

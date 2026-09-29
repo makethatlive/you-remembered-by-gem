@@ -120,8 +120,8 @@ export default function SubscriberDetail({ subscriber, onBack }) {
   const deleteAccount = async () => {
     setDeleting(true);
     try {
-      // Use standalone Express API instead of Base44
-      const response = await fetch(`http://localhost:3001/api/subscribers/${subscriber.id}`, {
+      // Use standalone Express API - use relative URL to work on both local and production
+      const response = await fetch(`/api/subscribers/${subscriber.id}`, {
         method: 'DELETE',
       });
 

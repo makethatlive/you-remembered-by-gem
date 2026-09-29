@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       return Response.json({ 
         status: "pending_approval", 
         giftListId: data.giftListId,
-        message: "Your request has been sent to admin for approval. You'll receive new gift suggestions once reviewed."
+        message: "Your feedback has been sent to Gem and new presents will be with you within 48 hours."
       });
     }
     

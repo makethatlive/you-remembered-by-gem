@@ -33,6 +33,8 @@ export default function GiftListView({ listId, onBack }) {
   const [refreshMessage, setRefreshMessage] = useState("");
   const [refreshOpen, setRefreshOpen] = useState(false);
   const [refreshReason, setRefreshReason] = useState("");
+  // Track which items have expanded "why this gift" text
+  const [expandedReasons, setExpandedReasons] = useState({});
 
   const { data: list } = useQuery({
     queryKey: ["giftlist", listId],
@@ -70,17 +72,56 @@ export default function GiftListView({ listId, onBack }) {
 
   // field is "feedback" or "subscriber_action"; clicking the already-active value is a no-op.
   const submitFeedback = async (item, field, value) => {
-    if (item[field] === value) return;
-    try {
-      const result = await base44.functions.invoke("submitGiftFeedback", {
-        gift_item_id: item.id,
-        [field]: value,
+    // Convert snake_case field to camelCase for React state
+    const camelField = field === 'subscriber_action' ? 'subscriberAction' : field;
+    
+    if (item[camelField] === value) return;
+    
+    console.log('🎯 Feedback clicked:', { itemId: item.id, itemTitle: item.title, field, camelField, value });
+    
+    // Optimistic update - immediately update UI before server response
+    const previousItems = queryClient.getQueryData(["giftitems", listId]);
+    
+    queryClient.setQueryData(["giftitems", listId], (old) => {
+      const updated = old.map(i => {
+        if (i.id === item.id) {
+          console.log('✅ Updating item:', i.title, { [camelField]: value });
+          return { ...i, [camelField]: value };
+        }
+        return i;
       });
-      if (result?.data?.error) throw new Error(result.data.error);
+      return updated;
+    });
+    
+    try {
+      // Use Express API - send snake_case to match database schema
+      const response = await fetch(`/api/gift-items/${item.id}/feedback`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Feedback update failed');
+      }
+      
+      console.log('✅ Feedback saved to server');
+      
+      // Revalidate to ensure we have server state
       await queryClient.invalidateQueries({ queryKey: ["giftitems", listId] });
-    } catch {
-      // Feedback is best-effort: on failure the buttons stay as they were.
+    } catch (error) {
+      // Rollback on error
+      console.error('❌ Feedback failed, rolling back:', error);
+      queryClient.setQueryData(["giftitems", listId], previousItems);
     }
+  };
+
+  const toggleReason = (itemId) => {
+    setExpandedReasons(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
   };
 
   const requestRefresh = async () => {
@@ -99,7 +140,7 @@ export default function GiftListView({ listId, onBack }) {
       if (data.status === "already_requested") {
         setRefreshMessage("Fresh ideas are already being curated for you.");
       } else if (data.status === "pending_approval") {
-        setRefreshMessage(data.message || "Your request has been sent to admin for approval. You'll receive new gift suggestions once reviewed.");
+        setRefreshMessage(data.message || "Your feedback has been sent to Gem and new presents will be with you within 48 hours.");
       } else {
         setRefreshMessage("Your refresh is with Gem. This list will update after the new ideas have been checked.");
       }
@@ -192,7 +233,21 @@ export default function GiftListView({ listId, onBack }) {
                     )}
                     {item.whyThisGift && (
                       <div className="mt-3 p-2.5 bg-brand-gold-soft/20 rounded-lg">
-                        <p className="font-body text-xs text-brand-dark/80 leading-relaxed line-clamp-3">{item.whyThisGift}</p>
+                        <p className="font-body text-xs font-semibold text-brand-dark mb-1.5">Why was this recommended?</p>
+                        <p className="font-body text-xs text-brand-dark/80 leading-relaxed">
+                          {expandedReasons[item.id] 
+                            ? item.whyThisGift 
+                            : `${item.whyThisGift.slice(0, 80)}${item.whyThisGift.length > 80 ? '...' : ''}`
+                          }
+                        </p>
+                        {item.whyThisGift.length > 80 && (
+                          <button
+                            onClick={() => toggleReason(item.id)}
+                            className="font-body text-xs text-brand-teal font-medium mt-1.5 hover:underline"
+                          >
+                            {expandedReasons[item.id] ? 'Show less' : 'Read more'}
+                          </button>
+                        )}
                       </div>
                     )}
                     <div className="mt-4 space-y-2">
@@ -214,10 +269,56 @@ export default function GiftListView({ listId, onBack }) {
                       </button>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2 relative z-20">
-                      <ActionBtn active={item.subscriber_action === "purchased"} activeClass="bg-brand-teal text-brand-cream" onClick={() => submitFeedback(item, "subscriber_action", "purchased")} icon={Check} label="Purchased" />
-                      <ActionBtn active={item.subscriber_action === "not_purchased"} activeClass="bg-brand-dark/80 text-brand-cream" onClick={() => submitFeedback(item, "subscriber_action", "not_purchased")} label="Didn't Buy" />
-                      <ActionBtn active={item.feedback === "loved_it"} activeClass="bg-rose-500 text-white" onClick={() => submitFeedback(item, "feedback", "loved_it")} icon={Heart} label="Loved It" />
-                      <ActionBtn active={item.feedback === "bad_suggestion"} activeClass="bg-amber-500 text-white" onClick={() => submitFeedback(item, "feedback", "bad_suggestion")} icon={ThumbsDown} label="Not Right" />
+                      {/* 
+                        Intelligent feedback logic:
+                        - Positive actions (Purchased/Loved It) disable all negative options
+                        - Negative actions (Didn't Buy/Not Right) disable all positive options
+                        - Once selected, that specific button locks
+                      */}
+                      {(() => {
+                        // Normalize to lowercase for comparison (database has UPPERCASE enums, Base44 returns lowercase)
+                        const subscriberAction = item.subscriberAction?.toLowerCase();
+                        const feedback = item.feedback?.toLowerCase();
+                        
+                        const hasPositive = subscriberAction === "purchased" || feedback === "loved_it";
+                        const hasNegative = subscriberAction === "not_purchased" || feedback === "bad_suggestion";
+                        
+                        return (
+                          <>
+                            <ActionBtn 
+                              active={subscriberAction === "purchased"} 
+                              activeClass="bg-brand-teal text-brand-cream" 
+                              onClick={() => submitFeedback(item, "subscriber_action", "purchased")} 
+                              icon={Check} 
+                              label="Purchased" 
+                              disabled={subscriberAction === "purchased" || hasNegative}
+                            />
+                            <ActionBtn 
+                              active={subscriberAction === "not_purchased"} 
+                              activeClass="bg-brand-dark/80 text-brand-cream" 
+                              onClick={() => submitFeedback(item, "subscriber_action", "not_purchased")} 
+                              label="Didn't Buy" 
+                              disabled={subscriberAction === "not_purchased" || hasPositive}
+                            />
+                            <ActionBtn 
+                              active={feedback === "loved_it"} 
+                              activeClass="bg-rose-500 text-white" 
+                              onClick={() => submitFeedback(item, "feedback", "loved_it")} 
+                              icon={Heart} 
+                              label="Loved It" 
+                              disabled={feedback === "loved_it" || hasNegative}
+                            />
+                            <ActionBtn 
+                              active={feedback === "bad_suggestion"} 
+                              activeClass="bg-amber-500 text-white" 
+                              onClick={() => submitFeedback(item, "feedback", "bad_suggestion")} 
+                              icon={ThumbsDown} 
+                              label="Not Right" 
+                              disabled={feedback === "bad_suggestion" || hasPositive}
+                            />
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -259,7 +360,7 @@ export default function GiftListView({ listId, onBack }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Refresh these suggestions</AlertDialogTitle>
             <AlertDialogDescription>
-              Gem will curate a fresh set of ideas. Optionally, tell her why — it helps her pick better.
+              Sorry these weren't quite right! Tell me what missed the mark and I'll do better next time. The more detail you give, the closer the new ideas will be.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea
@@ -267,7 +368,7 @@ export default function GiftListView({ listId, onBack }) {
             onChange={(e) => setRefreshReason(e.target.value)}
             maxLength={300}
             rows={3}
-            placeholder="e.g. These feel too practical — she'd love something more sentimental"
+            placeholder="Tell me what missed the mark and how I could improve the next ideas."
           />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -279,12 +380,17 @@ export default function GiftListView({ listId, onBack }) {
   );
 }
 
-function ActionBtn({ active, activeClass, onClick, icon: Icon, label }) {
+function ActionBtn({ active, activeClass, onClick, icon: Icon, label, disabled }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 min-h-[44px] font-body text-sm font-medium transition-colors ${
-        active ? activeClass : "bg-brand-cream text-brand-dark/70 hover:bg-brand-gold-soft/40"
+        active 
+          ? activeClass 
+          : disabled 
+            ? "bg-brand-cream/50 text-brand-dark/30 cursor-not-allowed" 
+            : "bg-brand-cream text-brand-dark/70 hover:bg-brand-gold-soft/40"
       }`}
     >
       {Icon && <Icon className="w-4 h-4" />} {label}
